@@ -90,6 +90,7 @@ const Header = ({ setLoginUser }) => {
     sessionStorage.removeItem('authToken');
     localStorage.removeItem('userId');
     sessionStorage.removeItem('userId');
+    localStorage.removeItem('username');
     localStorage.removeItem('att_courseId');
     localStorage.removeItem('att_batchId');
     localStorage.removeItem('att_status');

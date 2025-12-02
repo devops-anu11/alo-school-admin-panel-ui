@@ -65,6 +65,7 @@ const Login = ({ setLoginUser }) => {
           localStorage.setItem('userId', userId);
           sessionStorage.setItem('userId', userId);
           localStorage.setItem('username', userName);
+          
           localStorage.removeItem('att_date');
           localStorage.removeItem('activestatus');
           localStorage.removeItem('status');
