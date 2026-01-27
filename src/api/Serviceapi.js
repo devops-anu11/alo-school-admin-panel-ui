@@ -107,6 +107,7 @@ export const updateUser = (FormData, id) => {
     batchId: FormData.student_batch,
     DOB: FormData.student_dob,
     inStatus: FormData.inStatus,
+    ID:FormData.ID
   };
   return apiService.put(`/user/${id}`, data);
 };
@@ -289,7 +290,7 @@ export const getStudentAttendencemonth = (userId) => {
 };
 
 export const getAttendanceStudentList = (userId) => {
-  return apiService.get(`/attendance/admin?userId=${userId}&limit=4`);
+  return apiService.get(`/attendance?userId=${userId}&limit=4`);
 };
 
 export const getTodayrate = () => {
@@ -360,4 +361,51 @@ export const makeabsent = (id,discription) => {
 
 export const attendancestudentrate = (userid,fromdate,todate) => {
   return apiService.get(`attendance/studentrate?userId=${userid}&fromDate=${fromdate}&toDate=${todate}`);
+};
+// export const getUserByStudentId = (studentId) => {
+//   return apiService.get(`/user?studentId=${studentId}`);
+// };
+
+// term / sem (performance)
+
+export const createTermSem = (payload) => {
+  return apiService.post("/performance/send", payload);
+};
+
+
+
+// export const getUsers = (params = {}) => {
+//   return apiService.get("/user", {
+//     params: params   // ✅ THIS IS REQUIRED
+//   });
+// };
+
+
+
+export const getPerformance = () => {
+  return apiService.get("/performance");
+};
+export const updateTermSem = (id, payload) => {
+  return apiService.put(`/performance/${id}`, payload);
+};
+
+export const deleteTermSem = (id) => {
+  return apiService.delete(`/performance/${id}`);
+};
+// term wise toppers
+export const getDashboardTermToppers = (Term) => {
+  return apiService.get("/performance/leaderboard", {
+    params: {
+      Academic: Term,   // e.g. "Term 3"
+    },
+  });
+};
+
+// semester wise toppers
+export const getDashboardSemesterToppers = (semester) => {
+  return apiService.get("/performance/leaderboard", {
+    params: {
+      Academic: semester,  
+    },
+  });
 };
