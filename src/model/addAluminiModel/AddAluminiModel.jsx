@@ -132,9 +132,9 @@ if (!form.alumniName.trim()) {
   validationErrors.alumniName = "Alumni Name is required";
 }
 
-if (!form.companyName.trim()) {
-  validationErrors.companyName = "Company Name is required";
-}
+// if (!form.companyName.trim()) {
+//   validationErrors.companyName = "Company Name is required";
+// }
 
 if (!form.position.trim()) {
   validationErrors.position = "Position is required";
@@ -144,9 +144,9 @@ if (!editData && !form.alumniImage) {
   validationErrors.alumniImage = "Alumni Image is required";
 }
 
-if (!editData && !form.companyLogo) {
-  validationErrors.companyLogo = "Company Logo is required";
-}
+// if (!editData && !form.companyLogo) {
+//   validationErrors.companyLogo = "Company Logo is required";
+// }
 
 setErrors(validationErrors);
   if (Object.keys(validationErrors).length > 0) {
@@ -261,7 +261,7 @@ setErrors(validationErrors);
                 onChange={(e) => handleFile(e, "companyLogo")}
               />
             </label>
-            {errors.companyLogo && <ErrorText text={errors.companyLogo} />}
+            {/* {errors.companyLogo && <ErrorText text={errors.companyLogo} />} */}
           </div>
         </div>
 
@@ -282,7 +282,7 @@ setErrors(validationErrors);
             name="companyName"
             value={form.companyName}
             onChange={handleChange}
-            error={!!errors.companyName}
+            // error={!!errors.companyName}
             helperText={errors.companyName}
           />
         </div>
