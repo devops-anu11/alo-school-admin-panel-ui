@@ -315,11 +315,11 @@ export const getEnquiry = (limit, offset, enroll) => {
     `/aloEnroll?limit=${limit}&page=${offset}&enrollType=${enroll}`,
   );
 };
-export const getLittleStepsEnquiry = (limit, offset) => {
+export const getLittleStepsEnquiry = (limit, page) => {
   return apiService.get(
-    `/littlestep-enquiry?limit=${limit}&page=${offset}`
+    `/littlestep-enquiry?limit=${limit}&page=${page}`
   );
-};
+};;
 
 //application
 

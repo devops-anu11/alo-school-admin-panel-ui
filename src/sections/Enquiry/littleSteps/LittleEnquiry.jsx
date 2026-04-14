@@ -27,7 +27,7 @@ const theme = createTheme({
 const LittleStepsEnquiry = () => {
 
   const [limit] = useState(10);
-  const [offset, setoffset] = useState(1);
+  const [page, setPage] = useState(1);  
   const [enquiry, setEnquiry] = useState([]);
   const [loader, setloader] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
@@ -35,12 +35,12 @@ const LittleStepsEnquiry = () => {
   const getData = async () => {
     setloader(true);
     try {
-      let res = await getLittleStepsEnquiry(limit, offset - 1);
+      let res = await getLittleStepsEnquiry(limit, page);
 
       const data = res?.data?.data;
 
       setEnquiry(data?.enquiries || []);
-      setTotalCount(data?.totalCount || 0); // ✅ IMPORTANT
+      setTotalCount(data?.totalRecords || 0); 
 
     } catch (err) {
       console.log(err);
@@ -51,9 +51,8 @@ const LittleStepsEnquiry = () => {
 
   useEffect(() => {
     getData();
-  }, [offset]);
+  }, [page]);
 
-  // ✅ total pages calculation
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
@@ -115,14 +114,13 @@ const LittleStepsEnquiry = () => {
         </table>
       </div>
 
-   
       {totalPages > 1 && (
         <ThemeProvider theme={theme}>
           <div className="flex justify-end mt-4">
             <Pagination
               count={totalPages}
-              page={offset}
-              onChange={(e, val) => setoffset(val)}
+              page={page}
+              onChange={(e, val) => setPage(val)}
               showFirstButton
               showLastButton
             />
