@@ -45,7 +45,7 @@ const Header = ({ setLoginUser }) => {
   const [notificationlist, setNotificationlist] = useState([])
   const [isread, setIsread] = useState(false)
   const [isAcademicOpen, setIsAcademicOpen] = useState(false);
-
+const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   const notificationRef = useRef(null);
 
@@ -333,23 +333,48 @@ const Header = ({ setLoginUser }) => {
                         Events
                       </button>
                     </div>
-                    <div className={styles.settings}>
-                      <button
-                        className={`${styles.settings_button} ${location.pathname == "/enquiry" ? styles.navactive : ""}`}
-                        onClick={() => navigate("/enquiry")}
-                      >
-                        {location.pathname == "/enquiry" ? (
-                          <FaQuestionCircle
-                            className={styles.outline_settings_icon}
-                          />
-                        ) : (
-                          <FaRegQuestionCircle
-                            className={styles.filled_settings_icon}
-                          />
-                        )}
-                        Enquiry
-                      </button>
-                    </div>
+            <div className={styles.settings}>
+  <button
+  className={styles.settings_button}
+    onClick={() => setIsEnquiryOpen(!isEnquiryOpen)}
+    style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+  >
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      {location.pathname.includes("/enquiry") ? (
+        <FaQuestionCircle className={styles.outline_settings_icon} />
+      ) : (
+        <FaRegQuestionCircle className={styles.filled_settings_icon} />
+      )}
+      Enquiry
+    </div>
+
+    {isEnquiryOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+  </button>
+
+  {isEnquiryOpen && (
+    <div className="ml-8 mt-2 flex flex-col gap-2">
+      
+      <button
+        className={`${styles.settings_button} text-sm ${
+          location.pathname === "/enquiry/aloschool" ? styles.navactive : ""
+        }`}
+        onClick={() => navigate("/enquiry/aloschool")}
+      >
+        ALO School
+      </button>
+
+      <button
+        className={`${styles.settings_button} text-sm ${
+          location.pathname === "/enquiry/littlesteps" ? styles.navactive : ""
+        }`}
+        onClick={() => navigate("/enquiry/littlesteps")}
+      >
+        ALO LittleSteps
+      </button>
+
+    </div>
+  )}
+</div>
                     <div className={styles.settings}>
                       <button
                         className={`${styles.settings_button} ${location.pathname == "/application" ? styles.navactive : ""}`}

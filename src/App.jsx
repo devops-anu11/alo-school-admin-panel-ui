@@ -15,7 +15,7 @@ import LeaveRequest from './sections/Leaverequestmodel/Leaverequest';
 import CourseDetails from './sections/CourseDetails/CourseDetails';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Enquiry from './sections/Enquiry/Enquiry';
+import Enquiry from './sections/Enquiry/Aloschool/Enquiry';
 import Application from './sections/Application/Application';
 import Details from './sections/details/Details';
 import TermExam from './sections/Academicdetails/TermExam';
@@ -24,7 +24,7 @@ import Subjects from './sections/CourseDetails/Subjects';
 import AlumniImages from './sections/subAdmin/aluminiImage/AlunimiImage';
 import StudentWork from "./sections/subAdmin/studentWork/StudentWork";
 import AddEvent from "./sections/subAdmin/addEvent/AddEvent";
-
+import LittleStepsEnquiry from "./sections/Enquiry/littleSteps/LittleEnquiry"
 
 
 function App() {
@@ -80,9 +80,18 @@ function App() {
           <Route path="/events" element={<Header />}>
             <Route index element={<Eventlist />} />
           </Route>
-          <Route path="/enquiry" element={<Header />}>
-            <Route index element={<Enquiry />} />
-          </Route>
+        <Route path="/enquiry" element={<Header />}>
+
+  {/* default → /enquiry */}
+  <Route index element={<Enquiry />} />
+
+  {/* ✅ ALO School */}
+  <Route path="aloschool" element={<Enquiry />} />
+
+  {/* ✅ ALO LittleSteps */}
+  <Route path="littlesteps" element={<LittleStepsEnquiry />} />
+
+</Route>
           <Route path="/application" element={<Header />}>
             <Route index element={<Application />} />
             <Route path="details/:id" element={<Details />} />
