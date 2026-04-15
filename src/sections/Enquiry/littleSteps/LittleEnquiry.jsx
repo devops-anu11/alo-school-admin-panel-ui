@@ -69,7 +69,7 @@ const LittleStepsEnquiry = () => {
               <th className="px-4 py-2">Child Name</th>
               <th className="px-4 py-2">Phone</th>
               <th className="px-4 py-2">Email</th>
-              <th className="px-4 py-2">Age</th>
+          
               <th className="px-4 py-2">Program</th>
               <th className="px-4 py-2">Date</th>
             </tr>
@@ -93,7 +93,7 @@ const LittleStepsEnquiry = () => {
                     <td className="px-4 py-3">{item.childsName}</td>
                     <td className="px-4 py-3">{item.phoneNumber}</td>
                     <td className="px-4 py-3">{item.email}</td>
-                    <td className="px-4 py-3">{item.age}</td>
+          
                     <td className="px-4 py-3">{item.programOfInterest}</td>
                     <td className="px-4 py-3">
                       {new Date(item.createdAt).toLocaleDateString()}
@@ -102,7 +102,7 @@ const LittleStepsEnquiry = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-10">
+                  <td colSpan="6" className="text-center py-10">
                     <img src={nodata} width="150" className="m-auto" />
                     <p>No Data Found</p>
                   </td>
