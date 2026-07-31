@@ -1,5 +1,7 @@
 import { React, useEffect, useState } from "react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import profile from "../../assets/dashboardimgs/profile.png";
 import Import from "../../assets/dashboardimgs/Import.png";
 import { Form, useParams } from "react-router-dom";
@@ -17,6 +19,8 @@ import {
   Performanceuser,
   deleteTermSem,
   uploadFile,
+  getFeeBalance,
+  updateFeeBalance,
 } from "../../api/Serviceapi";
 import Modal from "react-modal";
 import { deleteTermSem as deleteTermSemApi } from "../../api/Serviceapi";
@@ -63,6 +67,11 @@ const Studentdetails = () => {
   const [subjects, setSubjects] = useState([]);
   const [marks, setMarks] = useState([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
+
+  const [feeDetails, setFeeDetails] = useState([]);
+  const [feeLoading, setFeeLoading] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState(null);
+  const [editedFee, setEditedFee] = useState({});
 
   const handleSemesterChange = (event) => {
 
@@ -511,7 +520,11 @@ const Studentdetails = () => {
 
 
   useEffect(() => {
-    if (id) fetchPerformance();
+    console.log("Student ID:", id);
+    if (id) {
+      fetchPerformance();
+      fetchFeeDetails();
+    }
   }, [id]);
 
   const [deleteId, setDeleteId] = useState(null);
@@ -538,8 +551,64 @@ const Studentdetails = () => {
     }
   };
 
+ const fetchFeeDetails = async () => {
+   console.log("fetchFeeDetails called");
 
+   try {
+     setFeeLoading(true);
 
+     const res = await getFeeBalance(id);
+
+     console.log(res);
+
+     setFeeDetails(res?.data?.data || []);
+   } catch (err) {
+     console.log(err);
+   } finally {
+     setFeeLoading(false);
+   }
+ }
+ const handleEditFee = (item) => {
+   setEditingFeeId(item._id);
+
+   setEditedFee({
+     semFee: item.semFee,
+     paidAmount: item.paidAmount,
+     pendingAmount: item.pendingAmount,
+   });
+ };
+ const handleChange = (field, value) => {
+   const updated = {
+     ...editedFee,
+     [field]: Number(value),
+   };
+
+   updated.pendingAmount =
+     Number(updated.semFee || 0) - Number(updated.paidAmount || 0);
+
+   setEditedFee(updated);
+ };
+ const handleSaveFee = async (id) => {
+   try {
+     console.log("Saving:", id, editedFee);
+
+     const res = await updateFeeBalance(id, editedFee);
+
+     console.log("Response:", res);
+
+     toast.success("Fee updated successfully");
+
+     fetchFeeDetails();
+     setEditingFeeId(null);
+   } catch (err) {
+     console.error(err);
+     toast.error(err?.response?.data?.message || "Update failed");
+   }
+ };
+ const handleCancelFee = () => {
+   setEditingFeeId(null);
+   setEditedFee({});
+ };
   return (
     <>
       <ToastContainer />
@@ -779,7 +848,7 @@ const Studentdetails = () => {
                   <div className="flex justify-between items-center pb-[10px]">
                     <h2 className="text-[22px] font-[500] text-center md:text-left">
                       {user?.name?.replace(/\b\w/g, (char) =>
-                        char.toUpperCase()
+                        char.toUpperCase(),
                       )}
                     </h2>
                     <div className="flex items-center gap-3 pb-[10px]">
@@ -884,74 +953,69 @@ const Studentdetails = () => {
                 <p className="text-sm text-gray-500">Loading records...</p>
               ) : termList.length > 0 ? (
                 termList.map((p) => (
-  <div
-    key={p._id}
-    className="bg-white p-3 rounded mb-3"
-  >
-    {/* Header */}
-    <div className="flex justify-between items-center mb-2">
-      <div>
-        <p className="font-medium">
-          {p.Academic || "—"} ({p.exam || "—"})
-        </p>
-        <p className="text-sm text-gray-500">
-          Total : {p.total} | Avg : {p.average}
-        </p>
-      </div>
+                  <div key={p._id} className="bg-white p-3 rounded mb-3">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <p className="font-medium">
+                          {p.Academic || "—"} ({p.exam || "—"})
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Total : {p.total} | Avg : {p.average}
+                        </p>
+                      </div>
 
-      <div className="flex gap-3 items-center">
-        <EditOutlinedIcon
-          sx={{ cursor: "pointer", fontSize: 18 }}
-          onClick={() => openEditTermSem(p)}
-        />
+                      <div className="flex gap-3 items-center">
+                        <EditOutlinedIcon
+                          sx={{ cursor: "pointer", fontSize: 18 }}
+                          onClick={() => openEditTermSem(p)}
+                        />
 
-        <span
-          className="text-red-600 text-sm cursor-pointer"
-          onClick={() => setDeleteId(p._id)}
-        >
-          Delete
-        </span>
-      </div>
-    </div>
+                        <span
+                          className="text-red-600 text-sm cursor-pointer"
+                          onClick={() => setDeleteId(p._id)}
+                        >
+                          Delete
+                        </span>
+                      </div>
+                    </div>
 
-    {/* 🔥 Revaluation Section */}
-    {p?.Marks?.filter(
-      (m) => m.revaluationUrl && m.revaluationUrl.trim() !== ""
-    ).length > 0 && (
-      <div className="border-t pt-2 mt-2">
-        <p className="text-sm font-medium mb-2">
-          Revaluation Papers:
-        </p>
+                    {/* 🔥 Revaluation Section */}
+                    {p?.Marks?.filter(
+                      (m) => m.revaluationUrl && m.revaluationUrl.trim() !== "",
+                    ).length > 0 && (
+                      <div className="border-t pt-2 mt-2">
+                        <p className="text-sm font-medium mb-2">
+                          Revaluation Papers:
+                        </p>
 
-        {p.Marks
-          .filter((m) => m.revaluationUrl && m.revaluationUrl.trim() !== "")
-          .map((m, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded mb-1"
-            >
-              <span className="text-sm font-medium">
-                {m.subjectName}
-              </span>
+                        {p.Marks.filter(
+                          (m) =>
+                            m.revaluationUrl && m.revaluationUrl.trim() !== "",
+                        ).map((m, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded mb-1"
+                          >
+                            <span className="text-sm font-medium">
+                              {m.subjectName}
+                            </span>
 
-              <button
-                onClick={() => handleDownload(m.revaluationUrl)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                ⬇️
-              </button>
-            </div>
-          ))}
-      </div>
-    )}
-  </div>
-))
-
+                            <button
+                              onClick={() => handleDownload(m.revaluationUrl)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              ⬇️
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
               ) : (
                 <p className="text-sm text-gray-400">No Term / Sem Records</p>
               )}
-
-
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 gap-3 mt-3">
@@ -1096,24 +1160,118 @@ const Studentdetails = () => {
               <div>
                 <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] ">
                   <h4 className="text-[16px] font-medium">Fee Details</h4>
-                  <div className="grid grid-cols-4 text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5 ">
-                    <div>
-                      <div className="text-[#00000080]">Total Fees</div>
-                      <p className="font-[500]">{user?.totalFee}</p>
+                  <div className="bg-white rounded-[10px] px-[20px] py-[15px] my-5">
+                    <div className="grid grid-cols-5 text-[13px] font-semibold border-b pb-2">
+                      <div>Semester</div>
+                      <div className="text-center">Fee</div>
+                      <div className="text-center">Paid</div>
+                      <div className="text-center">Pending</div>
+                      <div></div>
                     </div>
-                    <div>
-                      <div className="text-[#00000080]">Paid</div>
-                      <p className="font-[500]">{user?.paidFee}</p>
-                    </div>
-                    <div>
-                      <div className="text-[#00000080]">Pending</div>
-                      <p className="font-[500]">{user?.pendingFee}</p>
-                    </div>
-                    <div>
-                      <div className="text-[#00000080]">Paid Date</div>
-                      <p className="font-[500]">
-                        {user?.dueDate?.split("T")[0]}
-                      </p>
+
+                    {feeDetails.map((item) => (
+                      <div
+                        key={item._id}
+                        className="grid grid-cols-5 text-[13px] py-3 border-b items-center"
+                      >
+                        <div>Semester {item.noOfsem}</div>
+                        <div className="text-center">
+                          {editingFeeId === item._id ? (
+                            <input
+                              type="number"
+                              value={editedFee.semFee}
+                              onChange={(e) =>
+                                handleChange("semFee", e.target.value)
+                              }
+                              className="w-20 border rounded px-2 py-1 text-center"
+                            />
+                          ) : (
+                            `₹${item.semFee}`
+                          )}
+                        </div>
+                        <div className="text-center">
+                          {editingFeeId === item._id ? (
+                            <input
+                              type="number"
+                              value={editedFee.paidAmount}
+                              onChange={(e) =>
+                                handleChange("paidAmount", e.target.value)
+                              }
+                              className="w-20 border rounded px-2 py-1 text-center"
+                            />
+                          ) : (
+                            `₹${item.paidAmount}`
+                          )}
+                        </div>
+                        <div className="text-center">
+                          ₹
+                          {editingFeeId === item._id
+                            ? editedFee.pendingAmount
+                            : item.pendingAmount}
+                        </div>
+
+                        <div className="flex justify-center gap-2">
+                          {editingFeeId === item._id ? (
+                            <>
+                              <CheckIcon
+                                sx={{
+                                  fontSize: 18,
+                                  color: "green",
+                                  cursor: "pointer",
+                                }}
+                                onClick={() => handleSaveFee(item._id)}
+                              />
+
+                              <CloseIcon
+                                sx={{
+                                  fontSize: 18,
+                                  color: "red",
+                                  cursor: "pointer",
+                                }}
+                                onClick={handleCancelFee}
+                              />
+                            </>
+                          ) : (
+                            <EditOutlinedIcon
+                              sx={{
+                                fontSize: 16,
+                                color: "#144196",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => handleEditFee(item)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Total */}
+                    <div className="grid grid-cols-5 text-[13px] font-semibold py-3 items-center">
+                      <div>Total</div>
+
+                      <div className="text-center">
+                        ₹
+                        {feeDetails.reduce((sum, item) => sum + item.semFee, 0)}
+                      </div>
+
+                      <div className="text-center">
+                        ₹
+                        {feeDetails.reduce(
+                          (sum, item) => sum + item.paidAmount,
+                          0,
+                        )}
+                      </div>
+
+                      <div className="text-center">
+                        ₹
+                        {feeDetails.reduce(
+                          (sum, item) => sum + item.pendingAmount,
+                          0,
+                        )}
+                      </div>
+
+                      {/* Empty Action column */}
+                      <div></div>
                     </div>
                   </div>
                 </div>
@@ -1151,7 +1309,7 @@ const Studentdetails = () => {
                       <div className="w-[5%]">:</div>
                       <div className="w-[70%]">
                         {user?.fatherName?.replace(/\b\w/g, (char) =>
-                          char.toUpperCase()
+                          char.toUpperCase(),
                         )}
                       </div>
                     </div>
@@ -1217,7 +1375,7 @@ const Studentdetails = () => {
       <Modal
         isOpen={absentModel}
         onRequestClose={() => {
-          setAbsentModel(false), setdiscription(""), setError("");
+          (setAbsentModel(false), setdiscription(""), setError(""));
         }}
         contentLabel="Make Absent"
         isCloseButtonShown={true}
@@ -1255,7 +1413,7 @@ const Studentdetails = () => {
               className={styles.textarea}
               value={discription}
               onChange={(e) => {
-                setdiscription(e.target.value), setError("");
+                (setdiscription(e.target.value), setError(""));
               }}
             ></textarea>
             <p className="text-red-500 text-[12px]">{error}</p>
@@ -1285,7 +1443,7 @@ const Studentdetails = () => {
           overlay: { backgroundColor: "rgba(0,0,0,0.7)", zIndex: 1000 },
           content: {
             width: "600px",
-            height: 'max-content',
+            height: "max-content",
             margin: "auto",
             borderRadius: "10px",
             padding: "24px",
@@ -1305,7 +1463,7 @@ const Studentdetails = () => {
             onChange={(e) => handleSemesterChange(e)}
             className="w-full border rounded p-2 bg-white"
             disabled={editMode}
-            style={{ cursor: editMode ? 'not-allowed' : 'pointer' }}
+            style={{ cursor: editMode ? "not-allowed" : "pointer" }}
           >
             {/* <option value="">Select Semester</option> */}
             <option value="sem1">Semester 1</option>
@@ -1315,9 +1473,7 @@ const Studentdetails = () => {
 
         {/* ================= Term / Sem Dropdown ================= */}
         <div className="mb-5">
-          <label className="text-sm font-medium block mb-1">
-            Term / Sem
-          </label>
+          <label className="text-sm font-medium block mb-1">Term / Sem</label>
 
           <select
             className="w-full border rounded p-2 bg-white"
@@ -1347,7 +1503,9 @@ const Studentdetails = () => {
 
             <option
               value="Semester"
-              disabled={!editMode && usedAcademicsForSemester.includes("Semester")}
+              disabled={
+                !editMode && usedAcademicsForSemester.includes("Semester")
+              }
             >
               Semester
             </option>
@@ -1359,9 +1517,6 @@ const Studentdetails = () => {
               All Term / Semester records are already added for this semester.
             </p>
           )}
-
-
-
         </div>
 
         {/* ================= Marks Section (UNCHANGED) ================= */}
@@ -1375,15 +1530,12 @@ const Studentdetails = () => {
           ) : (
             subjects.map((sub, index) => (
               <div key={sub.subjectCode} className=" mb-4">
-
                 <div className="flex gap-3 items-center mb-2">
                   <div className="w-1/10 text-sm font-medium">
                     {sub.subjectCode}
                   </div>
 
-                  <div className="w-1/8 text-sm">
-                    {sub.subjectName}
-                  </div>
+                  <div className="w-1/8 text-sm">{sub.subjectName}</div>
 
                   <div className="w-1/4">
                     <input
@@ -1441,16 +1593,11 @@ const Studentdetails = () => {
                 </div>
 
                 {/* Revaluation Upload */}
-
-
               </div>
-
             ))
           )}
         </div>
-        {formError && (
-          <p className="text-red-500 text-sm mb-3">{formError}</p>
-        )}
+        {formError && <p className="text-red-500 text-sm mb-3">{formError}</p>}
 
         <div className="mt-4 text-sm font-medium">
           Total: {totalMarks} <br />
@@ -1462,18 +1609,17 @@ const Studentdetails = () => {
           <button
             className="px-4 py-2 border rounded"
             onClick={() => {
-              setTermModal(false);   // close modal
-              setEditMode(false);    // exit edit mode
-              setAcademic("");       // reset academic
-              setMarks([]);          // clear marks
-              setSubjects([]);       // clear subjects
+              setTermModal(false); // close modal
+              setEditMode(false); // exit edit mode
+              setAcademic(""); // reset academic
+              setMarks([]); // clear marks
+              setSubjects([]); // clear subjects
               setFormError("");
-              setSem("sem1");        // clear validation error
+              setSem("sem1"); // clear validation error
             }}
           >
             Cancel
           </button>
-
 
           <button
             type="button"
@@ -1488,13 +1634,12 @@ const Studentdetails = () => {
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 {editMode ? "Updating..." : "Saving..."}
               </>
+            ) : editMode ? (
+              "Update"
             ) : (
-              editMode ? "Update" : "Save"
+              "Save"
             )}
           </button>
-
-
-
         </div>
       </Modal>
       <Modal
@@ -1505,7 +1650,7 @@ const Studentdetails = () => {
           content: {
             width: "350px",
             margin: "auto",
-            height: 'max-content',
+            height: "max-content",
             borderRadius: "10px",
             padding: "20px",
             textAlign: "center",
@@ -1538,8 +1683,6 @@ const Studentdetails = () => {
           </button>
         </div>
       </Modal>
-
-
     </>
   );
 };

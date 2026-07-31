@@ -316,10 +316,8 @@ export const getEnquiry = (limit, offset, enroll) => {
   );
 };
 export const getLittleStepsEnquiry = (limit, page) => {
-  return apiService.get(
-    `/littlestep-enquiry?limit=${limit}&page=${page}`
-  );
-};;
+  return enquiryapi.get(`/littlestep-enquiry?limit=${limit}&page=${page}`);
+};
 
 //application
 
@@ -481,9 +479,7 @@ export const getDashboardSemesterToppers = (semester) => {
   });
 };
 export const createAlumni = (payload) => {
-  return apiService.post("/alumni", payload, {
-    
-  });
+  return apiService.post("/alumni", payload, {});
 };
 
 export const getAlumniList = () => {
@@ -529,10 +525,17 @@ export const updateStudentWork = (id, formData) => {
 // 🔹 Delete Student Work
 export const deleteStudentWork = (id) => {
   return apiService.delete(`/alumni/${id}`);
-}
+};
 export const deleteWebsiteEvent = (id) => {
   return apiService.delete(`/eventWebsite/${id}`);
 };
 export const updateWebsiteEvent = (id, payload) => {
   return apiService.put(`/eventWebsite/${id}`, payload);
+};
+
+export const getFeeBalance = (userId) => {
+  return apiService.get(`/feeBalance/user/${userId}`);
+};
+export const updateFeeBalance = (feeBalanceId, payload) => {
+  return apiService.put(`/feeBalance/${feeBalanceId}`, payload);
 };
