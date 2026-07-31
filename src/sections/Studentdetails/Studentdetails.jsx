@@ -1178,12 +1178,16 @@ const Studentdetails = () => {
                         <div className="text-center">
                           {editingFeeId === item._id ? (
                             <input
-                              type="number"
-                              value={editedFee.semFee}
+                              type="text"
+                              inputMode="numeric"
+                              value={
+                                editedFee.semFee === 0 ? "" : editedFee.semFee
+                              }
                               onChange={(e) =>
                                 handleChange("semFee", e.target.value)
                               }
-                              className="w-20 border rounded px-2 py-1 text-center"
+                              onFocus={(e) => e.target.select()}
+                              className="w-20 border rounded px-2 py-1 text-center outline-none focus:border-[#144196]"
                             />
                           ) : (
                             `₹${item.semFee}`
@@ -1192,12 +1196,18 @@ const Studentdetails = () => {
                         <div className="text-center">
                           {editingFeeId === item._id ? (
                             <input
-                              type="number"
-                              value={editedFee.paidAmount}
+                              type="text"
+                              inputMode="numeric"
+                              value={
+                                editedFee.paidAmount === 0
+                                  ? ""
+                                  : editedFee.paidAmount
+                              }
                               onChange={(e) =>
                                 handleChange("paidAmount", e.target.value)
                               }
-                              className="w-20 border rounded px-2 py-1 text-center"
+                              onFocus={(e) => e.target.select()}
+                              className="w-20 border rounded px-2 py-1 text-center outline-none focus:border-[#144196]"
                             />
                           ) : (
                             `₹${item.paidAmount}`
