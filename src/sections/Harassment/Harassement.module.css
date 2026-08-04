@@ -1,0 +1,211 @@
+.container {
+  padding: 25px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.heading {
+  font-size: 30px;
+  font-weight: 600;
+  color: #123d84;
+  margin-bottom: 25px;
+}
+
+/* ================= TABLE ================= */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table thead tr {
+  background: #123d84;
+}
+
+.table th {
+  color: #fff;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.table td {
+  padding: 16px;
+  font-size: 15px;
+  color: #333;
+  border-bottom: 1px solid #ececec;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: 0.3s;
+}
+
+.table tbody tr:hover {
+  background: #f5f8ff;
+}
+
+/* ================= COLUMN WIDTHS ================= */
+
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 120px;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 180px;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 250px;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  width: 400px;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 180px;
+}
+
+/* ================= MESSAGE ================= */
+
+.message {
+  max-width: 360px;
+  margin: auto;
+  text-align: left;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  line-height: 1.5;
+}
+
+/* ================= READ BUTTON ================= */
+
+.readBtn {
+  border: none;
+  outline: none;
+  background: linear-gradient(to bottom, #144196, #061530);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.readBtn:hover {
+  opacity: 0.9;
+}
+
+/* ================= READ STATUS ================= */
+
+.readStatus {
+  display: inline-block;
+  padding: 7px 16px;
+  border-radius: 20px;
+  background: #27ae60;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ================= NO DATA ================= */
+
+.noData {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #777;
+}
+
+/* ================= PAGINATION ================= */
+
+.paginationWrapper {
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.showing {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+  .container {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 1200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .heading {
+    font-size: 24px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .paginationWrapper {
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+  }
+
+  .showing {
+    text-align: center;
+  }
+
+  .readBtn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .readStatus {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heading {
+    font-size: 20px;
+  }
+
+  .message {
+    max-width: 220px;
+    -webkit-line-clamp: 3;
+  }
+
+  .showing {
+    font-size: 13px;
+  }
+}

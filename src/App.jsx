@@ -25,6 +25,8 @@ import AlumniImages from './sections/subAdmin/aluminiImage/AlunimiImage';
 import StudentWork from "./sections/subAdmin/studentWork/StudentWork";
 import AddEvent from "./sections/subAdmin/addEvent/AddEvent";
 import LittleStepsEnquiry from "./sections/Enquiry/littleSteps/LittleEnquiry"
+import Complaint from './sections/Complaint/Complaint';
+import Harassement from './sections/Harassment/Harassement';
 
 
 function App() {
@@ -77,21 +79,27 @@ function App() {
             <Route index element={<SemesterExam />} />
           </Route>
 
+          <Route path="/complaint" element={<Header />}>
+            <Route index element={<Complaint/>} />
+          </Route>
+
+          <Route path="/harassment" element={<Header />}>
+            <Route index element={<Harassement/>} />
+          </Route>
+
           <Route path="/events" element={<Header />}>
             <Route index element={<Eventlist />} />
           </Route>
-        <Route path="/enquiry" element={<Header />}>
+          <Route path="/enquiry" element={<Header />}>
+            {/* default → /enquiry */}
+            <Route index element={<Enquiry />} />
 
-  {/* default → /enquiry */}
-  <Route index element={<Enquiry />} />
+            {/* ✅ ALO School */}
+            <Route path="aloschool" element={<Enquiry />} />
 
-  {/* ✅ ALO School */}
-  <Route path="aloschool" element={<Enquiry />} />
-
-  {/* ✅ ALO LittleSteps */}
-  <Route path="littlesteps" element={<LittleStepsEnquiry />} />
-
-</Route>
+            {/* ✅ ALO LittleSteps */}
+            <Route path="littlesteps" element={<LittleStepsEnquiry />} />
+          </Route>
           <Route path="/application" element={<Header />}>
             <Route index element={<Application />} />
             <Route path="details/:id" element={<Details />} />

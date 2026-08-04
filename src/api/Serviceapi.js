@@ -539,3 +539,23 @@ export const getFeeBalance = (userId) => {
 export const updateFeeBalance = (feeBalanceId, payload) => {
   return apiService.put(`/feeBalance/${feeBalanceId}`, payload);
 };
+
+export const getAllComplaints = (page = 1, limit = 10) => {
+  return apiService.get(`/complaint/get-all?page=${page}&limit=${limit}`);
+};
+
+export const updateComplaintStatus = (id, status) => {
+  return apiService.put(`/complaint/update-status/${id}`, {
+    status,
+  });
+};
+
+
+
+export const getAllHarassment = (page = 1, limit = 10) => {
+  return apiService.get(`/harassment/get-all?page=${page}&limit=${limit}`);
+};
+
+export const markHarassmentAsRead = (id) => {
+  return apiService.put(`/harassment/read/${id}`);
+};

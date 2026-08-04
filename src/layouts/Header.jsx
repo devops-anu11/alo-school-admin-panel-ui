@@ -13,6 +13,10 @@ import { RiLogoutCircleLine } from "react-icons/ri";
 import { FaBullseye, FaPlus } from "react-icons/fa6";
 import { IoMenu } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
+import { FaExclamationCircle } from "react-icons/fa";
+import { FaRegCommentDots } from "react-icons/fa";
+import { MdReportProblem } from "react-icons/md";
+import { MdOutlineReportProblem } from "react-icons/md";
 import { GoBell } from "react-icons/go";
 import user_image from '../assets/user.png'
 import { IoMdPerson } from "react-icons/io";
@@ -197,7 +201,9 @@ const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
           <div className={styles.navbar_content}>
             <div>
               <div className={styles.logo}>
-               <Link to={userRole === "admin" ? "/dashboard" : "/alumniimages"}>
+                <Link
+                  to={userRole === "admin" ? "/dashboard" : "/alumniimages"}
+                >
                   <img
                     src={logo}
                     alt="logo"
@@ -316,6 +322,48 @@ const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
                         Academic
                       </button>
                     </div>
+                    <div className={styles.settings}>
+                      <button
+                        className={`${styles.settings_button} ${
+                          location.pathname === "/complaint"
+                            ? styles.navactive
+                            : ""
+                        }`}
+                        onClick={() => navigate("/complaint")}
+                      >
+                        {location.pathname === "/complaint" ? (
+                          <FaExclamationCircle
+                            className={styles.outline_settings_icon}
+                          />
+                        ) : (
+                          <FaRegCommentDots
+                            className={styles.filled_settings_icon}
+                          />
+                        )}
+                        Complaint
+                      </button>
+                    </div>
+                    <div className={styles.settings}>
+                      <button
+                        className={`${styles.settings_button} ${
+                          location.pathname === "/harassment"
+                            ? styles.navactive
+                            : ""
+                        }`}
+                        onClick={() => navigate("/harassment")}
+                      >
+                        {location.pathname === "/harassment" ? (
+                          <MdReportProblem
+                            className={styles.outline_settings_icon}
+                          />
+                        ) : (
+                          <MdOutlineReportProblem
+                            className={styles.filled_settings_icon}
+                          />
+                        )}
+                        Harassment
+                      </button>
+                    </div>
                     <div className={styles.events}>
                       <button
                         className={`${styles.events_button} ${location.pathname == "/events" ? styles.navactive : ""}`}
@@ -333,48 +381,68 @@ const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
                         Events
                       </button>
                     </div>
-            <div className={styles.settings}>
-  <button
-  className={styles.settings_button}
-    onClick={() => setIsEnquiryOpen(!isEnquiryOpen)}
-    style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
-  >
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      {location.pathname.includes("/enquiry") ? (
-        <FaQuestionCircle className={styles.outline_settings_icon} />
-      ) : (
-        <FaRegQuestionCircle className={styles.filled_settings_icon} />
-      )}
-      Enquiry
-    </div>
+                    <div className={styles.settings}>
+                      <button
+                        className={styles.settings_button}
+                        onClick={() => setIsEnquiryOpen(!isEnquiryOpen)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          {location.pathname.includes("/enquiry") ? (
+                            <FaQuestionCircle
+                              className={styles.outline_settings_icon}
+                            />
+                          ) : (
+                            <FaRegQuestionCircle
+                              className={styles.filled_settings_icon}
+                            />
+                          )}
+                          Enquiry
+                        </div>
 
-    {isEnquiryOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-  </button>
+                        {isEnquiryOpen ? (
+                          <FaChevronUp size={12} />
+                        ) : (
+                          <FaChevronDown size={12} />
+                        )}
+                      </button>
 
-  {isEnquiryOpen && (
-    <div className="ml-8 mt-2 flex flex-col gap-2">
-      
-      <button
-        className={`${styles.settings_button} text-sm ${
-          location.pathname === "/enquiry/aloschool" ? styles.navactive : ""
-        }`}
-        onClick={() => navigate("/enquiry/aloschool")}
-      >
-        ALO School
-      </button>
+                      {isEnquiryOpen && (
+                        <div className="ml-8 mt-2 flex flex-col gap-2">
+                          <button
+                            className={`${styles.settings_button} text-sm ${
+                              location.pathname === "/enquiry/aloschool"
+                                ? styles.navactive
+                                : ""
+                            }`}
+                            onClick={() => navigate("/enquiry/aloschool")}
+                          >
+                            ALO School
+                          </button>
 
-      <button
-        className={`${styles.settings_button} text-sm ${
-          location.pathname === "/enquiry/littlesteps" ? styles.navactive : ""
-        }`}
-        onClick={() => navigate("/enquiry/littlesteps")}
-      >
-        ALO LittleSteps
-      </button>
-
-    </div>
-  )}
-</div>
+                          <button
+                            className={`${styles.settings_button} text-sm ${
+                              location.pathname === "/enquiry/littlesteps"
+                                ? styles.navactive
+                                : ""
+                            }`}
+                            onClick={() => navigate("/enquiry/littlesteps")}
+                          >
+                            ALO LittleSteps
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <div className={styles.settings}>
                       <button
                         className={`${styles.settings_button} ${location.pathname == "/application" ? styles.navactive : ""}`}
@@ -390,6 +458,7 @@ const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
                         Application
                       </button>
                     </div>
+
                     <div className={styles.add_student}>
                       <button
                         className={styles.add_student_button}
