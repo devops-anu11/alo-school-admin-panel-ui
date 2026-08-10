@@ -10,7 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { getBatchbyid, getBatchName, getLeaveRequest, getLeaveRequestById, updateLeaveRequest } from '../../api/Serviceapi';
+import { getCourseBatch, getLeaveRequest, getLeaveRequestById, updateLeaveRequest } from '../../api/Serviceapi';
 import Pagination from '@mui/material/Pagination';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Modal from 'react-modal';
@@ -35,7 +35,7 @@ const theme = createTheme({
           border: '1px solid #e5e7eb',
           color: '#1f2937', // text-gray-800
           '&.Mui-selected': {
-            background: 'linear-gradient(to bottom, #144196, #061530)',
+            background: 'linear-gradient(to bottom, #144196, #0b2456)',
             color: '#fff',
             border: 'none',
           },
@@ -67,8 +67,8 @@ const LeaveRequest = () => {
   const [loading, setLoading] = useState(false)
   const adminId = localStorage.getItem('userId')
   const [reason, setReason] = useState('')
-  const [course, setCourse] = useState([])
-  const [batch, setBatch] = useState([])
+  const [batches, setBatches] = useState([])
+  const [courseOptions, setCourseOptions] = useState([])
   const [batchId, setBatchId] = useState('')
   const [courseId, setCourseId] = useState('')
   const [leaveType, setLeaveType] = useState('')
@@ -109,10 +109,8 @@ const LeaveRequest = () => {
   //   if (dates) setDate(dates);
   // }, [dates]);
 
-  useEffect(() => {
-    if (courseIds) setCourseId(courseIds);
-  }, [courseIds]);
-
+  // courseId is applied once the selected batch's course options are known
+  // (see the batchId/batches effect below) — it depends on batchId now.
   useEffect(() => {
     if (batchIds) setBatchId(batchIds);
   }, [batchIds]);
@@ -177,58 +175,59 @@ const LeaveRequest = () => {
 
   }
 
-  const handleChange = (event) => {
+  const handleBatchChange = (event) => {
+    // courseOptions are re-derived reactively (see the batchId/batches effect below)
     setBatchId(event.target.value);
+    setCourseId("");
+    setoffset(1);
   };
 
   const handlecourseChange = (event) => {
-    const selectedId = event.target.value;
-    setCourseId(selectedId);
+    setCourseId(event.target.value);
     setoffset(1);
-    setBatchId("");
-    getBatchnameid(selectedId);
   };
 
   useEffect(() => {
-    if (courseIds) {
-      setCourseId(courseIds);
-      getBatchnameid(courseIds);
-    }
-  }, [courseIds]);
-
-  useEffect(() => {
-    getBatchname()
+    fetchBatches()
   }, []);
 
-  let getBatchnameid = async (id) => {
+  // Batch drives the filter now — a batch's own `courses` array supplies
+  // the course dropdown's options, so no separate per-batch fetch is needed.
+  let fetchBatches = async () => {
     try {
-      const res = await getBatchbyid(id);
-      const course = res?.data?.data?.find(c => c._id === id);
-      const batches = Array.isArray(course?.batches) ? course.batches : [];
-      setBatch(batches);
-      if (paramBatch && batches.some(b => b._id === paramBatch)) {
-        setBatchId(paramBatch);
+      const res = await getCourseBatch();
+      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setBatches(list);
+
+      // Default the filter to the primary batch on first load only — don't
+      // override a batch selection coming from the URL.
+      if (!batchId && !batchIds) {
+        const primary = list.find((b) => b.isPrimary);
+        if (primary) setBatchId(primary._id);
       }
     } catch (error) {
       console.error("error", error.response?.data || error);
     }
   };
 
-
-
-  let getBatchname = async () => {
-    try {
-      const res = await getBatchName();
-
-
-      console.log(res?.data?.data, 'dasdasdada')
-      setCourse(Array.isArray(res?.data?.data) ? res.data.data : []);
-
-
-    } catch (error) {
-      console.error("error", error.response?.data || error);
+  // Re-derive course options whenever batchId or the batch list changes
+  // (covers the batchId arriving from the URL before batches finish
+  // loading), apply courseId from the URL if it belongs to this batch, and
+  // drop courseId if it no longer belongs to the selected batch.
+  useEffect(() => {
+    if (!batchId) {
+      setCourseOptions([]);
+      return;
     }
-  };
+    const selectedBatch = batches.find((b) => b._id === batchId);
+    const options = selectedBatch?.courses || [];
+    setCourseOptions(options);
+    if (courseIds && options.some((c) => c.courseId === courseIds)) {
+      setCourseId(courseIds);
+    } else if (courseId && !options.some((c) => c.courseId === courseId)) {
+      setCourseId('');
+    }
+  }, [batchId, batches]);
 
   const [reasonerror, setReasonerror] = useState('')
 
@@ -308,6 +307,7 @@ const LeaveRequest = () => {
     setStatus('');
     setCourseId('');
     setBatchId('');
+    setCourseOptions([]);
     setLeaveType('');
     setSearchText('');
     setDate('')
@@ -347,10 +347,10 @@ const [leaveReson,setLeaveReason]= useState('')
                   variant="outlined"
                   size="small"
                   sx={{
-                    minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    minWidth: 150,
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb',
                   }}
                 >
                   <Select
@@ -363,10 +363,11 @@ const [leaveReson,setLeaveReason]= useState('')
                         border: 'none',
                       },
                       fontSize: '14px',
+                      fontFamily: 'inherit',
+                      color: '#374151',
                       padding: '4px 10px',
-                      height: '36px',
+                      height: '42px',
                       border: 'none',
-
                     }}
                   >
                     <MenuItem value="">All</MenuItem>
@@ -387,10 +388,49 @@ const [leaveReson,setLeaveReason]= useState('')
                   variant="outlined"
                   size="small"
                   sx={{
-                    minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    minWidth: 150,
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb',
+                  }}
+                >
+
+                  <Select
+                    value={batchId}
+                    onChange={handleBatchChange}
+                    displayEmpty
+                    IconComponent={KeyboardArrowDownIcon}
+                    sx={{
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        border: 'none',
+                      },
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      color: '#374151',
+                      padding: '4px 10px',
+                      height: '42px',
+                      border: 'none'
+                    }}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    {batches.map((item, index) => (
+                      <MenuItem value={item._id} key={index}>
+                        {item.batchName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+              <div className={styles.selectWrapper}>
+
+                <FormControl
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    minWidth: 150,
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb',
                   }}
                 >
                   <Select
@@ -403,59 +443,22 @@ const [leaveReson,setLeaveReason]= useState('')
                         border: 'none',
                       },
                       fontSize: '14px',
+                      fontFamily: 'inherit',
+                      color: '#374151',
                       padding: '4px 10px',
-                      height: '36px',
+                      height: '42px',
                       border: 'none'
                     }}
+                    disabled={!batchId}
                   >
                     <MenuItem value="">All</MenuItem>
-                    {course.map((item, index) => {
+                    {courseOptions.map((item, index) => {
                       return (
-                        <MenuItem value={item._id} key={index}>{item.courseName}</MenuItem>
+                        <MenuItem value={item.courseId} key={index}>{item.courseName}</MenuItem>
                       )
                     })}
                   </Select>
 
-                </FormControl>
-              </div>
-              <div className={styles.selectWrapper}>
-
-                <FormControl
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
-                  }}
-                >
-
-                  <Select
-                    value={batchId}
-                    onChange={handleChange}
-                    displayEmpty
-                    IconComponent={KeyboardArrowDownIcon}
-                    sx={{
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        border: 'none',
-                      },
-                      fontSize: '14px',
-                      padding: '4px 10px',
-                      height: '36px',
-                      border: 'none'
-                    }}
-                    disabled={!courseId}
-                  // style={{ cursor: courseId ? 'pointer' : 'not-allowed' }}
-                  >
-                    <MenuItem value="">All</MenuItem>
-                    {Array.isArray(batch) &&
-                      batch.map((item, index) => (
-                        <MenuItem value={item._id} key={index}>
-                          {item.batchName}
-                        </MenuItem>
-                      ))}
-                  </Select>
                 </FormControl>
               </div>
               <div className={styles.dropdown}>
@@ -466,10 +469,10 @@ const [leaveReson,setLeaveReason]= useState('')
                       variant="outlined"
                       size="small"
                       sx={{
-                        minWidth: 120,
-                        backgroundColor: '#F6F6F6', // match the image background
-                        borderRadius: '6px',
-                        border: 'none'
+                        minWidth: 150,
+                        backgroundColor: '#fff',
+                        borderRadius: '10px',
+                        border: '1px solid #e5e7eb',
                       }}
                     >
                       <Select
@@ -482,10 +485,11 @@ const [leaveReson,setLeaveReason]= useState('')
                             border: 'none',
                           },
                           fontSize: '14px',
+                          fontFamily: 'inherit',
+                          color: '#374151',
                           padding: '4px 10px',
-                          height: '36px',
+                          height: '42px',
                           border: 'none',
-
                         }}
                       >
                         <MenuItem value="">All</MenuItem>
@@ -519,21 +523,21 @@ const [leaveReson,setLeaveReason]= useState('')
                         error: Boolean(Error?.DateofBrith),
                         sx: {
                           '& .MuiPickersOutlinedInput-root': {
-                            height: '35px',
+                            height: '42px',
                             outline: 'none',
                             width: '100%',
-                            backgroundColor: ' #f2f2f2',
-                            width: '150px'
+                            backgroundColor: '#fff',
+                            borderRadius: '10px',
                           },
                           '& fieldset': {
-                            border: 'none',
+                            border: '1px solid #e5e7eb',
                           },
                           '&:hover fieldset': {
-                            border: 'none',
+                            border: '1px solid #123d84',
                             outline: 'none'
                           },
                           '& .MuiPickersOutlinedInput-root.Mui-focused .MuiPickersOutlinedInput-notchedOutline': {
-                            border: 'none'
+                            border: '1px solid #123d84'
                           }
                         },
                       },
@@ -541,7 +545,7 @@ const [leaveReson,setLeaveReason]= useState('')
                   />
                 </LocalizationProvider>
               </div>
-              <div style={{ width: '190px' }}>
+              <div className={styles.searchWrapper}>
                 <TextField
                   variant="outlined"
                   size="small"
@@ -551,7 +555,7 @@ const [leaveReson,setLeaveReason]= useState('')
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <BiSearchAlt style={{ fontSize: 18, color: '#555' }} />
+                        <BiSearchAlt style={{ fontSize: 18, color: '#6b7280' }} />
 
                       </InputAdornment>
                     ),
@@ -563,11 +567,13 @@ const [leaveReson,setLeaveReason]= useState('')
                       </InputAdornment>
                     ),
                     style: {
-                      backgroundColor: '#F6F6F6',
-                      borderRadius: '6px',
-                      height: '36px',
+                      backgroundColor: '#fff',
+                      borderRadius: '10px',
+                      height: '42px',
                       fontSize: '14px',
-                      padding: '4px 10px'
+                      padding: '4px 10px',
+                      border: '1px solid #e5e7eb',
+                      fontFamily: 'inherit',
                     },
                     notched: false
                   }}
@@ -575,7 +581,7 @@ const [leaveReson,setLeaveReason]= useState('')
                     '& .MuiOutlinedInput-notchedOutline': {
                       border: 'none',
                     },
-                    minWidth: 120,
+                    width: '100%',
                   }}
                 />
               </div>
@@ -642,7 +648,7 @@ const [leaveReson,setLeaveReason]= useState('')
 </td>
 
                           <td className={styles.green} style={{
-                            color: item.status === 'Approved' && 'green' || item.status === 'Created' && '#144196' || item.status === 'Rejected' && 'red',
+                            color: item.status === 'Approved' && '#12805c' || item.status === 'Created' && '#123d84' || item.status === 'Rejected' && '#d92d20',
                             cursor: item?.status == 'Created' && 'pointer'
                           }} onClick={() => item?.status == 'Created' && handlegetbyClick(item?._id)}>{item?.status == 'Created' ? <div><FontAwesomeIcon
                             icon={faEye}
@@ -669,11 +675,11 @@ const [leaveReson,setLeaveReason]= useState('')
           </div>
         </div>
 
-        <div className='flex justify-between items-end px-2 ms-auto w-[50%]'>
+        <div className='flex flex-wrap justify-between items-center gap-3 w-full mt-4'>
 
           {totalpages > 0 &&
             <ThemeProvider theme={theme}>
-              <div style={{ marginTop: '20px' }}>
+              <div>
                 <Pagination
 
                   count={totalpages}
@@ -688,7 +694,7 @@ const [leaveReson,setLeaveReason]= useState('')
           }
           {totalpages > 0 &&
             <div className="flex justify-between items-center">
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-500 text-sm">
                 Showing {startIndex} – {endIndex} of {totallist} students
               </p>
             </div>
@@ -708,7 +714,7 @@ const [leaveReson,setLeaveReason]= useState('')
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgb(21 21 21 / 81%)', // gray overlay
+            backgroundColor: 'rgba(21, 21, 21, 0.6)',
             zIndex: 1000,
           },
           content: {
@@ -716,13 +722,15 @@ const [leaveReson,setLeaveReason]= useState('')
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            padding: '1rem',
+            padding: 0,
             backgroundColor: '#fff',
-            borderRadius: '8px',
+            borderRadius: '12px',
             width: 'max-content',
-            height: '600px',
-            overflow: 'auto',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            height: 'max-content',
+            maxHeight: '90vh',
+            overflow: 'hidden',
+            boxShadow: '0 12px 32px rgba(15, 27, 51, 0.25)',
+            border: 'none',
             zIndex: 1001,
           },
         }}
@@ -822,7 +830,7 @@ const [leaveReson,setLeaveReason]= useState('')
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgb(21 21 21 / 81%)', // gray overlay
+            backgroundColor: 'rgba(21, 21, 21, 0.6)',
             zIndex: 1000,
           },
           content: {
@@ -830,19 +838,20 @@ const [leaveReson,setLeaveReason]= useState('')
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            padding: '1rem',
+            padding: '25px',
             backgroundColor: '#fff',
-            borderRadius: '8px',
-            width: '500px',
+            borderRadius: '12px',
+            width: 'min(500px, 92vw)',
             height: 'max-content',
             overflow: 'auto',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 12px 32px rgba(15, 27, 51, 0.25)',
+            border: 'none',
             zIndex: 1001,
           },
         }}
       >
-        <p className='font-[600] text-[20px] text-center'>Reason</p>
-        <p className='my-[30px] text-center' style={{textTransform:'capitalize'}}>{leaveReson}</p>
+        <p className='font-[600] text-[18px] text-center' style={{ color: '#123d84' }}>Reason</p>
+        <p className='my-[24px] text-center text-[#374151]' style={{textTransform:'capitalize'}}>{leaveReson}</p>
       </Modal>
     </>
   )

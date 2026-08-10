@@ -51,20 +51,21 @@ const Subjects = () => {
 
     return (
         <>
-            <div style={{ paddingBottom: '100px' }}>
-                <div className='p-4  Outlet' >
-                    <div className="flex justify-between items-center lg:flex-row md:flex-row flex-col">
-                        <h4 className='text-xl font-normal'>Subjects</h4>
-                        <div className=' flex items-center md:justify-around flex-wrap  p-2 gap-6 '>
-                            <div style={{ width: '130px', }}>
+            <div className="pb-[100px] bg-[#f6f7fb] min-h-full">
+                <div className='p-4 sm:p-5 md:p-6 Outlet max-w-6xl mx-auto' >
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center items-start gap-3 sm:gap-4 mb-2">
+                        <h4 className='text-xl sm:text-2xl font-semibold text-[#123d84]'>Subjects</h4>
+                        <div className='flex items-center flex-wrap w-full sm:w-auto justify-between sm:justify-end gap-3 sm:gap-4'>
+                            <div className="w-full sm:w-[150px]">
                                 <FormControl
                                     variant="outlined"
                                     size="small"
+                                    fullWidth
                                     sx={{
                                         minWidth: 120,
-                                        backgroundColor: '#F6F6F6', // match the image background
-                                        borderRadius: '6px',
-                                        border: 'none'
+                                        backgroundColor: '#fff',
+                                        borderRadius: '10px',
+                                        border: '1px solid #e5e7eb'
                                     }}
                                 >
                                     <Select
@@ -78,8 +79,9 @@ const Subjects = () => {
                                             },
                                             fontSize: '14px',
                                             padding: '4px 10px',
-                                            height: '36px',
-                                            border: 'none'
+                                            height: '40px',
+                                            border: 'none',
+                                            color: '#374151'
                                         }}
                                     >
 
@@ -89,14 +91,14 @@ const Subjects = () => {
                                     </Select>
                                 </FormControl>
                             </div>
-                            <div >
+                            <div className="w-full sm:w-auto">
                                 <button
                                     onClick={() => !hasSubjects && setIsOpen(true)}
                                     disabled={hasSubjects}
-                                    className={`px-[20px] py-2 rounded-md mr-2 flex items-center justify-between
+                                    className={`px-[22px] py-[11px] rounded-[10px] flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap transition-colors
     ${hasSubjects
                                             ? "bg-gray-400 cursor-not-allowed text-white"
-                                            : "text-white bg-gradient-to-b from-[#144196] to-[#061530]"}
+                                            : "text-white bg-gradient-to-b from-[#144196] to-[#0b2456]"}
   `}
                                 >
                                     <PlusIcon className='w-4 h-4' />
@@ -116,53 +118,48 @@ const Subjects = () => {
                         subjects.length > 0 &&
                         subjects.some(user => user.subjects?.length > 0) ? (
 
-                        <div className='overflow-x-auto w-200 m-auto'>
-                            <table className="w-full rounded-md text-sm mt-10">
-                                <thead className="bg-white">
-                                    <tr className="text-center">
-                                        <th colSpan={2} className='flex gap-4 items-center py-6 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent text-[24px] font-semibold'>
-                                            {coursename} - {batchname}
-                                            <HiOutlinePencilAlt
-                                                className='w-4 h-4 text-blue-700 cursor-pointer'
-                                                onClick={() => {
-                                                    setEditData(subjects[0]); // assuming one record per sem/course/batch
-                                                    setIsOpen(true);
-                                                }}
-                                            />
-
-
-
-
-                                        </th>
-
-                                    </tr>
-                                    <tr className="bg-[#F8F8F8] text-left">
-                                        <th className="px-4 py-2 font-bold bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent">
-                                            Subject Code
-                                        </th>
-                                        <th className="px-4 py-2 font-bold bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent">
-                                            Subjects
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white text-gray-800">
-                                    {subjects.flatMap((user) =>
-                                        user.subjects.map((item) => (
-                                            <tr key={`${user._id}-${item.subjectCode}`} className="border-b border-[#0000001A] hover:bg-gray-50">
-                                                <td className="px-4 py-3">{item.subjectCode}</td>
-                                                <td className="px-4 py-3 capitalize">{item.subjectName}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                        <div className='w-full max-w-4xl mx-auto mt-6 sm:mt-8 rounded-xl border border-[#eef0f5] bg-white overflow-hidden'>
+                            <div className='flex gap-3 items-center justify-center py-5 sm:py-6 px-4 border-b border-[#f0f1f5] bg-gradient-to-b from-[#144196] to-[#0b2456] bg-clip-text text-transparent text-lg sm:text-[22px] md:text-[24px] font-semibold text-center'>
+                                <span className="truncate">{coursename} - {batchname}</span>
+                                <HiOutlinePencilAlt
+                                    className='w-4 h-4 flex-shrink-0 text-[#123d84] cursor-pointer'
+                                    onClick={() => {
+                                        setEditData(subjects[0]); // assuming one record per sem/course/batch
+                                        setIsOpen(true);
+                                    }}
+                                />
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm min-w-[420px]">
+                                    <thead>
+                                        <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456] text-left">
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 font-semibold text-white text-xs uppercase tracking-wide whitespace-nowrap">
+                                                Subject Code
+                                            </th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 font-semibold text-white text-xs uppercase tracking-wide whitespace-nowrap">
+                                                Subjects
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white text-[#374151]">
+                                        {subjects.flatMap((user) =>
+                                            user.subjects.map((item) => (
+                                                <tr key={`${user._id}-${item.subjectCode}`} className="border-b border-[#f0f1f5] last:border-b-0 hover:bg-[#f5f8ff] transition-colors">
+                                                    <td className="px-4 sm:px-6 py-3 sm:py-4">{item.subjectCode}</td>
+                                                    <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize">{item.subjectName}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                     ) : (
-                        <div className='flex flex-col justify-center items-center h-[300px] text-gray-500 font-semibold'>
-                            <img src={nodata} alt="No subjects" width="180" height="180" className="mb-4 opacity-80" />
-                            <p className="text-lg">No subjects added yet</p>
-                            <p className="text-sm text-gray-400">Click “Add Subject” to get started</p>
+                        <div className='flex flex-col justify-center items-center h-[300px] text-[#6b7280] font-medium'>
+                            <img src={nodata} alt="No subjects" width="180" height="180" className="mb-4 opacity-80 max-w-[140px] sm:max-w-[180px] h-auto" />
+                            <p className="text-base sm:text-lg text-[#374151] font-semibold">No subjects added yet</p>
+                            <p className="text-sm text-[#9ca3af] mt-1">Click "Add Subject" to get started</p>
                         </div>
                     )}
 
@@ -185,7 +182,7 @@ const Subjects = () => {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: 'rgb(21 21 21 / 81%)', // gray overlay
+                        backgroundColor: 'rgba(21,21,21,.6)', // gray overlay
                         zIndex: 1000,
                     },
                     content: {
@@ -193,13 +190,15 @@ const Subjects = () => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        padding: '2rem',
+                        padding: '1.5rem 2rem 2rem',
                         backgroundColor: '#fff',
-                        borderRadius: '8px',
-                        width: '800px',
+                        borderRadius: '12px',
+                        width: '90%',
+                        maxWidth: '800px',
+                        maxHeight: '90vh',
                         height: 'max-content',
                         overflow: 'auto',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        boxShadow: '0 10px 30px rgba(18, 61, 132, 0.15)',
                         zIndex: 1001,
                     },
                 }}

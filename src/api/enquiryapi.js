@@ -29,7 +29,7 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem('authToken'); 
     
       
-      window.location.href = '/login'; 
+      window.location.href = '/#/login';
 
       return Promise.reject(error);
     }

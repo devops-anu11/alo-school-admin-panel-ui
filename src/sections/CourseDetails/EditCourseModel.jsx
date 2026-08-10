@@ -166,18 +166,38 @@ const EditCourseModal = ({ visible, onCancel, onUpdate, formData,id }) => {
   }
   return (
     <Modal
+      className={styles.editModal}
+      classNames={{
+        mask: styles.modalMask,
+        content: styles.modalContent,
+        header: styles.modalHeader,
+        body: styles.modalBody,
+      }}
       title={<h2 className={styles.modalTitle}>Edit Course</h2>}
       open={visible}
       onCancel={onCancel}
-      footer={null}
+      footer={
+        <div className={styles.footer}>
+          <button
+            type="button"
+            className={styles.cancelBtn}
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button type="submit" form="edit-course-form" className={styles.submitBtn}>
+            {loading ? "Updating..." : "Update"}
+          </button>
+        </div>
+      }
       centered
-      width={800}
+      width={520}
       transitionName=""
       maskTransitionName=""
       modalRender={(modal) => <div className="slide-up-wrapper">{modal}</div>}
     >
       <div className={styles.form}>
-        <form onSubmit={handleCreate}>
+        <form id="edit-course-form" onSubmit={handleCreate}>
           <div className={styles.formWrapper}>
             {/* Row 1 */}
             <div className={styles.rowOneGrid}>
@@ -264,14 +284,6 @@ const EditCourseModal = ({ visible, onCancel, onUpdate, formData,id }) => {
                   <p>{sem2feeerror}</p>
                 </div>
               </div>
-            </div>
-
-            <div
-              style={{ textAlign: "left", marginTop: "20px", fontSize: "20px" }}
-            >
-              <button type="submit" className={styles.submitBtn}>
-               {loading ? "Updating..." : "Update"} 
-              </button>
             </div>
           </div>
         </form>

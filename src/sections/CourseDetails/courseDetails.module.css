@@ -1,268 +1,691 @@
 .container {
-  min-height: 100%;
   width: 100%;
-  margin: auto;
+  min-height: 100%;
+  padding: 25px;
+  background: #f6f7fb;
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
   overflow-y: auto;
-  padding: 18px;
 }
+
+/* ================= HEADER ================= */
+
 .header {
-  font-weight: 400;
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
 }
+
+.backBtn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #123d84;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.backBtn:hover {
+  border-color: #123d84;
+  background: #f5f8ff;
+}
+
+.header p {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  color: #123d84;
+}
+
+/* ================= COURSE CARD ================= */
 
 .diplomatable {
-  margin-top: 28px;
-  padding: 5px;
-  background-color: #f2f2f2;
-  border-radius: 10px;
-  padding: 5px;
-  background-color: #f2f2f2;
-  border-radius: 10px;
+  margin-top: 0;
 }
 
-.tablehead {
+.courseCard {
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.courseHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px 0 15px;
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
-  padding: 10px 15px 0 15px;
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f1f5;
 }
 
-.tableheadpara {
-  font-weight: 500;
-  font-size: 22px;
+.courseTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
 }
 
 .tableheadicon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  font-size: 1rem;
-  font-size: 1rem;
-  color: #144196;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  gap: 6px;
+  transition:
+    border-color .2s ease,
+    color .2s ease;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 26px;
+.tableheadicon:hover {
+  border-color: #123d84;
+  color: #123d84;
 }
 
-.table th {
-  width: 7%;
-  font-size: 15px;
-  text-align: center;
-  font-weight: 400;
-  color: #666;
-  padding: 8px;
-  text-align: left;
-  /* font-weight: 400; */
-  color: #666;
-  padding: 8px;
+/* ================= INFO GRID ================= */
+
+.courseInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
 }
 
-.table td {
-  padding: 8px;
-  font-weight: 500;
-  text-align: left;
-  padding: 8px;
-  font-weight: 500;
+.infoCard {
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  padding: 18px;
+  transition:
+    box-shadow .25s ease,
+    border-color .25s ease,
+    transform .25s ease;
 }
-.loadingText{
-    display: grid;
-        grid-template-columns:auto;
-    justify-content: center;
-    width: 100%;
+
+.infoCard:hover {
+  border-color: #d7e3f6;
+  box-shadow: 0 6px 18px rgba(18, 61, 132, 0.08);
+  transform: translateY(-2px);
 }
+
+.infoLabel {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 10px;
+}
+
+.infoValue {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ongoing,
+.complete {
+  transition: opacity .2s ease;
+}
+
+.ongoing:hover,
+.complete:hover {
+  opacity: .85;
+}
+
+.ongoingText {
+  color: #2563eb;
+}
+
+.completedText {
+  color: #12805c;
+}
+
+/* ================= BATCH SECTION ================= */
+
 .diplomacard {
-  margin-top: 28px;
+  margin-top: 22px;
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  padding: 22px;
 }
 
 .cardcreate {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Allow button to move below title */
-  flex-wrap: wrap; /* Allow button to move below title */
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f1f5;
+}
+
+.batchHeading {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
 }
 
 .createbtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 7px 15px 7px 20px;
-  color: white;
-  background: linear-gradient(to bottom, #144196, #061530);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 11px 22px;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
   cursor: pointer;
-  gap:3px;
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease;
 }
 
-.createbtnicon {
-  margin-right: 10px;
+.createbtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(20, 65, 150, .22);
 }
+
+/* ================= BATCH CARDS ================= */
 
 .cards {
-  margin-top: 30px;
+  margin-top: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
 }
 
-
-.popmessage{
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: 600;
+.batchTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
-.popyes{
-    color: white;
-    background: linear-gradient(to bottom, #0b48b0, #061634);
-    width: 70px;
-    padding: 8px 0px;
-    border-radius: 10px;
-    cursor: pointer;
-}
-.popyes:hover ,.createbtn:hover{
-    background: #154682fc;
-}
-.popno:hover {
-  background: #d6d7d7fc;
-  border: none;
-}
-.popno{
-    color: black;
-     width: 70px;
-    padding: 8px 0px;
-    border-radius: 10px;
-    cursor: pointer;
-    border: 1px solid black;
-}
 .divcards {
-  padding: 10px;
-  background-color: #f2f2f2;
-  border-radius: 4px;
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  padding: 20px;
+  transition:
+    box-shadow .25s ease,
+    border-color .25s ease,
+    transform .25s ease;
+}
+
+.divcards:hover {
+  border-color: #d7e3f6;
+  box-shadow: 0 8px 18px rgba(18, 61, 132, .08);
+  transform: translateY(-2px);
 }
 
 .divcardspara1 {
-  font-size: 1.3rem;
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
 }
 
 .datesection {
-  border-bottom: 1px solid grey;
-  margin: 4px 0 10px 0;
-  padding-bottom: 10px;
-  margin: 4px 0 10px 0;
-  padding-bottom: 10px;
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0f1f5;
 }
 
-.datesectionpara1
- {
-  font-size: 15px;
-  font-weight: 400;
+.datesectionpara1 {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin: 0 0 5px;
 }
+
 .datesectionpara2 {
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
 }
 
 .iconsection {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+}
+
+.icondiv {
+  display: flex;
+  gap: 10px;
 }
 
 .iconsectionsvg {
+  width: 32px;
+  height: 32px;
+  display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 0.9rem;
-  color: #144196;
+  border-radius: 8px;
+  color: #123d84;
   cursor: pointer;
+  transition:
+    background .2s ease,
+    color .2s ease;
 }
 
-.tableheadstatus {
-  font-size: 0.8rem;
+.iconsectionsvg:hover {
+  background: #eef2fb;
 }
-.icondiv {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  gap: 20px;
-}
+
 .ongoing {
-  color: green;
-  font-weight: 500;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #fff3e0;
+  color: #f59e0b;
 }
 
 .complete {
-  color: red;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #e7f7ee;
+  color: #12805c;
 }
 
-/* 📱 Mobile Responsive Adjustments */
+/* ================= POPUP ================= */
+
+.popmessage {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.popyes,
+.popno {
+  width: 80px;
+  padding: 9px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition:
+    transform .2s ease,
+    background .2s ease;
+}
+
+.popyes {
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: #fff;
+  border: none;
+}
+
+.popno {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+}
+
+.popyes:hover {
+  transform: scale(1.03);
+}
+
+.popno:hover {
+  border-color: #123d84;
+  color: #123d84;
+}
+
+/* ================= LOADER / EMPTY STATE ================= */
+
+.loadingText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-height: 250px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.studentCount {
+  font-size: 14px;
+  color: #374151;
+  margin: 0 0 14px;
+}
+
+.studentCount strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.arrowIcon {
+  font-size: 18px;
+  color: #123d84;
+  transition:
+    transform .2s ease,
+    color .2s ease;
+}
+
+.arrowIcon:hover {
+  transform: translateX(3px);
+  color: #0b2456;
+}
+
+.paginationWrapper {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f1f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.paginationInfo {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* =================== Large / 4K guard =================== */
+
+@media (min-width: 1600px) {
+  .courseInfoGrid {
+    grid-template-columns: repeat(5, minmax(170px, 1fr));
+  }
+
+  .cards {
+    grid-template-columns: repeat(4, minmax(250px, 1fr));
+  }
+}
+
+/* =================== Laptop =================== */
+
+@media (max-width: 1200px) {
+
+  .courseInfoGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+
+/* =================== Tablet / 1024 =================== */
+
 @media (max-width: 1024px) {
-  .cards {
-    grid-template-columns: 1fr 1fr; /* 2 per row on tablets */
+
+  .courseInfoGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
   }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
 }
 
-@media (max-width: 768px) {
-  .tableheadpara {
-    font-size: 1.3rem;
-  }
-  .cards {
-    grid-template-columns: 1fr; /* 1 per row on mobile */
-  }
-  .table th,
-  .table td {
-    font-size: 0.75rem;
-    padding: 5px;
-  }
-}
 
-@media (max-width: 480px) {
-  .header {
-    font-size: 1rem;
-    text-align: center;
+/* =================== Tablet / 900 =================== */
+
+@media (max-width: 900px) {
+
+  .container {
+    padding: 18px;
   }
-  .tablehead {
+
+  .courseCard,
+  .diplomacard {
+    padding: 20px;
+  }
+
+  .courseHeader {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 16px;
   }
+
+  .courseTitle {
+    font-size: 17px;
+  }
+
+  .courseInfoGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .paginationWrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+}
+
+
+/* =================== Mobile =================== */
+
+@media (max-width: 768px) {
+
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .header p {
+    font-size: 22px;
+  }
+
+  .backBtn {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .courseCard,
+  .diplomacard {
+    padding: 18px;
+  }
+
+  .courseHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .courseTitle {
+    font-size: 16px;
+  }
+
+  .tableheadicon {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .courseInfoGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .infoCard {
+    padding: 16px;
+  }
+
+  .infoValue {
+    font-size: 21px;
+  }
+
+  .batchHeading {
+    font-size: 16px;
+  }
+
+  .cardcreate {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
   .createbtn {
     width: 100%;
     justify-content: center;
   }
-  .table {
-    font-size: 0.7rem;
-    overflow-x: auto;
-    display: block;
+
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
-}
-/* ... existing styles ... */
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 0px; /* Adjust spacing between the button and the heading */
+  .batchTop {
+    align-items: center;
+  }
+
+  .paginationWrapper {
+    flex-direction: column-reverse;
+    align-items: center;
+    text-align: center;
+  }
+
+  .paginationInfo {
+    font-size: 13px;
+  }
+
 }
 
-.backBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #1f2937;
-  font-size: 18px; /* Adjust icon size as needed */
-  padding: 5px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-  margin-top: 5px;
+
+/* =================== Small Mobile =================== */
+
+@media (max-width: 480px) {
+
+  .container {
+    padding: 12px;
+  }
+
+  .header p {
+    font-size: 19px;
+  }
+
+  .courseTitle {
+    font-size: 15px;
+  }
+
+  .batchHeading {
+    font-size: 15px;
+  }
+
+  .courseInfoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .infoCard {
+    padding: 15px;
+  }
+
+  .infoLabel {
+    font-size: 12px;
+  }
+
+  .infoValue {
+    font-size: 19px;
+  }
+
+  .divcards {
+    padding: 16px;
+  }
+
+  .divcardspara1 {
+    font-size: 15px;
+  }
+
+  .studentCount {
+    font-size: 13px;
+  }
+
+  .datesection {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .iconsection {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .icondiv {
+    gap: 10px;
+  }
+
+  .paginationWrapper {
+    margin-top: 18px;
+  }
+
+  .paginationInfo {
+    font-size: 12px;
+    text-align: center;
+  }
+
+}
+
+
+/* =================== Very Small Devices =================== */
+
+@media (max-width: 360px) {
+
+  .header p {
+    font-size: 17px;
+  }
+
+  .courseTitle {
+    font-size: 14px;
+  }
+
+  .infoValue {
+    font-size: 17px;
+  }
+
+  .createbtn {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .batchHeading {
+    font-size: 14px;
+  }
+
 }

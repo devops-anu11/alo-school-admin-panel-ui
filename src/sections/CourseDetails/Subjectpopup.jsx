@@ -109,14 +109,14 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
 
   return (
     <div className="w-full">
-      <h2 className="text-2xl font-semibold mb-6">
+      <h2 className="text-xl sm:text-2xl font-semibold text-[#123d84] mb-5 sm:mb-6 pb-4 border-b border-[#f0f1f5]">
         {isEdit ? "Update Subjects" : "Add Subjects"}
       </h2>
 
-      <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+      <div className="space-y-3 sm:space-y-4 max-h-[300px] sm:max-h-[350px] overflow-y-auto pr-1 sm:pr-2">
         {subjects.map((sub, index) => (
-          <div key={index} className="flex gap-3 items-start">
-            <div className="w-1/3">
+          <div key={index} className="flex flex-col sm:flex-row gap-3 items-start">
+            <div className="w-full sm:w-1/3">
               <input
                 type="text"
                 placeholder="Subject Code"
@@ -124,7 +124,7 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
                 onChange={(e) =>
                   handleChange(index, "subjectCode", e.target.value)
                 }
-                className={`border p-2 rounded w-full ${errors[index]?.subjectCode ? "border-red-500" : ""
+                className={`border border-[#e5e7eb] h-11 px-3 py-2.5 rounded-[10px] w-full text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none transition-colors focus:border-[#123d84] ${errors[index]?.subjectCode ? "border-red-500" : ""
                   }`}
               />
               {errors[index]?.subjectCode && (
@@ -134,7 +134,7 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
               )}
             </div>
 
-            <div className="w-2/3">
+            <div className="w-full sm:w-2/3">
               <input
                 type="text"
                 placeholder="Subject Name"
@@ -142,7 +142,7 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
                 onChange={(e) =>
                   handleChange(index, "subjectName", e.target.value)
                 }
-                className={`border p-2 rounded w-full ${errors[index]?.subjectName ? "border-red-500" : ""
+                className={`border border-[#e5e7eb] h-11 px-3 py-2.5 rounded-[10px] w-full text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none transition-colors focus:border-[#123d84] ${errors[index]?.subjectName ? "border-red-500" : ""
                   }`}
               />
               {errors[index]?.subjectName && (
@@ -155,7 +155,7 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
             {subjects.length > 1 && (
               <TrashIcon
                 onClick={() => removeRow(index)}
-                className="w-5 h-5 text-red-500 cursor-pointer mt-2"
+                className="w-5 h-5 text-red-500 hover:text-red-600 cursor-pointer flex-shrink-0 mt-0 sm:mt-3 self-end sm:self-auto transition-colors"
               />
             )}
           </div>
@@ -164,23 +164,23 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
 
       <button
         onClick={addRow}
-        className="flex items-center gap-2 text-blue-700 mt-4"
+        className="flex items-center gap-2 text-[#123d84] hover:text-[#0b2456] text-sm font-medium mt-4 transition-colors"
       >
         <PlusIcon className="w-4 h-4" /> Add Another Subject
       </button>
 
-      <div className="flex justify-end gap-4 mt-8">
-        <button onClick={closeModal} className="px-4 py-2 border rounded">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8 pt-4 border-t border-[#f0f1f5]">
+        <button onClick={closeModal} className="px-[22px] py-[11px] w-full sm:w-auto border border-[#e5e7eb] rounded-[10px] text-[#374151] hover:border-[#123d84] hover:text-[#123d84] transition-colors">
           Cancel
         </button>
         <button
           disabled={loading}
 
           onClick={handleSubmit}
-          className={`px-6 py-2 rounded text-white flex items-center justify-center gap-2
+          className={`px-[22px] py-[11px] w-full sm:w-auto rounded-[10px] text-white flex items-center justify-center gap-2 transition-colors
     ${loading
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-b from-[#144196] to-[#061530]"}
+              : "bg-gradient-to-b from-[#144196] to-[#0b2456]"}
   `}        >
           {loading ? (
             <>

@@ -3,6 +3,15 @@ import schoolLogo from "../../assets/loginPage_image/AloSchoolredesign_logo.png"
 import schoolImg from "../../assets/loginPage_image/AloSchoolboy_image.png";
 import styles from "./Login.module.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+  LuGraduationCap,
+  LuTrendingUp,
+  LuLightbulb,
+  LuUser,
+  LuLock,
+  LuArrowRight,
+  LuShieldCheck,
+} from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import { LoginUser } from '../../api/Serviceapi';
 import { toast, ToastContainer } from 'react-toastify';
@@ -78,7 +87,10 @@ const Login = ({ setLoginUser }) => {
 
   return (
     <>
+      <ToastContainer />
       <div className={styles.container}>
+        <div className={styles.seamGlow} aria-hidden="true" />
+
         <div className={styles.content}>
           <div className={styles["content-left"]}>
             <div className={styles["content-left-in"]}>
@@ -87,12 +99,44 @@ const Login = ({ setLoginUser }) => {
               </div>
               <div className={styles["content-left-main"]}>
                 <div className={styles.head}>
-                  <h1>Welcome Back!</h1>
+                  <h1>
+                    Welcome <span className={styles.headAccent}>Back!</span>
+                  </h1>
                 </div>
                 <div className={styles.para}>
                   <p>
                     Empowering growth through learning and technology, creating a future driven by knowledge and innovation.
                   </p>
+                </div>
+
+                <div className={styles.featureList}>
+                  <div className={styles.featureItem}>
+                    <span className={`${styles.featureIcon} ${styles.featureIconBlue}`}>
+                      <LuGraduationCap />
+                    </span>
+                    <div>
+                      <p className={styles.featureTitle}>Quality Education</p>
+                      <p className={styles.featureText}>Industry-focused curriculum</p>
+                    </div>
+                  </div>
+                  <div className={styles.featureItem}>
+                    <span className={`${styles.featureIcon} ${styles.featureIconPurple}`}>
+                      <LuTrendingUp />
+                    </span>
+                    <div>
+                      <p className={styles.featureTitle}>Future Ready</p>
+                      <p className={styles.featureText}>Skills for tomorrow</p>
+                    </div>
+                  </div>
+                  <div className={styles.featureItem}>
+                    <span className={`${styles.featureIcon} ${styles.featureIconGreen}`}>
+                      <LuLightbulb />
+                    </span>
+                    <div>
+                      <p className={styles.featureTitle}>Innovative Learning</p>
+                      <p className={styles.featureText}>Technology-driven approach</p>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className={styles["content-left-image"]}>
@@ -104,26 +148,35 @@ const Login = ({ setLoginUser }) => {
 
         <div className={styles.content}>
           <div className={styles["content-right"]}>
+            <div className={styles.dotGrid} aria-hidden="true" />
             <div className={styles["content-right-formDiv"]}>
+              <div className={styles.formBadge}>
+                <LuGraduationCap />
+              </div>
               <div className={styles.formDivHead}>
                 <h1>Nice to see you again</h1>
+                <p className={styles.formSubtitle}>Sign in to your admin account to continue.</p>
               </div>
               <form onSubmit={handleClick}>
                 <div className={styles.formDivName}>
                   <label htmlFor="username">Email ID</label>
-                  <input
-                    type="text"
-                    id="username"
-                    placeholder="Email ID"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <div className={styles.inputIconWrap}>
+                    <LuUser className={styles.inputIcon} />
+                    <input
+                      type="text"
+                      id="username"
+                      placeholder="Email ID"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
                   <p className={styles.errorMsg}>{error.userName}</p>
                 </div>
 
                 <div className={styles.formDivPass}>
                   <label htmlFor="password">Password</label>
                   <div className={styles.passwordWrapper}>
+                    <LuLock className={styles.inputIcon} />
                     <input
                       type={showPassword ? "text" : "password"}
                       id="password"
@@ -142,15 +195,28 @@ const Login = ({ setLoginUser }) => {
                 </div>
 
                 <div className={styles.formDivBtn}>
-                  <button type="submit">{loading ? 'Signing in...' : "Sign in"}</button>
+                  <button type="submit" disabled={loading}>
+                    {loading ? (
+                      "Signing in..."
+                    ) : (
+                      <>
+                        Sign in <LuArrowRight className={styles.btnArrow} />
+                      </>
+                    )}
+                  </button>
                 </div>
               </form>
+
+              <div className={styles.secureFooter}>
+                <span>Secure Admin Access</span>
+              </div>
+              <p className={styles.secureNote}>
+                <LuShieldCheck /> Your data is protected and secure with us
+              </p>
             </div>
           </div>
         </div>
       </div>
-
-      
     </>
   );
 };

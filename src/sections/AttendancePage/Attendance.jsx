@@ -9,7 +9,7 @@ import Pagination from '@mui/material/Pagination';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { excelAttendance, getAttendance, getAttendancerate, getBatchbyid, getBatchName } from "../../api/Serviceapi";
+import { excelAttendance, getAttendance, getAttendancerate, getCourseBatch } from "../../api/Serviceapi";
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -21,6 +21,8 @@ import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import { IoIosCloseCircle } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 const theme = createTheme({
@@ -32,7 +34,7 @@ const theme = createTheme({
           border: '1px solid #e5e7eb',
           color: '#1f2937', // text-gray-800
           '&.Mui-selected': {
-            background: 'linear-gradient(to bottom, #144196, #061530)',
+            background: 'linear-gradient(to bottom, #144196, #0b2456)',
             color: '#fff',
             border: 'none',
           },
@@ -54,8 +56,8 @@ const Attandance = () => {
   const navigate = useNavigate()
   const [list, setList] = useState([])
   const [rate, setRate] = useState()
-  const [course, setCourse] = useState([])
-  const [batch, setBatch] = useState([])
+  const [batches, setBatches] = useState([])
+  const [courseOptions, setCourseOptions] = useState([])
   // const [batchId, setBatchId] = useState('')
   // const [courseId, setCourseId] = useState('')
   // const [date, setDate] = useState('')
@@ -63,8 +65,10 @@ const Attandance = () => {
   const [deleteevent, setDelete] = useState(false)
   const [loading, setLoading] = useState(false)
   // const [status, setStatus] = useState('');
-  const [courseId, setCourseId] = useState(() => localStorage.getItem('att_courseId') || '');
-  const [batchId, setBatchId] = useState(() => localStorage.getItem('att_batchId') || '');
+  // Not persisted (unlike the fields below) — the primary batch should win
+  // as the default on every fresh visit, not whatever was last picked.
+  const [courseId, setCourseId] = useState('');
+  const [batchId, setBatchId] = useState('');
   const [status, setStatus] = useState(() => localStorage.getItem('att_status') || 'false');
   const [date, setDate] = useState(() => {
     const saved = localStorage.getItem('att_date');
@@ -116,24 +120,22 @@ const Attandance = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem('att_courseId', courseId);
-    localStorage.setItem('att_batchId', batchId);
     localStorage.setItem('att_status', status);
     localStorage.setItem('att_date', date ? dayjs(date).format('YYYY-MM-DD') : '');
     localStorage.setItem('att_searchText', searchText);
-  }, [courseId, batchId, status, date, searchText]);
+  }, [status, date, searchText]);
 
 
-  const handleChange = (event) => {
+  const handleBatchChange = (event) => {
+    // courseOptions are re-derived reactively (see the batchId/batches effect below)
     setBatchId(event.target.value);
+    setCourseId("");
+    setoffset(1);
   };
 
   const handlecourseChange = (event) => {
-    const selectedId = event.target.value;
-    setCourseId(selectedId);
+    setCourseId(event.target.value);
     setoffset(1);
-    setBatchId("");
-    getBatchnameid(selectedId);
   };
 
   // useEffect(() => {
@@ -142,41 +144,43 @@ const Attandance = () => {
 
 
   useEffect(() => {
-    getBatchname()
+    fetchBatches()
   }, []);
 
-  let getBatchnameid = async (id) => {
+  // Batch drives the filter now — a batch's own `courses` array supplies
+  // the course dropdown's options, so no separate per-batch fetch is needed.
+  let fetchBatches = async () => {
     try {
-      const res = await getBatchbyid(id);
-      console.log(res?.data?.data, 'batchdasdasd')
-      const course = res?.data?.data?.find(c => c._id === id);
-      setBatch(
-        course?.batches
-          ? Array.isArray(course.batches)
-            ? course.batches
-            : [course.batches]
-          : []
-      );
-      setBatchId("");
+      const res = await getCourseBatch();
+      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setBatches(list);
+
+      // Default the filter to the primary batch on first load — batchId
+      // isn't persisted, so this is the only thing that sets it initially.
+      if (!batchId) {
+        const primary = list.find((b) => b.isPrimary);
+        if (primary) setBatchId(primary._id);
+      }
     } catch (error) {
       console.error("error", error.response?.data || error);
     }
   };
 
-
-  let getBatchname = async () => {
-    try {
-      const res = await getBatchName();
-
-
-      console.log(res?.data?.data, 'dasdasdada')
-      setCourse(Array.isArray(res?.data?.data) ? res.data.data : []);
-
-
-    } catch (error) {
-      console.error("error", error.response?.data || error);
+  // Re-derive course options whenever batchId or the batch list changes
+  // (covers the primary-batch default kicking in once batches finish
+  // loading), and drop courseId if it no longer belongs to this batch.
+  useEffect(() => {
+    if (!batchId) {
+      setCourseOptions([]);
+      return;
     }
-  };
+    const selectedBatch = batches.find((b) => b._id === batchId);
+    const options = selectedBatch?.courses || [];
+    setCourseOptions(options);
+    if (courseId && !options.some((c) => c.courseId === courseId)) {
+      setCourseId('');
+    }
+  }, [batchId, batches]);
 
 
   useEffect(() => {
@@ -242,33 +246,15 @@ const Attandance = () => {
   const handlefilterSearch = () => {
     setCourseId('');
     setBatchId('');
+    setCourseOptions([]);
     setStatus(false);
     setDate(dayjs().format('YYYY-MM-DD'));
     setSearchText('');
 
-    localStorage.removeItem('att_courseId');
-    localStorage.removeItem('att_batchId');
     localStorage.removeItem('att_status');
     localStorage.removeItem('att_date');
     localStorage.removeItem('att_searchText');
   };
-
-  useEffect(() => {
-    // Step 1: If a saved courseId exists on mount, load its batches
-    if (courseId) {
-      getBatchnameid(courseId).then(() => {
-        // Step 2: After batches load, check if saved batchId still exists in them
-        const savedBatchId = localStorage.getItem('att_batchId');
-        if (savedBatchId) {
-          setBatchId(savedBatchId);
-        }
-      });
-    } else {
-      setBatch([]);
-    }
-    // 👇 Run only once on mount
-  }, []);
-
 
   let getExcel = async () => {
     try {
@@ -279,7 +265,7 @@ const Attandance = () => {
       let base64String = res.data.data;
 
       if (!base64String) {
-        alert("No Excel file data found");
+        toast.error("No Excel file data found");
         return;
       }
 
@@ -309,6 +295,7 @@ const Attandance = () => {
   };
   return (
     <div className={styles.container}>
+      <ToastContainer />
       <div className={styles.attendancetop}>
         <div className={styles.attendanceleft}>
           <p>Attendance</p>
@@ -321,10 +308,10 @@ const Attandance = () => {
                 variant="outlined"
                 size="small"
                 sx={{
-                  minWidth: 120,
-                  backgroundColor: '#F6F6F6', // match the image background
-                  borderRadius: '6px',
-                  border: 'none'
+                  minWidth: 150,
+                  backgroundColor: '#fff',
+                  borderRadius: '10px',
+                  border: '1px solid #e5e7eb',
                 }}
               >
                 <Select
@@ -337,8 +324,10 @@ const Attandance = () => {
                       border: 'none',
                     },
                     fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#374151',
                     padding: '4px 10px',
-                    height: '36px',
+                    height: '42px',
                     border: 'none'
                   }}
                 >
@@ -354,10 +343,47 @@ const Attandance = () => {
                 variant="outlined"
                 size="small"
                 sx={{
-                  minWidth: 120,
-                  backgroundColor: '#F6F6F6', // match the image background
-                  borderRadius: '6px',
-                  border: 'none'
+                  minWidth: 150,
+                  backgroundColor: '#fff',
+                  borderRadius: '10px',
+                  border: '1px solid #e5e7eb',
+                }}
+              >
+                <Select
+                  value={batchId}
+                  onChange={handleBatchChange}
+                  displayEmpty
+                  IconComponent={KeyboardArrowDownIcon}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      border: 'none',
+                    },
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#374151',
+                    padding: '4px 10px',
+                    height: '42px',
+                    border: 'none'
+                  }}
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {batches.map((item, index) => (
+                    <MenuItem value={item._id} key={index}>
+                      {item.batchName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+            <div className={styles.selectWrapper}>
+              <FormControl
+                variant="outlined"
+                size="small"
+                sx={{
+                  minWidth: 150,
+                  backgroundColor: '#fff',
+                  borderRadius: '10px',
+                  border: '1px solid #e5e7eb',
                 }}
               >
                 <Select
@@ -370,55 +396,20 @@ const Attandance = () => {
                       border: 'none',
                     },
                     fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#374151',
                     padding: '4px 10px',
-                    height: '36px',
+                    height: '42px',
                     border: 'none'
                   }}
+                  disabled={!batchId}
                 >
                   <MenuItem value="">All</MenuItem>
-                  {course.map((item, index) => {
+                  {courseOptions.map((item, index) => {
                     return (
-                      <MenuItem value={item._id} key={index}>{item.courseName}</MenuItem>
+                      <MenuItem value={item.courseId} key={index}>{item.courseName}</MenuItem>
                     )
                   })}
-                </Select>
-              </FormControl>
-            </div>
-            <div className={styles.selectWrapper}>
-              <FormControl
-                variant="outlined"
-                size="small"
-                sx={{
-                  minWidth: 120,
-                  backgroundColor: '#F6F6F6', // match the image background
-                  borderRadius: '6px',
-                  border: 'none'
-                }}
-              >
-                <Select
-                  value={batchId}
-                  onChange={handleChange}
-                  displayEmpty
-                  IconComponent={KeyboardArrowDownIcon}
-                  sx={{
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      border: 'none',
-                    },
-                    fontSize: '14px',
-                    padding: '4px 10px',
-                    height: '36px',
-                    border: 'none'
-                  }}
-                  disabled={!courseId}
-                // style={{ cursor: courseId ? 'pointer' : 'not-allowed' }}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  {Array.isArray(batch) &&
-                    batch.map((item, index) => (
-                      <MenuItem value={item._id} key={index}>
-                        {item.batchName}
-                      </MenuItem>
-                    ))}
                 </Select>
               </FormControl>
             </div>
@@ -445,19 +436,20 @@ const Attandance = () => {
                       error: Boolean(Error?.DateofBrith),
                       sx: {
                         '& .MuiPickersOutlinedInput-root': {
-                          height: '35px',
+                          height: '42px',
                           outline: 'none',
-                          backgroundColor: ' #f2f2f2'
+                          backgroundColor: '#fff',
+                          borderRadius: '10px',
                         },
                         '& fieldset': {
-                          border: 'none', // removes the default outline
+                          border: '1px solid #e5e7eb',
                         },
                         '&:hover fieldset': {
-                          border: 'none',
+                          border: '1px solid #123d84',
                           outline: 'none'
                         },
                         '& .MuiPickersOutlinedInput-root.Mui-focused .MuiPickersOutlinedInput-notchedOutline': {
-                          border: 'none'
+                          border: '1px solid #123d84'
                         }
                       },
                     },
@@ -465,7 +457,7 @@ const Attandance = () => {
                 />
               </LocalizationProvider>
             </div>
-            <div style={{ width: '190px' }}>
+            <div className={styles.searchWrapper}>
               <TextField
                 variant="outlined"
                 size="small"
@@ -475,7 +467,7 @@ const Attandance = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <BiSearchAlt style={{ fontSize: 18, color: '#555' }} />
+                      <BiSearchAlt style={{ fontSize: 18, color: '#6b7280' }} />
 
                     </InputAdornment>
                   ),
@@ -487,11 +479,13 @@ const Attandance = () => {
                     </InputAdornment>
                   ),
                   style: {
-                    backgroundColor: '#F6F6F6',
-                    borderRadius: '6px',
-                    height: '36px',
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    height: '42px',
                     fontSize: '14px',
-                    padding: '4px 10px'
+                    padding: '4px 10px',
+                    border: '1px solid #e5e7eb',
+                    fontFamily: 'inherit',
                   },
                   notched: false
                 }}
@@ -499,7 +493,7 @@ const Attandance = () => {
                   '& .MuiOutlinedInput-notchedOutline': {
                     border: 'none',
                   },
-                  minWidth: 120,
+                  width: '100%',
                 }}
               />
             </div>
@@ -515,8 +509,8 @@ const Attandance = () => {
           </div>
         </div>
       </div>
-      <div className='flex justify-end mt-4 w-[96%]'>
-        <button className='bg-gradient-to-b from-[#144196] to-[#061530] text-white px-1 py-1 rounded-md flex items-center flex-end gap-1 cursor-pointer' onClick={getExcel}>Export<MdOutlineFileDownload />
+      <div className='flex justify-end mt-3 mb-1 w-full'>
+        <button className='bg-gradient-to-b from-[#144196] to-[#0b2456] text-white px-[18px] py-[10px] rounded-[10px] flex items-center gap-2 cursor-pointer text-sm font-medium shadow-sm hover:brightness-110 transition' onClick={getExcel}>Export<MdOutlineFileDownload />
         </button>
       </div>
       {rateLoading ?
@@ -602,30 +596,30 @@ const Attandance = () => {
 
                   <tr key={item._id}>
                     {item.userDetails?.name ?
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.userDetails?.name}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.userDetails?.name}</td>
                       :
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.name}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.name}</td>
                     }
                     {item.userDetails?.studentId ?
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.userDetails?.studentId}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.userDetails?.studentId}</td>
                       :
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.studentId}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.studentId}</td>
                     }
                     {item.userDetails?.mobileNo ?
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.userDetails?.mobileNo}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.userDetails?.mobileNo}</td>
                       :
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.mobileNo}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.mobileNo}</td>
                     }
-                    <td style={{ color: item?.onLeave && "red" }}>{item.courseDetails?.courseName}</td>
+                    <td style={{ color: item?.onLeave && "#d92d20" }}>{item.courseDetails?.courseName}</td>
                     {item.date ?
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>{item.date?.split("T")[0]}</td>
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.date?.split("T")[0]}</td>
                       :
-                      <td style={{ color: item?.onLeave && "red", textTransform: "capitalize" }}>   {date}
+                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>   {date}
                       </td>
                     }
-                    <td style={{ color: item?.onLeave && "red" }}>{item.breakTime?.length > 0 ? item?.breakTime[0] ? formatTime(item?.breakTime[0]) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p> : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
-                    <td style={{ color: item?.onLeave && "red" }}>{item.breakTime?.length > 0 ? item?.breakTime[1] ? formatTime(item?.breakTime[1]) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p> : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
-                    <td>{item?.onLeave ? <p style={{ color: "red" }}>Leave</p> : item.inTime ? formatTime(item?.inTime) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
+                    <td style={{ color: item?.onLeave && "#d92d20" }}>{item.breakTime?.length > 0 ? item?.breakTime[0] ? formatTime(item?.breakTime[0]) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p> : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
+                    <td style={{ color: item?.onLeave && "#d92d20" }}>{item.breakTime?.length > 0 ? item?.breakTime[1] ? formatTime(item?.breakTime[1]) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p> : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
+                    <td>{item?.onLeave ? <p style={{ color: "#d92d20" }}>Leave</p> : item.inTime ? formatTime(item?.inTime) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
                     <td >
                       {item?.onLeave ? '' : item.outTime ? formatTime(item?.outTime) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>
                       }
@@ -648,12 +642,11 @@ const Attandance = () => {
       </div>
 
 
-      <div className='flex justify-between items-end px-2 ms-auto w-[50%]'>
-
+      <div className='flex flex-wrap justify-between items-center gap-3 w-full mt-4'>
 
         {totalpages > 0 &&
           <ThemeProvider theme={theme}>
-            <div className="flex justify-end ">
+            <div className="flex justify-end">
               <Pagination
 
                 count={totalpages}
@@ -668,7 +661,7 @@ const Attandance = () => {
         }
         {totalpages > 0 &&
           <div className="flex justify-between items-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-500 text-sm">
               Showing {startIndex} – {endIndex} of {totallist} students
             </p>
           </div>

@@ -119,24 +119,7 @@ const AddEvent = () => {
             )}
 
             <div className={styles.addRow}>
-              <button
-                onClick={handleOpen}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 12,
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#fff",
-                  fontWeight: 500,
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                  background: "linear-gradient(180deg, #1f4fa3, #0b2c6b)",
-                  boxShadow: "0 6px 14px rgba(0,0,0,0.15)",
-                  transition: "all .2s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-1px)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-              >
+              <button className={styles.addBtn} onClick={handleOpen}>
                 + Add Event
               </button>
             </div>

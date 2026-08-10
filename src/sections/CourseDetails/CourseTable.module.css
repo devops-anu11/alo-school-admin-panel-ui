@@ -1,244 +1,266 @@
-.container {
-  width: 96%;
-  margin: 15px auto 0;
-  overflow-y: auto;
-}
-.header {
+.page {
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: #f6f7fb;
+  min-height: 100%;
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
+}
+
+/* ============ Toolbar ============ */
+
+.toolbar {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
-.title {
-  font-weight: 400;
-  font-size: 22px;
-}
-.addcoursebtn {
-  /* width: 30%; */
+
+.heading {
   display: flex;
-  justify-content: center;
   align-items: center;
+  gap: 10px;
+  color: #123d84;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
 }
 
-.addBtn {
-  background: linear-gradient(to bottom, #144196, #061530);
-  color: #f6f6f6;
-  border: none;
-  padding: 8px 20px;
-  cursor: pointer;
-  border-radius: 10px;
+.headCount {
+  min-width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  background: #e8eefc;
+  border-radius: 999px;
+  box-sizing: border-box;
+}
 
-  display: flex; /* Puts icon and text in a row */
-  align-items: center; /* Vertical center */
-  gap: 8px; /* Space between icon and text */
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  font-family: inherit;
   font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    filter 0.2s ease,
+    transform 0.18s ease;
 }
-.addBtn:hover{
-      background: #154682fc;
 
+.primaryBtn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
-.courseTable {
+
+.primaryBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  filter: none;
+}
+
+/* ============ Card / table ============ */
+
+.card {
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
   width: 100%;
   border-collapse: collapse;
-  margin: 35px auto 0;
+  min-width: 700px;
 }
-.courseTable th {
-  padding: 8px 5px;
-  text-align: center;
+
+.table thead tr {
+  background: linear-gradient(to bottom, #144196, #0b2456);
+}
+
+.table th {
+  color: #fff;
+  padding: 16px;
+  font-size: 12px;
   font-weight: 600;
-  font-size: 15px;
-  /* color: #0B2C65;   */
-  background: linear-gradient(to bottom, #144196, #061530);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   text-align: left;
+  white-space: nowrap;
 }
-.courseTable thead{
-  background-color: #f2f2f2;
-  
-}
-.courseTable td {
-  padding: 15px 9px;
-  border-bottom: 1px solid #e3e3e3;
-  font-weight: normal;
-  color: black;
-  text-align: left;
-  vertical-align: middle;
+
+.table td {
+  padding: 14px 16px;
   font-size: 14px;
-  cursor: pointer;
+  color: #374151;
+  border-bottom: 1px solid #f0f1f5;
+  vertical-align: middle;
 }
 
-.courseTable th {
-  background-color: #f3f3f3;
+.table tbody tr {
+  transition: background 0.2s ease;
 }
 
-.greenText {
-  color: green;
-  font-weight: 600;
+.table tbody tr:hover {
+  background: #f5f8ff;
 }
 
-.pagination {
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.nameCell {
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 20px;
-  gap: 6px;
+  gap: 11px;
+  font-weight: 600;
+  color: #111827;
 }
 
-.pagination button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  background-color: white;
-  color: #333;
+.courseIcon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  background: #e8eefc;
+  border-radius: 10px;
+}
+
+.batchChip {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2563eb;
+  background: #e8eefc;
+  border-radius: 999px;
+}
+
+.actionsCol {
+  text-align: right;
+}
+
+.rowActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editBtn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #144196;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease-in-out;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
-.pagination button:hover {
-  background: linear-gradient(to bottom, #144196, #061530);
-  color: white;
+.editBtn:hover {
+  color: #123d84;
+  border-color: #123d84;
+  background: #e8eefc;
 }
 
-.pagination button:disabled {
-  background-color: #eee;
-  color: #aaa;
-  cursor: not-allowed;
+/* ============ Empty state ============ */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 56px 20px;
+  text-align: center;
+  color: #9ca3af;
 }
 
-.activePage {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-  font-weight: bold;
+.empty h3 {
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 6px 0 0;
 }
 
-@media (max-width: 765px) {
-  .container {
+.empty p {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+/* ============ Responsive ============ */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .heading {
+    font-size: 20px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+
+  .empty {
+    padding: 44px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 12px;
+    gap: 14px;
+  }
+
+  .heading {
+    font-size: 18px;
+  }
+
+  .primaryBtn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .table th,
+  .table td {
     padding: 10px;
   }
 
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  .addcoursebtn {
-    width: 100%;
-    justify-content: flex-start;
-    position: relative;
-  }
-  .addBtn {
-    background: linear-gradient(to bottom, #144196, #061530);
-    color: #f6f6f6;
-    padding: 8px 20.51px 8px 37.18px;
-    cursor: pointer;
-    border-radius: 10px;
-  }
-  .addBtn svg {
-    color: white;
-    position: absolute;
-    left: 10px;
-  }
-
-  .title {
-    font-size: 1.2rem;
-  }
-
-  .courseTable {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .courseTable thead,
-  .courseTable tbody,
-  .courseTable th,
-  .courseTable td,
-  .courseTable tr {
-    white-space: nowrap;
-  }
-  .courseTable th {
-    padding: 7.08px 20px;
-    text-align: center;
-    font-weight: 500;
-    font-size: 0.899rem;
-    color: #0b2c65;
-  }
-  .courseTable td {
-    padding: 20px 9px;
-    border-bottom: 1px solid #ddd;
-    font-weight: normal;
-    color: black;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 0.9rem;
-  }
-
-  .courseTable th {
-    background-color: #f3f3f3;
-  }
-
-  .greenText {
-    color: green;
-    font-weight: 600;
-  }
-}
-@media (min-width: 766px) and (max-width: 1024px) {
-  .addcoursebtn {
-    width: 30%;
-    position: relative;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-  }
-  .addBtn {
-    background: linear-gradient(to bottom, #144196, #061530);
-    color: #f6f6f6;
-    border: none;
-    padding: 8px 20.51px 8px 51.18px;
-    cursor: pointer;
-    border-radius: 10px;
-  }
-  .addBtn svg {
-    color: white;
-    left: 85px;
-  }
-  .courseTable {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .courseTable thead,
-  .courseTable tbody,
-  .courseTable th,
-  .courseTable td,
-  .courseTable tr {
-    white-space: nowrap;
-  }
-  .courseTable th {
-    padding: 7.08px 50px;
-    text-align: center;
-    font-weight: 500;
-    font-size: 0.899rem;
-    color: #0b2c65;
-  }
-  .courseTable td {
-    padding: 20px 9px;
-    border-bottom: 1px solid #ddd;
-    font-weight: normal;
-    color: black;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 0.9rem;
-  }
-
-  .courseTable th {
-    background-color: #f3f3f3;
-  }
-
-  .greenText {
-    color: green;
-    font-weight: 600;
+  .empty {
+    padding: 40px 16px;
   }
 }

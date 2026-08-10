@@ -102,56 +102,60 @@ const Harassement = () => {
         <Loader />
       ) : (
         <>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Student Name</th>
-                <th>Email</th>
-                <th>Message</th>
-                <th>Read Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {harassment.length > 0 ? (
-                harassment.map((item) => (
-                  <tr key={item._id}>
-                    <td>
-                      {new Date(item.createdAt).toLocaleDateString("en-GB")}
-                    </td>
-
-                    <td>{item.studentId?.name}</td>
-
-                    <td>{item.studentId?.email}</td>
-
-                    <td>
-                      <div className={styles.message}>{item.message}</div>
-                    </td>
-
-                    <td>
-                      {item.isRead ? (
-                        <span className={styles.readStatus}>Read</span>
-                      ) : (
-                        <button
-                          className={styles.readBtn}
-                          onClick={() => handleMarkAsRead(item._id)}
-                        >
-                          Mark as Read
-                        </button>
-                      )}
-                    </td>
+          <div className={styles.tableCard}>
+            <div className={styles.tableScroll}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Message</th>
+                    <th>Read Status</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className={styles.noData}>
-                    No Harassment Reports Found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+
+                <tbody>
+                  {harassment.length > 0 ? (
+                    harassment.map((item) => (
+                      <tr key={item._id}>
+                        <td>
+                          {new Date(item.createdAt).toLocaleDateString("en-GB")}
+                        </td>
+
+                        <td>{item.studentId?.name}</td>
+
+                        <td>{item.studentId?.email}</td>
+
+                        <td>
+                          <div className={styles.message}>{item.message}</div>
+                        </td>
+
+                        <td>
+                          {item.isRead ? (
+                            <span className={styles.readStatus}>Read</span>
+                          ) : (
+                            <button
+                              className={styles.readBtn}
+                              onClick={() => handleMarkAsRead(item._id)}
+                            >
+                              Mark as Read
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className={styles.noData}>
+                        No Harassment Reports Found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {totalPages > 0 && (
             <div className={styles.paginationWrapper}>

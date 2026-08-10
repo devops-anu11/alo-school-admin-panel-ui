@@ -1,0 +1,515 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(21, 21, 21, .6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+}
+
+.content {
+  background: white;
+  border-radius: 12px;
+  width: 72%;
+  max-width: 860px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+/* ---------- pinned top block (header + summary): stays put ---------- */
+
+.pinned {
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid #eef0f3;
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.identity {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.name {
+  font-size: 19px;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin: 0;
+  color: #111827;
+}
+
+.subInfo {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+.closeBtn {
+  background: #f3f4f6;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: #e5e7eb;
+}
+
+.summaryRow {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.summaryItem {
+  flex: 1;
+  background-color: #F6F7FB;
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.summaryValue {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 4px 0 0;
+  color: #111827;
+}
+
+.paidText {
+  color: #12805c;
+}
+
+.pendingText {
+  color: #d92d20;
+}
+
+.discountRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fff7ed;
+  border: 1px dashed #f59e0b;
+  border-radius: 10px;
+}
+
+.discountLabel {
+  font-size: 13px;
+  color: #92400e;
+}
+
+.discountSticker {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.discountInput {
+  width: 120px;
+  padding: 7px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.discountInput:focus {
+  border-color: #144196;
+}
+
+/* ---------- body: single scroll region for the whole modal ---------- */
+
+.scrollBody {
+  padding: 20px 28px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 6px 0 2px;
+  color: #144196;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+}
+
+.countBadge {
+  margin-left: 8px;
+  background: #E8ECF7;
+  color: #144196;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.tableWrap {
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  table-layout: fixed;
+}
+
+.table th {
+  text-align: left;
+  padding: 10px 14px;
+  background-color: #F6F7FB;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.table td {
+  padding: 11px 14px;
+  border-top: 1px solid #f1f2f5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Semester Breakdown: Semester / Sem Fee / Paid / Pending / Payment Date / Action */
+.semTable th:nth-child(1), .semTable td:nth-child(1) { width: 12%; }
+.semTable th:nth-child(2), .semTable td:nth-child(2) { width: 16%; }
+.semTable th:nth-child(3), .semTable td:nth-child(3) { width: 16%; }
+.semTable th:nth-child(4), .semTable td:nth-child(4) { width: 16%; }
+.semTable th:nth-child(5), .semTable td:nth-child(5) { width: 16%; }
+.semTable th:nth-child(6), .semTable td:nth-child(6) { width: 24%; }
+
+/* Payment History: Date / Sem / Amount / Mode / Collected By */
+.historyTable th:nth-child(1), .historyTable td:nth-child(1) { width: 20%; }
+.historyTable th:nth-child(2), .historyTable td:nth-child(2) { width: 12%; }
+.historyTable th:nth-child(3), .historyTable td:nth-child(3) { width: 20%; }
+.historyTable th:nth-child(4), .historyTable td:nth-child(4) { width: 18%; }
+.historyTable th:nth-child(5), .historyTable td:nth-child(5) { width: 30%; }
+
+.table tbody tr:hover {
+  background-color: #FAFBFE;
+}
+
+.rowActive {
+  background-color: #F0F4FF;
+}
+
+.semBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #E8ECF7;
+  color: #144196;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #E7F7EE;
+  color: #12805c;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.pillPending {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #FDECEC;
+  color: #d92d20;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.completed {
+  color: #12805c;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.actionCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.requestLink {
+  font-weight: 600;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.editBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid #144196;
+  color: #144196;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.editBtn:hover {
+  background: #F0F4FF;
+}
+
+.editRow td {
+  border-top: none;
+  padding: 0 14px 14px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.editForm {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  background-color: #F6F7FB;
+  border: 1px dashed #c7d2e8;
+  padding: 16px;
+  border-radius: 10px;
+  white-space: normal;
+}
+
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.editField label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.editField input,
+.editField select {
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid #d7dbe3;
+  font-size: 14px;
+  min-width: 130px;
+  background: white;
+}
+
+.editField input:focus,
+.editField select:focus {
+  outline: none;
+  border-color: #144196;
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+}
+
+.saveBtn {
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.saveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  background: white;
+  border: 1px solid #d7dbe3;
+  color: #374151;
+  padding: 9px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* ---------- payment history ---------- */
+
+.historyBox {
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+}
+
+.collector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: capitalize;
+}
+
+.collectorAvatar {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: #E8ECF7;
+  color: #144196;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noData {
+  text-align: center;
+  padding: 24px;
+  color: #9ca3af;
+  font-size: 13.5px;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1024px) {
+  .content {
+    width: 90%;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    width: 100%;
+    max-height: 92vh;
+  }
+
+  .pinned {
+    padding: 18px 18px 14px;
+  }
+
+  .scrollBody {
+    padding: 16px 18px 20px;
+  }
+
+  .summaryRow {
+    flex-wrap: wrap;
+  }
+
+  .summaryItem {
+    flex: 1 1 45%;
+  }
+
+  .tableWrap,
+  .historyBox {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 560px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: 0;
+  }
+
+  .content {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .identity {
+    gap: 10px;
+  }
+
+  .name {
+    font-size: 16px;
+  }
+
+  .summaryItem {
+    flex: 1 1 100%;
+  }
+
+  .editForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .editField input,
+  .editField select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .editActions {
+    justify-content: flex-end;
+  }
+}

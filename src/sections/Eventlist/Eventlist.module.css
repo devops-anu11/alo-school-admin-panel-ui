@@ -8,40 +8,64 @@
 }
 
 .edit {
-  color: rgb(19, 19, 123);
+  color: #123d84;
+  font-size: 17px;
+  transition: opacity 0.2s ease;
+}
+
+.edit:hover {
+  opacity: 0.7;
 }
 
 .delete {
-  color: rgb(245 86 86);
+  color: #d92d20;
+  font-size: 17px;
+  transition: opacity 0.2s ease;
 }
+
+.delete:hover {
+  opacity: 0.7;
+}
+
 .popmessage {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
+  color: #111827;
 }
 
 .popyes {
   color: white;
-  background: linear-gradient(to bottom, #0b48b0, #061634);
-  width: 70px;
-  padding: 8px 0px;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  width: 90px;
+  padding: 10px 0px;
   border-radius: 10px;
+  border: none;
+  font-family: inherit;
+  font-weight: 500;
   cursor: pointer;
+  transition: opacity 0.2s ease;
 }
 
-.popyes:hover ,.button button:hover{
-    background: #154682fc;
+.popyes:hover, .button button:hover {
+  opacity: 0.9;
 }
+
 .popno {
-  color: black;
-  width: 70px;
-  padding: 8px 0px;
+  color: #374151;
+  background: #fff;
+  width: 90px;
+  padding: 10px 0px;
   border-radius: 10px;
   cursor: pointer;
-  border: 1px solid black;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
 }
 
 .popno:hover {
-  background: #d6d7d7fc;
-  border: none;
+  background: #f9fafb;
+  border-color: #123d84;
+  color: #123d84;
 }

@@ -1,0 +1,412 @@
+.container {
+  padding: 25px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  background: #f6f7fb;
+  min-height: 100%;
+  font-family: "Poppins", sans-serif;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 9px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back:hover {
+  border-color: #123d84;
+  color: #123d84;
+}
+
+.pageHeader {
+  margin-bottom: 22px;
+}
+
+.heading {
+  font-size: 26px;
+  font-weight: 600;
+  color: #123d84;
+  margin-bottom: 6px;
+}
+
+.subheading {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ================= SUBJECT TABS ================= */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 18px;
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tab:hover {
+  background: #f5f8ff;
+  color: #123d84;
+}
+
+.tabActive {
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tabActive:hover {
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: #fff;
+}
+
+.tabCount {
+  padding: 1px 8px;
+  border-radius: 20px;
+  background: #eef2f9;
+  font-size: 12px;
+  font-weight: 600;
+  color: #123d84;
+}
+
+.tabActive .tabCount {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+/* ================= BULK ACTION BAR ================= */
+
+.bulkBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  margin-bottom: 14px;
+  background: #eef3fc;
+  border: 1px solid #d7e3f7;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #123d84;
+}
+
+.bulkBtn {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.bulkBtn:hover {
+  opacity: 0.9;
+}
+
+.bulkBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkboxCell {
+  width: 44px;
+}
+
+.checkboxCell input {
+  width: 16px;
+  height: 16px;
+  accent-color: #123d84;
+  cursor: pointer;
+}
+
+/* ================= TABLE ================= */
+
+.tableCard {
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tableScroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.table thead tr {
+  background: linear-gradient(to bottom, #144196, #0b2456);
+}
+
+.table th {
+  color: #fff;
+  padding: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #f0f1f5;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.table tbody tr:hover {
+  background: #f5f8ff;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.studentName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.studentMeta {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.badgeSuccess {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #e7f7ee;
+  color: #12805c;
+}
+
+.badgeDanger {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #fdecec;
+  color: #d92d20;
+}
+
+.viewBtn {
+  padding: 7px 16px;
+  border: 1px solid #123d84;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  color: #123d84;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewBtn:hover {
+  background: #123d84;
+  color: #fff;
+}
+
+/* ================= DETAIL POPUP ================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(21 21 21 / 60%);
+}
+
+.modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(17, 24, 39, 0.24);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #f0f1f5;
+}
+
+.modalTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.modalSubtitle {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 18px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+
+.taskCard {
+  border: 1px solid #eef0f5;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.taskCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.taskTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.taskMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.taskMetaLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 3px;
+}
+
+.taskMetaGrid p {
+  font-size: 13.5px;
+  color: #374151;
+}
+
+.taskNotes {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #eef0f5;
+}
+
+.taskNotes p {
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .taskMetaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.emptyCard {
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+}
+
+.noData {
+  padding: 50px;
+  text-align: center;
+  font-size: 15px;
+  color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+}

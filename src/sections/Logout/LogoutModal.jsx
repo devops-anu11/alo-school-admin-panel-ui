@@ -3,7 +3,12 @@ import styles from "./LogoutModal.module.css";
 
 const LogoutModal = ({ closeModal, onConfirmLogout }) => {
   return (
-    <div className={styles.overlay}>
+    <div
+      className={styles.overlay}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) closeModal();
+      }}
+    >
       <div className={styles.modal}>
         <p className={styles.message}>Are You Sure You Want to Logout Now?</p>
 

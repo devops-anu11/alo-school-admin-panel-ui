@@ -172,7 +172,7 @@ const StudentWork = () => {
                             <img src={item.thumbnail} className={styles.thumbnail} alt="" />
                           </td>
                           <td>
-                            <a href={item.behance} target="_blank" rel="noreferrer" style={{ padding: "4px 10px", background: "#eef6ff", borderRadius: 6, fontWeight: 500 }}>
+                            <a href={item.behance} target="_blank" rel="noreferrer" style={{ padding: "4px 12px", background: "#e8eefc", color: "#2563eb", borderRadius: 999, fontWeight: 600, fontSize: 12.5, textDecoration: "none", display: "inline-block" }}>
                               Tap to View
                             </a>
                           </td>

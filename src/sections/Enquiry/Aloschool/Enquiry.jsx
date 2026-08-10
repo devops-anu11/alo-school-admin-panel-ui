@@ -70,11 +70,11 @@ const Enquiry = () => {
     };
     return (
         <>
-            <div className='px-5 pt-6   pb-[100px]'>
+            <div className='px-4 sm:px-5 pt-5 sm:pt-6 pb-[100px] bg-[#f6f7fb] min-h-full' style={{ fontFamily: '"Poppins", sans-serif' }}>
 
-                <h4 className='text-xl font-normal'>Enquiry</h4>
+                <h4 className='text-[22px] sm:text-[26px] font-semibold text-[#123d84]'>Enquiry</h4>
 
-                <div className='mt-5'>
+                <div className='mt-4 sm:mt-5'>
                     <Tabs defaultActiveKey="1" className="custom-tabs" onChange={(key) => {
                         setoffset(1); // reset to first page when tab changes
                         if (key === "1") setEnroll("message");
@@ -82,44 +82,47 @@ const Enquiry = () => {
                         if (key === "3") setEnroll("toMessage");
                     }} >
                         <TabPane tab="Connect" key="1"  >
-                            <div className='overflow-x-auto w-full  '>
-                                <table className="w-full  rounded-md    ">
-                                    <thead className="bg-white text-[16px] ">
-                                        <tr className="bg-[#F8F8F8] text-left ">
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Name</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Phone Number</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Email</th>
-                                        </tr>
-                                    </thead>
-                                    {loader ?
-                                        <tr>
-                                            <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
-                                                <Loader />
-                                            </td>
-                                        </tr>
-
-                                        : <tbody className="bg-white text-gray-800 text-[15px] ">
-
-                                            {enquiry?.length > 0 ? (
-                                                enquiry.map((item, index) => (
-                                                    <tr key={item._id || index} style={{ borderBottom: '1px solid #e5e7eba4' }}>
-                                                        <td className="px-4 py-4">{item?.name || "-"}</td>
-                                                        <td className="px-4 py-2">+{item?.phoneNumber || "-"}</td>
-                                                        <td className="px-4 py-2">{item?.email || "-"}</td>
-                                                    </tr>
-                                                ))
-                                            ) : (
+                            <div className='bg-white border border-[#eef0f5] rounded-xl overflow-hidden'>
+                                <div className='overflow-x-auto w-full'>
+                                    <table className="w-full border-collapse" style={{ minWidth: '600px' }}>
+                                        <thead>
+                                            <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456]">
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Name</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Phone Number</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
+                                            </tr>
+                                        </thead>
+                                        {loader ?
+                                            <tbody>
                                                 <tr>
-                                                    <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold">
-                                                        <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
-                                                        <p>N o Data Found</p>
-                                                    </td>                                            </tr>
-                                            )}
+                                                    <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
+                                                        <Loader />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
 
-                                        </tbody>
-                                    }
-                                </table>
+                                            : <tbody>
 
+                                                {enquiry?.length > 0 ? (
+                                                    enquiry.map((item, index) => (
+                                                        <tr key={item._id || index} className="border-b border-[#f0f1f5] last:border-0 hover:bg-[#f5f8ff] transition-colors">
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.name || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">+{item?.phoneNumber || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.email || "-"}</td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="10" className="text-center py-16 text-sm text-[#9ca3af] font-medium">
+                                                            <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
+                                                            <p>No Data Found</p>
+                                                        </td>                                            </tr>
+                                                )}
+
+                                            </tbody>
+                                        }
+                                    </table>
+                                </div>
                             </div>
                             {totalpages > 1 &&
                                 <ThemeProvider theme={theme}>
@@ -136,41 +139,44 @@ const Enquiry = () => {
                             }
                         </TabPane>
                         <TabPane tab="Faq" key="2" >
-                            <div className='overflow-hidden   '>
-                                <table className="w-full  rounded-md    ">
-                                    <thead className="bg-white text-[16px] ">
-                                        <tr className="bg-[#F8F8F8] text-left ">
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Name</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Email</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold  w-[50%]">Question</th>
-                                        </tr>
-                                    </thead>
-                                    {loader ?
-                                        <tr>
-                                            <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
-                                                <Loader />
-                                            </td>
-                                        </tr>
-
-                                        : <tbody className="bg-white text-gray-800 text-[15px] ">
-                                            {enquiry?.length > 0 ? (
-                                                enquiry.map((item, index) => (
-                                                    <tr key={item._id || index} style={{ borderBottom: '1px solid #e5e7eba4' }}>
-                                                        <td className="px-4 py-4">{item?.name || "-"}</td>
-                                                        <td className="px-4 py-2">{item?.email || "-"}</td>
-                                                        <td className="px-4 py-2 "><p className=' w-[100%] break-all'>{item?.question || "-"}</p></td>
-                                                    </tr>
-                                                ))
-                                            ) : (
+                            <div className='bg-white border border-[#eef0f5] rounded-xl overflow-hidden'>
+                                <div className='overflow-x-auto w-full'>
+                                    <table className="w-full border-collapse" style={{ minWidth: '600px' }}>
+                                        <thead>
+                                            <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456]">
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Name</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left w-[50%]">Question</th>
+                                            </tr>
+                                        </thead>
+                                        {loader ?
+                                            <tbody>
                                                 <tr>
-                                                    <td colSpan="3" className="text-center py-4">No records found</td>
+                                                    <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
+                                                        <Loader />
+                                                    </td>
                                                 </tr>
-                                            )}
+                                            </tbody>
 
-                                        </tbody>
-                                    }
-                                </table>
+                                            : <tbody>
+                                                {enquiry?.length > 0 ? (
+                                                    enquiry.map((item, index) => (
+                                                        <tr key={item._id || index} className="border-b border-[#f0f1f5] last:border-0 hover:bg-[#f5f8ff] transition-colors">
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.name || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.email || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]"><p className=' w-[100%] break-all'>{item?.question || "-"}</p></td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" className="text-center py-10 text-sm text-[#9ca3af]">No records found</td>
+                                                    </tr>
+                                                )}
 
+                                            </tbody>
+                                        }
+                                    </table>
+                                </div>
                             </div>
                             {totalpages > 1 &&
                                 <ThemeProvider theme={theme}>
@@ -187,52 +193,53 @@ const Enquiry = () => {
                             }
                         </TabPane>
                         <TabPane tab="Contact" key="3" >
-                            <div className='overflow-x-auto w-full  '>
-                                <table className="w-full  rounded-md    ">
-                                    <thead className="bg-white text-[16px] ">
-                                        <tr className="bg-[#F8F8F8] text-left ">
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">First Name</th>
-                                            {/* <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Last Name</th> */}
+                            <div className='bg-white border border-[#eef0f5] rounded-xl overflow-hidden'>
+                                <div className='overflow-x-auto w-full'>
+                                    <table className="w-full border-collapse" style={{ minWidth: '760px' }}>
+                                        <thead>
+                                            <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456]">
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">First Name</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Phone Number</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Subject</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left w-[40%]">Message</th>
 
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Email</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Phone Number</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Subject</th>
-                                            <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold w-[40%]">Message</th>
-
-                                        </tr>
-                                    </thead>
-                                    {loader ?
-                                        <tr>
-                                            <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
-                                                <Loader />
-                                            </td>
-                                        </tr>
-
-                                        : <tbody className="bg-white text-gray-800 text-[15px] ">
-                                            {enquiry?.length > 0 ? (
-                                                enquiry.map((item, index) => (
-                                                    <tr key={item._id || index} style={{ borderBottom: '1px solid #e5e7eba4' }}>
-                                                        <td className="px-4 py-4">{item?.firstName} {item.lastName}</td>
-                                                        <td className="px-4 py-2">{item?.email || "-"}</td>
-                                                        <td className="px-4 py-2">+{item?.phoneNumber || "-"}</td>
-                                                        <td className="px-4 py-2">{item?.subject || "-"}</td>
-                                                        <td className="px-4 py-2"><p className=' w-[100%] break-all'>{item?.message || "-"}</p></td>
-
-
-                                                    </tr>
-                                                ))
-                                            ) : (
+                                            </tr>
+                                        </thead>
+                                        {loader ?
+                                            <tbody>
                                                 <tr>
-                                                    <td colSpan="3" className="text-center py-4">No records found</td>
+                                                    <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
+                                                        <Loader />
+                                                    </td>
                                                 </tr>
-                                            )}
+                                            </tbody>
 
-                                        </tbody>
-                                    }
+                                            : <tbody>
+                                                {enquiry?.length > 0 ? (
+                                                    enquiry.map((item, index) => (
+                                                        <tr key={item._id || index} className="border-b border-[#f0f1f5] last:border-0 hover:bg-[#f5f8ff] transition-colors">
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.firstName} {item.lastName}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.email || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">+{item?.phoneNumber || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.subject || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]"><p className=' w-[100%] break-all'>{item?.message || "-"}</p></td>
 
 
-                                </table>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" className="text-center py-10 text-sm text-[#9ca3af]">No records found</td>
+                                                    </tr>
+                                                )}
 
+                                            </tbody>
+                                        }
+
+
+                                    </table>
+                                </div>
                             </div>
                             {totalpages > 1 &&
                                 <ThemeProvider theme={theme}>

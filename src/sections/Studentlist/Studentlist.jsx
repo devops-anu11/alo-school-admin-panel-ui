@@ -5,7 +5,11 @@ import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import { BiSearchAlt } from "react-icons/bi";
 import { PlusIcon } from '@heroicons/react/24/solid';
-import profile from '../../assets/dashboardimgs/profile.png';
+// generic placeholder avatar - profile.png was an actual person's photo,
+// not a real "no photo" icon, so students without a picture got shown
+// someone else's face instead of a neutral silhouette.
+const profile =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23cbd5e1'/%3E%3Ccircle cx='20' cy='16' r='7' fill='%23f8fafc'/%3E%3Cpath d='M6 35c1.8-8.5 8.2-13 14-13s12.2 4.5 14 13' fill='%23f8fafc'/%3E%3C/svg%3E";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import Pagination from '@mui/material/Pagination';
@@ -13,7 +17,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { excelStudents, getUser } from '../../api/Serviceapi';
 import CloseIcon from '@mui/icons-material/Close';
-import { deleteUserId, getBatchbyid, getBatchName } from '../../api/Serviceapi';
+import { deleteUserId, getCourseBatch } from '../../api/Serviceapi';
 import Addstudent from '../Addstudent/Addstudent';
 import Modal from 'react-modal';
 import styles from './Studentlist.module.css'
@@ -54,28 +58,29 @@ const Studentlist = () => {
   const navigate = useNavigate()
   const [users, setUser] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [course, setCourse] = useState([])
-  const [batch, setBatch] = useState([])
+  const [batches, setBatches] = useState([])
+  const [courseOptions, setCourseOptions] = useState([])
   const [activestatus, setActiveStatus] = useState(() => localStorage.getItem('activestatus') || '');
   const [status, setStatus] = useState(() => localStorage.getItem('status') || '');
-  const [courseId, setCourseId] = useState(() => localStorage.getItem('courseId') || '');
-  const [batchId, setBatchId] = useState(() => localStorage.getItem('batchId') || '');
+  // Not persisted (unlike the fields above) — the primary batch should win
+  // as the default on every fresh visit, not whatever was last picked.
+  const [courseId, setCourseId] = useState('');
+  const [batchId, setBatchId] = useState('');
   const [searchText, setSearchText] = useState(() => localStorage.getItem('searchText') || '');
 
   // Calculate visible range
   const startIndex = (offset - 1) * limit + 1;
   const endIndex = Math.min(offset * limit, totaluser);
 
-  const handleChange = (event) => {
+  const handleBatchChange = (event) => {
+    // courseOptions are re-derived reactively (see the batchId/batches effect below)
     setBatchId(event.target.value);
-
+    setCourseId("");
+    setoffset(1);
   };
   const handlecourseChange = (event) => {
-    const selectedId = event.target.value;
-    setCourseId(selectedId);
+    setCourseId(event.target.value);
     setoffset(1);
-    setBatchId("");
-    getBatchnameid(selectedId);
   };
 
   const handleStatusChange = (event) => {
@@ -88,10 +93,8 @@ const Studentlist = () => {
  useEffect(() => {
   localStorage.setItem('activestatus', activestatus);
   localStorage.setItem('status', status);
-  localStorage.setItem('courseId', courseId);
-  localStorage.setItem('batchId', batchId);
   localStorage.setItem('searchText', searchText);
-}, [activestatus, status, courseId, batchId, searchText]);
+}, [activestatus, status, searchText]);
 
   const handlefilterSearch = () => {
     setActiveStatus('');
@@ -99,51 +102,30 @@ const Studentlist = () => {
     setCourseId('');
     setBatchId('');
     setSearchText('');
+    setCourseOptions([]);
     localStorage.removeItem('activestatus');
     localStorage.removeItem('status');
-    localStorage.removeItem('courseId');
-    localStorage.removeItem('batchId');
     localStorage.removeItem('searchText');
   };
 
   useEffect(() => {
-    getBatchname()
+    fetchBatches()
   }, []);
 
- let getBatchnameid = async (id) => {
-  try {
-    const res = await getBatchbyid(id);
-    const course = res?.data?.data?.find(c => c._id === id);
-
-    const batches = course?.batches
-      ? Array.isArray(course.batches)
-        ? course.batches
-        : [course.batches]
-      : [];
-
-    setBatch(batches);
-
-    // ✅ only clear batchId if it doesn’t exist in this course’s batches
-    if (!batches.some(b => b._id === batchId)) {
-      setBatchId('');
-    }
-  } catch (error) {
-    console.error("error", error.response?.data || error);
-  }
-};
-
-
-
-  let getBatchname = async () => {
+  // Batch drives the filter now — a batch's own `courses` array supplies the
+  // course dropdown's options, so no separate per-batch fetch is needed.
+  let fetchBatches = async () => {
     try {
-      const res = await getBatchName();
+      const res = await getCourseBatch();
+      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setBatches(list);
 
-      // Extract imageURL from backend response
-
-      // console.log(res?.data?.data, 'dasdasdada')
-      setCourse(res?.data?.data)
-
-
+      // Default the filter to the primary batch on first load only — don't
+      // override a batch already restored from localStorage.
+      if (!batchId) {
+        const primary = list.find((b) => b.isPrimary);
+        if (primary) setBatchId(primary._id);
+      }
     } catch (error) {
       console.error("error", error.response?.data || error);
     }
@@ -235,7 +217,7 @@ const Studentlist = () => {
       let base64String = res.data.data;
 
       if (!base64String) {
-        alert("No Excel file data found");
+        toast.error("No Excel file data found");
         return;
       }
 
@@ -263,25 +245,21 @@ const Studentlist = () => {
     }
   };
 
-  // 👇 This ensures batch dropdown refills when you come back from view page
-useEffect(() => {
-  if (courseId) {
-    getBatchnameid(courseId);
-  } else {
-    setBatch([]);
-  }
-}, [courseId]);
-
-  // 👇 after you already defined getBatchnameid() and have batchId in state
+  // 👇 Re-derive course options whenever batchId or the batch list changes
+  // (e.g. the primary batch default kicking in once batches finish
+  // loading) — and drop courseId if it no longer belongs to the batch.
   useEffect(() => {
-    if (batch.length > 0 && batchId) {
-      // ensure that the batchId exists in the new batch list
-      const found = batch.some((b) => b._id === batchId);
-      if (!found) {
-        setBatchId(''); // reset if the stored ID doesn’t exist in this course
-      }
+    if (!batchId) {
+      setCourseOptions([]);
+      return;
     }
-  }, [batch, batchId]);
+    const selectedBatch = batches.find((b) => b._id === batchId);
+    const options = selectedBatch?.courses || [];
+    setCourseOptions(options);
+    if (courseId && !options.some((c) => c.courseId === courseId)) {
+      setCourseId('');
+    }
+  }, [batchId, batches]);
 
 
 
@@ -292,21 +270,21 @@ useEffect(() => {
 
       />
 
-      <div style={{ paddingBottom: '100px' }}>
-        <div className='p-4  Outlet' >
-          <div className="flex justify-between items-center lg:flex-row md:flex-row flex-col">
-            <h4 className='text-xl font-normal'>Student Management</h4>
-            <div className=' flex items-end md:justify-around flex-wrap  p-2 gap-1 '>
+      <div style={{ paddingBottom: '60px' }}>
+        <div className={styles.container} >
+          <div className={styles.pageHeader}>
+            <h4 className={styles.heading}>Student Management</h4>
+            <div className={styles.filterBar}>
 
-              <div style={{ width: '130px', }}>
+              <div>
                 <FormControl
                   variant="outlined"
                   size="small"
                   sx={{
                     minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
                   }}
                 >
                   <Select
@@ -320,7 +298,7 @@ useEffect(() => {
                       },
                       fontSize: '14px',
                       padding: '4px 10px',
-                      height: '36px',
+                      height: '42px',
                       border: 'none'
                     }}
                   >
@@ -339,9 +317,9 @@ useEffect(() => {
                   size="small"
                   sx={{
                     // minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
                   }}
                 >
                   <Select
@@ -355,7 +333,7 @@ useEffect(() => {
                       },
                       fontSize: '14px',
                       padding: '4px 10px',
-                      height: '36px',
+                      height: '42px',
                       border: 'none'
                     }}
                   >
@@ -381,14 +359,14 @@ useEffect(() => {
                   size="small"
                   sx={{
                     minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
                   }}
                 >
                   <Select
-                    value={courseId}
-                    onChange={handlecourseChange}
+                    value={batchId}
+                    onChange={handleBatchChange}
                     displayEmpty
                     IconComponent={KeyboardArrowDownIcon}
                     sx={{
@@ -397,14 +375,14 @@ useEffect(() => {
                       },
                       fontSize: '14px',
                       padding: '4px 10px',
-                      height: '36px',
+                      height: '42px',
                       border: 'none'
                     }}
                   >
                     <MenuItem value="">All</MenuItem>
-                    {course.map((item, index) => {
+                    {batches.map((item, index) => {
                       return (
-                        <MenuItem value={item._id} key={index}>{item.courseName}</MenuItem>
+                        <MenuItem value={item._id} key={index}>{item.batchName}</MenuItem>
                       )
                     })}
                   </Select>
@@ -419,15 +397,15 @@ useEffect(() => {
                   size="small"
                   sx={{
                     minWidth: 120,
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
                   }}
                 >
 
                   <Select
-                    value={batchId}
-                    onChange={handleChange}
+                    value={courseId}
+                    onChange={handlecourseChange}
                     displayEmpty
                     IconComponent={KeyboardArrowDownIcon}
                     sx={{
@@ -436,28 +414,28 @@ useEffect(() => {
                       },
                       fontSize: '14px',
                       padding: '4px 10px',
-                      height: '36px',
+                      height: '42px',
                       border: 'none'
                     }}
-                    disabled={!courseId}
-                  // style={{ cursor: courseId ? 'pointer' : 'not-allowed' }}
+                    disabled={!batchId}
                   >
                     <MenuItem value="">All</MenuItem>
-                    {batch.map((item, index) => {
+                    {courseOptions.map((item, index) => {
                       return (
-                        <MenuItem value={item._id} key={index}>{item.batchName}</MenuItem>
+                        <MenuItem value={item.courseId} key={index}>{item.courseName}</MenuItem>
                       )
                     })}
                   </Select>
                 </FormControl>
               </div>
-              <div style={{ width: '190px' }}>
+              <div className={styles.searchBox}>
                 <TextField
                   variant="outlined"
                   size="small"
                   placeholder="Search here"
                   value={searchText}
                   onChange={handleSearchChange}
+                  fullWidth
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -472,9 +450,9 @@ useEffect(() => {
                       </InputAdornment>
                     ),
                     style: {
-                      backgroundColor: '#F6F6F6',
-                      borderRadius: '6px',
-                      height: '36px',
+                      backgroundColor: '#fff',
+                      borderRadius: '10px',
+                      height: '42px',
                       fontSize: '14px',
                       padding: '4px 10px'
                     },
@@ -482,99 +460,107 @@ useEffect(() => {
                   }}
                   sx={{
                     '& .MuiOutlinedInput-notchedOutline': {
-                      border: 'none',
+                      border: '1px solid #e5e7eb',
                     },
                     minWidth: 120,
+                    width: '100%',
                   }}
                 />
               </div>
               <div>
                 {(activestatus?.toString().trim() || status || courseId?.toString().trim() || batchId?.toString().trim()) && (
-                  <button className={styles.clear} onClick={handlefilterSearch}>
+                  <button className={styles.clear} onClick={handlefilterSearch} title="Clear filters">
                     <IoIosCloseCircle />
                   </button>
                 )}
 
               </div>
-              <div className={styles.button}>
-                <button onClick={() => setIsOpen(true)} style={{ cursor: 'pointer' }} className='text-[#FFFFFF] bg-gradient-to-b from-[#144196] to-[#061530]  px-[20px] w-fit py-2 rounded-md mr-2 flex items-center justify-between'><PlusIcon className='w-4 h-4 text-[600]' />Add Student</button>
+              <div className={styles.addBtnWrap}>
+                <button onClick={() => setIsOpen(true)} className={styles.primaryBtn}><PlusIcon className='w-4 h-4' />Add Student</button>
               </div>
 
             </div>
           </div>
 
-          <div className='flex justify-end mt-4'>
-            <button className='bg-gradient-to-b from-[#144196] to-[#061530] text-white px-1 py-1 rounded-md flex items-center flex-end gap-1 cursor-pointer' onClick={getExcel}>Export<MdOutlineFileDownload />
+          <div className={styles.exportRow}>
+            <button className={styles.exportBtn} onClick={getExcel}>Export<MdOutlineFileDownload />
             </button>
           </div>
-          <div className='overflow-x-auto w-full '>
-            <table className="w-full  rounded-md  text-sm  ">
-              <thead className="bg-white  ">
-                <tr className="bg-[#F8F8F8] text-left ">
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Profile</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">ID No</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Name</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Mobile</th>
-
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Mail</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Password</th>
-
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Course</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Batch</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Active</th>
-
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Status</th>
-                  <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold text-center" colSpan={2}>Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white text-gray-800">
-                {loading ? (
+          <div className={styles.tableCard}>
+            <div className={styles.tableScroll}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold">
-                      <Loader />
-                    </td>
+                    <th>Profile</th>
+                    <th>ID No</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Mail</th>
+                    <th>Password</th>
+                    <th>Course</th>
+                    <th>Batch</th>
+                    <th>Active</th>
+                    <th>Status</th>
+                    <th className="text-center" colSpan={2}>Action</th>
                   </tr>
-                ) : Array.isArray(users) && users.length > 0 ? (
-                  users.map((user) => (
-                    <tr key={user._id} className="border-b border-[#0000001A] hover:bg-gray-50">
-                      <td className="px-4 py-2">
-                        <img src={user.profileURL || profile} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold">
+                        <Loader />
                       </td>
-                      <td className="px-4 py-2">{user.studentId}</td>
-                      <td className="px-4 py-2 capitalize">{user.name}</td>
-                      <td className="px-4 py-2">{user.mobileNo}</td>
-                      <td className="px-4 py-2">{user.email}</td>
-                      <td className="px-4 py-2">{user.password}</td>
-                      <td className="px-4 py-2">{user?.courseDetails?.courseName}</td>
-                      <td className="px-4 py-2">{user?.batchDetails?.batchName || '-'}</td>
-                      <td
-                        className="px-4 py-2 capitalize"
-                        style={{ color: user.status === 'active' ? 'green' : 'red' }}
-                      >
-                        {user?.status || '-'}
-                      </td>
-                      <td
-                        className={`px-4 py-2 font-medium ${user.inStatus === 'completed'
-                          ? 'text-green-500'
-                          : user.inStatus === 'placed'
-                            ? 'text-yellow-500'
-                            : user.inStatus === 'ongoing'
-                              ? 'text-blue-700'
-                              : ''
-                          }`}
-                      >
-                        {user.inStatus}
-                      </td>
-                      <td className="px-4 py-2 space-x-2 text-sm">
-                        <button
-                          className="text-blue-700 flex items-center gap-1 cursor-pointer"
-                          onClick={() => navigate(`/students/studentview/${user._id}`)}
-                        >
-                          <VisibilityIcon /> View
-                        </button>
-                      </td>
+                    </tr>
+                  ) : Array.isArray(users) && users.length > 0 ? (
+                    users.map((user) => (
+                      <tr key={user._id}>
+                        <td>
+                          <img
+                            src={user.profileURL || profile}
+                            alt="Profile"
+                            className={styles.avatar}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = profile;
+                            }}
+                          />
+                        </td>
+                        <td>{user.studentId}</td>
+                        <td className={styles.cellPrimary}>{user.name}</td>
+                        <td>{user.mobileNo}</td>
+                        <td>{user.email}</td>
+                        <td>{user.password}</td>
+                        <td>{user?.courseDetails?.courseName}</td>
+                        <td>{user?.batchDetails?.batchName || '-'}</td>
+                        <td>
+                          <span className={`${styles.pill} ${user.status === 'active' ? styles.pillActive : styles.pillInactive}`}>
+                            {user?.status || '-'}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`${styles.pill} ${user.inStatus === 'completed'
+                              ? styles.pillCompleted
+                              : user.inStatus === 'placed'
+                                ? styles.pillPlaced
+                                : user.inStatus === 'ongoing'
+                                  ? styles.pillOngoing
+                                  : styles.pillNeutral
+                              }`}
+                          >
+                            {user.inStatus || '-'}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className={styles.viewBtn}
+                            onClick={() => navigate(`/students/studentview/${user._id}`)}
+                          >
+                            <VisibilityIcon fontSize="small" /> View
+                          </button>
+                        </td>
 
-                      {/* <td className="px-4 py-2 space-x-2 text-sm">
+                        {/* <td className="px-4 py-2 space-x-2 text-sm">
             <button
               className="text-red-600 flex items-center gap-1 cursor-pointer"
               onClick={() => { setDeleteOpen(true); setId(user._id) }}
@@ -582,47 +568,47 @@ useEffect(() => {
               <DeleteOutlineIcon /> Delete
             </button>
           </td> */}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="11" className={styles.emptyState}>
+                        <img src={nodata} alt="" width="160" height="160" className="m-auto" />
+                        <p>No Data Found</p>
+                      </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold">
-                      <img src={nodata} alt="" width="200" height="200" className="m-auto" />
-                      <p>No Data Found</p>
-                    </td>
-                  </tr>
                 )}
               </tbody>
 
             </table>
 
+            </div>
+
           </div>
 
-        </div>
-        <div className='flex justify-between items-end ms-auto w-[50%]'>
+          <div className={styles.footerRow}>
 
-          {totalpages > 0 &&
+            {totalpages > 0 &&
 
-            <ThemeProvider theme={theme}>
-              <div className="flex justify-center ">
-                <Pagination
-                  count={totalpages}
-                  page={offset}
-                  onChange={handlePageChange}
-                  showFirstButton
-                  showLastButton
-                />
-              </div>
-            </ThemeProvider>
+              <ThemeProvider theme={theme}>
+                <div className="flex justify-center ">
+                  <Pagination
+                    count={totalpages}
+                    page={offset}
+                    onChange={handlePageChange}
+                    showFirstButton
+                    showLastButton
+                  />
+                </div>
+              </ThemeProvider>
 
-          }
-          {totalpages > 0 &&
-            <div className="flex justify-between items-center">
-              <p className="text-gray-600 text-sm">
+            }
+            {totalpages > 0 &&
+              <p className={styles.pageInfo}>
                 Showing {startIndex} – {endIndex} of {totaluser} students
               </p>
-            </div>
-          }
+            }
+          </div>
         </div>
 
         <Modal
@@ -636,7 +622,7 @@ useEffect(() => {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgb(21 21 21 / 81%)', // gray overlay
+              backgroundColor: 'rgba(21, 21, 21, 0.6)',
               zIndex: 1000,
             },
             content: {
@@ -646,12 +632,13 @@ useEffect(() => {
               transform: 'translate(-50%, -50%)',
               padding: '2rem',
               backgroundColor: '#fff',
-              borderRadius: '8px',
-              width: '800px',
-              height: '600px',
+              borderRadius: '12px',
+              width: 'min(800px, 94vw)',
+              height: 'min(600px, 90vh)',
               overflow: 'auto',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 20px 45px rgba(15, 27, 51, 0.25)',
               zIndex: 1001,
+              fontFamily: '"Poppins", sans-serif',
             },
           }}
         >
@@ -670,7 +657,7 @@ useEffect(() => {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgb(21 21 21 / 81%)', // gray overlay
+              backgroundColor: 'rgba(21, 21, 21, 0.6)',
               zIndex: 1000,
             },
             content: {
@@ -678,14 +665,15 @@ useEffect(() => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              padding: '3rem',
+              padding: '2.5rem',
               backgroundColor: '#fff',
-              borderRadius: '8px',
-              width: 'max-content',
+              borderRadius: '12px',
+              width: 'min(360px, 92vw)',
               height: 'max-content',
               overflow: 'auto',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 20px 45px rgba(15, 27, 51, 0.25)',
               zIndex: 1001,
+              fontFamily: '"Poppins", sans-serif',
             },
           }}
         >

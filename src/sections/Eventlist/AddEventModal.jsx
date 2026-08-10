@@ -115,12 +115,10 @@ const AddEventModal = ({ closeModal, onevent }) => {
                 size="small"
                 sx={{
                   minWidth: '100%',
-                  backgroundColor: '#F6F6F6', // match the image background
-                  borderRadius: '6px',
-                  border: 'none',
-                  height: '45px',
-                  border: ' 1px solid #eceaeae1'
-
+                  backgroundColor: '#fff',
+                  borderRadius: '10px',
+                  height: '44px',
+                  border: '1px solid #e5e7eb',
                 }}
               >
                 <Select
@@ -134,7 +132,7 @@ const AddEventModal = ({ closeModal, onevent }) => {
                     },
                     fontSize: '14px',
                     padding: '4px 10px',
-                    height: '36px',
+                    height: '44px',
                     border: 'none'
                   }}
                 //  placeholder="Event Type"

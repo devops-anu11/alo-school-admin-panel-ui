@@ -102,73 +102,77 @@ const Complaint = () => {
         <Loader />
       ) : (
         <>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Student Name</th>
-                <th>Summary</th>
-                <th>Message</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {complaints.length > 0 ? (
-                complaints.map((item) => (
-                  <tr key={item._id}>
-                    <td>
-                      {new Date(item.createdAt).toLocaleDateString("en-GB")}
-                    </td>
-
-                    <td>{item.studentId?.name}</td>
-
-                    <td>{item.summary}</td>
-
-                    <td>
-                      <div className={styles.message}>{item.message}</div>
-                    </td>
-
-                    <td>
-                      {item.status === "pending" ? (
-                        <div className={styles.actionButtons}>
-                          <button
-                            className={styles.acceptBtn}
-                            onClick={() => handleStatus(item._id, "accepted")}
-                          >
-                            Accept
-                          </button>
-
-                          <button
-                            className={styles.rejectBtn}
-                            onClick={() => handleStatus(item._id, "rejected")}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          className={`${styles.status} ${
-                            item.status === "accepted"
-                              ? styles.accepted
-                              : styles.rejected
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      )}
-                    </td>
+          <div className={styles.tableCard}>
+            <div className={styles.tableScroll}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Student Name</th>
+                    <th>Summary</th>
+                    <th>Message</th>
+                    <th>Status</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className={styles.noData}>
-                    No Complaints Found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+
+                <tbody>
+                  {complaints.length > 0 ? (
+                    complaints.map((item) => (
+                      <tr key={item._id}>
+                        <td>
+                          {new Date(item.createdAt).toLocaleDateString("en-GB")}
+                        </td>
+
+                        <td>{item.studentId?.name}</td>
+
+                        <td>{item.summary}</td>
+
+                        <td>
+                          <div className={styles.message}>{item.message}</div>
+                        </td>
+
+                        <td>
+                          {item.status === "pending" ? (
+                            <div className={styles.actionButtons}>
+                              <button
+                                className={styles.acceptBtn}
+                                onClick={() => handleStatus(item._id, "accepted")}
+                              >
+                                Accept
+                              </button>
+
+                              <button
+                                className={styles.rejectBtn}
+                                onClick={() => handleStatus(item._id, "rejected")}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span
+                              className={`${styles.status} ${
+                                item.status === "accepted"
+                                  ? styles.accepted
+                                  : styles.rejected
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className={styles.noData}>
+                        No Complaints Found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {totalPages > 0 && (
             <div className={styles.paginationWrapper}>

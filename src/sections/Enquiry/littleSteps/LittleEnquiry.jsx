@@ -56,62 +56,64 @@ const LittleStepsEnquiry = () => {
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
-    <div className='px-5 pt-6 pb-[100px]'>
+    <div className='px-4 sm:px-5 pt-5 sm:pt-6 pb-[100px] bg-[#f6f7fb] min-h-full' style={{ fontFamily: '"Poppins", sans-serif' }}>
 
-      <h4 className='text-xl font-normal'>ALO LittleSteps Enquiry</h4>
+      <h4 className='text-[22px] sm:text-[26px] font-semibold text-[#123d84]'>ALO LittleSteps Enquiry</h4>
 
-      <div className='mt-5 overflow-x-auto'>
-        <table className="w-full rounded-md">
+      <div className='mt-4 sm:mt-5 bg-white border border-[#eef0f5] rounded-xl overflow-hidden'>
+        <div className='overflow-x-auto'>
+          <table className="w-full border-collapse" style={{ minWidth: '780px' }}>
 
-          <thead className="bg-[#F8F8F8] text-left">
-            <tr>
-              <th className="px-4 py-2">Parent Name</th>
-              <th className="px-4 py-2">Child Name</th>
-              <th className="px-4 py-2">Phone</th>
-              <th className="px-4 py-2">Email</th>
-          
-              <th className="px-4 py-2">Program</th>
-              <th className="px-4 py-2">Date</th>
-            </tr>
-          </thead>
+            <thead>
+              <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456]">
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Parent Name</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Child Name</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Phone</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
 
-          {loader ? (
-            <tbody>
-              <tr>
-                <td colSpan="7" className="text-center py-10">
-                  <Loader />
-                </td>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Program</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Date</th>
               </tr>
-            </tbody>
-          ) : (
-            <tbody>
+            </thead>
 
-              {enquiry.length > 0 ? (
-                enquiry.map((item, index) => (
-                  <tr key={item._id || index} style={{ borderBottom: '1px solid #eee' }}>
-                    <td className="px-4 py-3">{item.parentsName}</td>
-                    <td className="px-4 py-3">{item.childsName}</td>
-                    <td className="px-4 py-3">{item.phoneNumber}</td>
-                    <td className="px-4 py-3">{item.email}</td>
-          
-                    <td className="px-4 py-3">{item.programOfInterest}</td>
-                    <td className="px-4 py-3">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              ) : (
+            {loader ? (
+              <tbody>
                 <tr>
-                  <td colSpan="6" className="text-center py-10">
-                    <img src={nodata} width="150" className="m-auto" />
-                    <p>No Data Found</p>
+                  <td colSpan="7" className="text-center py-16">
+                    <Loader />
                   </td>
                 </tr>
-              )}
+              </tbody>
+            ) : (
+              <tbody>
 
-            </tbody>
-          )}
-        </table>
+                {enquiry.length > 0 ? (
+                  enquiry.map((item, index) => (
+                    <tr key={item._id || index} className="border-b border-[#f0f1f5] last:border-0 hover:bg-[#f5f8ff] transition-colors">
+                      <td className="px-4 py-3.5 text-sm text-[#374151]">{item.parentsName}</td>
+                      <td className="px-4 py-3.5 text-sm text-[#374151]">{item.childsName}</td>
+                      <td className="px-4 py-3.5 text-sm text-[#374151]">{item.phoneNumber}</td>
+                      <td className="px-4 py-3.5 text-sm text-[#374151]">{item.email}</td>
+
+                      <td className="px-4 py-3.5 text-sm text-[#374151]">{item.programOfInterest}</td>
+                      <td className="px-4 py-3.5 text-sm text-[#374151]">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center py-16 text-sm text-[#9ca3af]">
+                      <img src={nodata} width="150" className="m-auto" />
+                      <p>No Data Found</p>
+                    </td>
+                  </tr>
+                )}
+
+              </tbody>
+            )}
+          </table>
+        </div>
       </div>
 
       {totalPages > 1 && (

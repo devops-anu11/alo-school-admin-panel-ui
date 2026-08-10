@@ -1,7 +1,5 @@
 import { React, useEffect, useState } from "react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import profile from "../../assets/dashboardimgs/profile.png";
 import Import from "../../assets/dashboardimgs/Import.png";
 import { Form, useParams } from "react-router-dom";
@@ -20,7 +18,6 @@ import {
   deleteTermSem,
   uploadFile,
   getFeeBalance,
-  updateFeeBalance,
 } from "../../api/Serviceapi";
 import Modal from "react-modal";
 import { deleteTermSem as deleteTermSemApi } from "../../api/Serviceapi";
@@ -41,6 +38,7 @@ import { getSubjects } from "../../api/Serviceapi";
 const Studentdetails = () => {
   const { id } = useParams();
   const [user, setUser] = useState([]);
+  const [profileImgError, setProfileImgError] = useState(false);
   const [fileUrl, setFileUrl] = useState("");
   const [certificateUrl, setCertificateUrl] = useState("");
   const [totalcount, setTotalcount] = useState(null);
@@ -70,8 +68,6 @@ const Studentdetails = () => {
 
   const [feeDetails, setFeeDetails] = useState([]);
   const [feeLoading, setFeeLoading] = useState(false);
-  const [editingFeeId, setEditingFeeId] = useState(null);
-  const [editedFee, setEditedFee] = useState({});
 
   const handleSemesterChange = (event) => {
 
@@ -568,65 +564,24 @@ const Studentdetails = () => {
      setFeeLoading(false);
    }
  }
- const handleEditFee = (item) => {
-   setEditingFeeId(item._id);
-
-   setEditedFee({
-     semFee: item.semFee,
-     paidAmount: item.paidAmount,
-     pendingAmount: item.pendingAmount,
-   });
- };
- const handleChange = (field, value) => {
-   const updated = {
-     ...editedFee,
-     [field]: Number(value),
-   };
-
-   updated.pendingAmount =
-     Number(updated.semFee || 0) - Number(updated.paidAmount || 0);
-
-   setEditedFee(updated);
- };
- const handleSaveFee = async (id) => {
-   try {
-     console.log("Saving:", id, editedFee);
-
-     const res = await updateFeeBalance(id, editedFee);
-
-     console.log("Response:", res);
-
-     toast.success("Fee updated successfully");
-
-     fetchFeeDetails();
-     setEditingFeeId(null);
-   } catch (err) {
-     console.error(err);
-     toast.error(err?.response?.data?.message || "Update failed");
-   }
- };
- const handleCancelFee = () => {
-   setEditingFeeId(null);
-   setEditedFee({});
- };
   return (
     <>
       <ToastContainer />
       <div className={styles.spacing}>
-        <div className="flex gap-[10px] items-center pb-[10px]">
+        <div className="flex gap-[10px] items-center pb-[16px]">
           <div>
             <IoMdArrowRoundBack
-              style={{ cursor: "pointer", fontSize: "20px", marginTop: "2px" }}
+              style={{ cursor: "pointer", fontSize: "20px", marginTop: "2px", color: "#123d84" }}
               onClick={() => window.history.back()}
             />
           </div>
           <div>
-            <h4 className="text-xl font-normal">Student Details</h4>
+            <h4 className={styles.pageHeading}>Student Details</h4>
           </div>
         </div>
         {loading ? (
           <div>
-            <div className="bg-[#F8F8F8] px-[10px] py-[10px] rounded-[10px]">
+            <div className="bg-white border border-[#eef0f5] px-[10px] py-[10px] rounded-[12px]">
               <div className="flex justify-evenly items-center flex-col md:flex-row">
                 <div className="  m-auto rounded-[50%] overflow-hidden mx-2 border-[3px] border-[#ffff] border-solid">
                   <div className="w-[100px] h-[100px]">
@@ -653,31 +608,31 @@ const Studentdetails = () => {
 
                   <div className="grid grid-cols-2 lg:grid-cols-7 md:grid-cols-3 sm:grid-cols-2 text-[14px]">
                     <div>
-                      <div className="text-[#00000080]">ID</div>
+                      <div className="text-[#6b7280]">ID</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Phone</div>
+                      <div className="text-[#6b7280]">Phone</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">E-Mail</div>
+                      <div className="text-[#6b7280]">E-Mail</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Course</div>
+                      <div className="text-[#6b7280]">Course</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Batch</div>
+                      <div className="text-[#6b7280]">Batch</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Blood</div>
+                      <div className="text-[#6b7280]">Blood</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">D.O.B</div>
+                      <div className="text-[#6b7280]">D.O.B</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                   </div>
@@ -686,123 +641,123 @@ const Studentdetails = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 gap-3 mt-3">
-              <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px]">
+              <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px]">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-[16px] font-medium">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">
                     Attendance Details
                   </h4>
                   {/* <div className='text-white  bg-gradient-to-b from-[#144196] to-[#061530] text-[12px] px-[40px] p-2 rounded-lg'>Make Absent</div> */}
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-2 md:grid-cols-2 gap-2">
-                  <div className="bg-white rounded-[10px] px-[20px] py-[10px] mt-5">
-                    <p className="text-[#F81111] text-[12px]">
+                  <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5">
+                    <p className="text-[#d92d20] text-[12px]">
                       No: Of Days Absents
                     </p>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
-                  <div className="bg-white rounded-[10px] px-[20px] py-[10px] mt-5 ">
-                    <p className="text-[#F81111] text-[12px]">
+                  <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5 ">
+                    <p className="text-[#d92d20] text-[12px]">
                       No: Of Days Absents
                     </p>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                 </div>
-                <div className="grid grid-cols-3  text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5  ">
+                <div className="grid grid-cols-3  text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-5  ">
                   <div>
-                    <div className="text-[#00000080]">Date</div>
+                    <div className="text-[#6b7280]">Date</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                   <div>
-                    <div className="text-[#00000080]">Check-in</div>
+                    <div className="text-[#6b7280]">Check-in</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                   <div>
-                    <div className="text-[#00000080]">Check-out</div>
-                    <Skeleton variant="text" width={80} height={40} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3  text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5  ">
-                  <div>
-                    <div className="text-[#00000080]">Date</div>
-                    <Skeleton variant="text" width={80} height={40} />
-                  </div>
-                  <div>
-                    <div className="text-[#00000080]">Check-in</div>
-                    <Skeleton variant="text" width={80} height={40} />
-                  </div>
-                  <div>
-                    <div className="text-[#00000080]">Check-out</div>
+                    <div className="text-[#6b7280]">Check-out</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                 </div>
-                <div className="grid grid-cols-3  text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5  ">
+                <div className="grid grid-cols-3  text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-5  ">
                   <div>
-                    <div className="text-[#00000080]">Date</div>
+                    <div className="text-[#6b7280]">Date</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                   <div>
-                    <div className="text-[#00000080]">Check-in</div>
+                    <div className="text-[#6b7280]">Check-in</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                   <div>
-                    <div className="text-[#00000080]">Check-out</div>
+                    <div className="text-[#6b7280]">Check-out</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                 </div>
-                <div className="grid grid-cols-3  text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5  ">
+                <div className="grid grid-cols-3  text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-5  ">
                   <div>
-                    <div className="text-[#00000080]">Date</div>
+                    <div className="text-[#6b7280]">Date</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                   <div>
-                    <div className="text-[#00000080]">Check-in</div>
+                    <div className="text-[#6b7280]">Check-in</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                   <div>
-                    <div className="text-[#00000080]">Check-out</div>
+                    <div className="text-[#6b7280]">Check-out</div>
+                    <Skeleton variant="text" width={80} height={40} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3  text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-5  ">
+                  <div>
+                    <div className="text-[#6b7280]">Date</div>
+                    <Skeleton variant="text" width={80} height={40} />
+                  </div>
+                  <div>
+                    <div className="text-[#6b7280]">Check-in</div>
+                    <Skeleton variant="text" width={80} height={40} />
+                  </div>
+                  <div>
+                    <div className="text-[#6b7280]">Check-out</div>
                     <Skeleton variant="text" width={80} height={40} />
                   </div>
                 </div>
               </div>
               <div>
-                <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] ">
-                  <h4 className="text-[16px] font-medium">Fee Details</h4>
-                  <div className="grid grid-cols-4 text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5 ">
+                <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] ">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">Fee Details</h4>
+                  <div className="grid grid-cols-4 text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-5 ">
                     <div>
-                      <div className="text-[#00000080]">Total Fees</div>
+                      <div className="text-[#6b7280]">Total Fees</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Paid</div>
+                      <div className="text-[#6b7280]">Paid</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Pending</div>
+                      <div className="text-[#6b7280]">Pending</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Due Date</div>
+                      <div className="text-[#6b7280]">Due Date</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                   </div>
                 </div>
-                <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] my-3">
-                  <h4 className="text-[16px] font-medium">Documents</h4>
-                  <div className="text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 ">
+                <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] my-3">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">Documents</h4>
+                  <div className="text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-2 ">
                     <div className="flex justify-between items-center">
                       <h4>Aadhar card</h4>
                       <Skeleton variant="text" width={80} height={20} />
                     </div>
                   </div>
-                  <div className="text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 ">
+                  <div className="text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-2 ">
                     <div className="flex justify-between items-center">
                       <h4>Original</h4>
                       <Skeleton variant="text" width={80} height={20} />
                     </div>
                   </div>
                 </div>
-                <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] my-3">
-                  <h4 className="text-[16px] font-medium">Personal Details</h4>
+                <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] my-3">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">Personal Details</h4>
 
                   <div className="text-[14px] font-normal my-2">
                     <div className="flex justify-around items-center my-1">
@@ -833,25 +788,32 @@ const Studentdetails = () => {
           </div>
         ) : (
           <div>
-            <div className="bg-[#F8F8F8] px-[10px] py-[10px] rounded-[10px]">
+            <div className="bg-white border border-[#eef0f5] px-[10px] py-[10px] rounded-[12px]">
               <div className="flex justify-evenly items-center flex-col md:flex-row">
                 <div className="  m-auto rounded-[50%] overflow-hidden mx-2 border-[3px] border-[#ffff] border-solid">
                   <div className="w-[100px] h-[100px]">
-                    <img
-                      src={user?.profileURL}
-                      alt="profile"
-                      className="w-[100%] h-[100%]"
-                    />
+                    {user?.profileURL && !profileImgError ? (
+                      <img
+                        src={user.profileURL}
+                        alt="profile"
+                        className="w-[100%] h-[100%] object-cover"
+                        onError={() => setProfileImgError(true)}
+                      />
+                    ) : (
+                      <div className="w-[100%] h-[100%] flex items-center justify-center bg-gradient-to-b from-[#144196] to-[#061530] text-white text-[40px] font-semibold">
+                        {user?.name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="w-[85%]">
                   <div className="flex justify-between items-center pb-[10px]">
-                    <h2 className="text-[22px] font-[500] text-center md:text-left">
+                    <h2 className="text-[22px] font-semibold text-[#123d84] text-center md:text-left">
                       {user?.name?.replace(/\b\w/g, (char) =>
                         char.toUpperCase(),
                       )}
                     </h2>
-                    <div className="flex items-center gap-3 pb-[10px]">
+                    <div className="flex items-center gap-3 pb-[10px] flex-wrap">
                       <div>
                         <button
                           className={` ${styles.absent}`}
@@ -862,12 +824,12 @@ const Studentdetails = () => {
                       </div>
                       <div>
                         <button
-                          className="bg-gradient-to-b from-[#144196] to-[#061530]
+                          className="bg-gradient-to-b from-[#144196] to-[#0b2456]
     text-white font-medium
     text-[11px] sm:text-[12px] md:text-[13px]
     px-3 sm:px-4 md:px-5
     py-1.5 sm:py-2
-    rounded-md
+    rounded-[10px]
     whitespace-nowrap"
                           onClick={() => {
                             setTimeout(fetchSubjects, 0); // ensure modal + user loaded
@@ -903,15 +865,15 @@ const Studentdetails = () => {
 
                   <div className="grid grid-cols-2 lg:grid-cols-7 md:grid-cols-3 sm:grid-cols-2 text-[14px]">
                     <div>
-                      <div className="text-[#00000080]">ID</div>
+                      <div className="text-[#6b7280]">ID</div>
                       <p className="font-[500]">{user?.studentId}</p>
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Phone</div>
+                      <div className="text-[#6b7280]">Phone</div>
                       <p className="font-[500]">{user?.mobileNo}</p>
                     </div>
                     <div>
-                      <div className="text-[#00000080]">E-Mail</div>
+                      <div className="text-[#6b7280]">E-Mail</div>
                       <p
                         title={user?.email}
                         className="font-[500] truncate overflow-hidden whitespace-nowrap w-[90%]"
@@ -920,23 +882,23 @@ const Studentdetails = () => {
                       </p>
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Course</div>
+                      <div className="text-[#6b7280]">Course</div>
                       <p className="font-[500]">
                         {user?.courseDetails?.courseName}
                       </p>
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Batch</div>
+                      <div className="text-[#6b7280]">Batch</div>
                       <p className="font-[500]">
                         {user?.batchDetails?.batchName}
                       </p>
                     </div>
                     <div>
-                      <div className="text-[#00000080]">Blood</div>
+                      <div className="text-[#6b7280]">Blood</div>
                       <p className="font-[500]">{user?.blood}</p>
                     </div>
                     <div>
-                      <div className="text-[#00000080]">D.O.B</div>
+                      <div className="text-[#6b7280]">D.O.B</div>
                       <p className="font-[500]">{user?.DOB?.split("T")[0]}</p>
                     </div>
                   </div>
@@ -944,8 +906,8 @@ const Studentdetails = () => {
               </div>
             </div>
 
-            <div className="bg-[#F8F8F8] mt-3 p-3 rounded-[10px]">
-              <h4 className="text-[16px] font-medium mb-3">
+            <div className="bg-white border border-[#eef0f5] mt-3 p-3 rounded-[12px]">
+              <h4 className="text-[16px] font-semibold text-[#123d84] mb-3">
                 Term / Semester Details
               </h4>
 
@@ -953,7 +915,7 @@ const Studentdetails = () => {
                 <p className="text-sm text-gray-500">Loading records...</p>
               ) : termList.length > 0 ? (
                 termList.map((p) => (
-                  <div key={p._id} className="bg-white p-3 rounded mb-3">
+                  <div key={p._id} className="bg-[#f8fafd] border border-[#eef0f5] p-3 rounded-[10px] mb-3">
                     {/* Header */}
                     <div className="flex justify-between items-center mb-2">
                       <div>
@@ -1019,9 +981,9 @@ const Studentdetails = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 gap-3 mt-3">
-              <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px]">
+              <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px]">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-[16px] font-medium">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">
                     Attendance Details
                   </h4>
                   <div>
@@ -1048,30 +1010,30 @@ const Studentdetails = () => {
                 </div>
                 {totalcount && (
                   <div className="grid grid-cols-2 lg:grid-cols-3 md:grid-cols-2 gap-2">
-                    <div className="bg-white rounded-[10px] px-[20px] py-[10px] mt-5">
-                      <p className="text-[#F81111] text-[11px]">
+                    <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5">
+                      <p className="text-[#d92d20] text-[11px]">
                         No Of Days Absents this month
                       </p>
-                      <p className="text-[#F81111] text-[28px] font-[600]">
+                      <p className="text-[#d92d20] text-[28px] font-[600]">
                         {totalcount?.total?.currentMonth || 0}
                       </p>
                     </div>
-                    <div className="bg-white rounded-[10px] px-[20px] py-[10px] mt-5 ">
-                      <p className="text-[#F81111] text-[12px]">
+                    <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5 ">
+                      <p className="text-[#d92d20] text-[12px]">
                         No Of Days Absents last month
                       </p>
-                      <p className="text-[#F81111] text-[28px] font-[600]">
+                      <p className="text-[#d92d20] text-[28px] font-[600]">
                         {totalcount?.total?.prevMonth || 0}
                       </p>
                     </div>
-                    <div className="bg-white rounded-[10px] px-[20px] py-[10px] mt-5 ">
-                      <p className="text-[#F81111] text-[12px]">
+                    <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5 ">
+                      <p className="text-[#d92d20] text-[12px]">
                         Attendance Rate
                       </p>
-                      <p className="text-[#F81111] text-[12px]">
+                      <p className="text-[#d92d20] text-[12px]">
                         Present Days : {Studentattendancerate?.presentDays || 0}
                       </p>
-                      <p className="text-[#F81111] text-[28px] font-[600] ">
+                      <p className="text-[#d92d20] text-[28px] font-[600] ">
                         {Studentattendancerate?.attendanceRate || 0}
                       </p>
                     </div>
@@ -1081,10 +1043,10 @@ const Studentdetails = () => {
                   studentattendance.map((item, index) => (
                     <div
                       key={index}
-                      className="grid grid-cols-5 text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-5"
+                      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-5"
                     >
                       <div>
-                        <div className="text-[#00000080]">Date</div>
+                        <div className="text-[#6b7280]">Date</div>
                         <p
                           className="font-[500]"
                           style={{ color: item?.onLeave ? "red" : "" }}
@@ -1093,7 +1055,7 @@ const Studentdetails = () => {
                         </p>
                       </div>
                       <div>
-                        <div className="text-[#00000080]">Break-in</div>
+                        <div className="text-[#6b7280]">Break-in</div>
                         <p className="font-[500]">
                           {item?.onLeave ? (
                             <span style={{ color: "red" }}>-</span>
@@ -1105,7 +1067,7 @@ const Studentdetails = () => {
                         </p>
                       </div>
                       <div>
-                        <div className="text-[#00000080]">Break-out</div>
+                        <div className="text-[#6b7280]">Break-out</div>
                         <p className="font-[500]">
                           {item?.onLeave ? (
                             <span style={{ color: "red" }}>-</span>
@@ -1117,7 +1079,7 @@ const Studentdetails = () => {
                         </p>
                       </div>
                       <div>
-                        <div className="text-[#00000080]">Check-in</div>
+                        <div className="text-[#6b7280]">Check-in</div>
                         <p className="font-[500]">
                           {item?.onLeave ? (
                             <span style={{ color: "red" }}>Leave</span>
@@ -1129,7 +1091,7 @@ const Studentdetails = () => {
                         </p>
                       </div>
                       <div>
-                        <div className="text-[#00000080]">Check-out</div>
+                        <div className="text-[#6b7280]">Check-out</div>
                         <p className="font-[500]">
                           {item?.onLeave ? (
                             <span style={{ color: "red" }}>-</span>
@@ -1151,112 +1113,37 @@ const Studentdetails = () => {
                       height={"200px"}
                       className="m-auto mt-[30px]"
                     />
-                    <p className="text-center text-[#00000080] font-semibold">
+                    <p className="text-center text-[#6b7280] font-semibold">
                       No Data Found
                     </p>
                   </div>
                 )}
               </div>
               <div>
-                <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] ">
-                  <h4 className="text-[16px] font-medium">Fee Details</h4>
-                  <div className="bg-white rounded-[10px] px-[20px] py-[15px] my-5">
-                    <div className="grid grid-cols-5 text-[13px] font-semibold border-b pb-2">
+                <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] ">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">Fee Details</h4>
+                  <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[15px] my-5">
+                    <div className="grid grid-cols-4 text-[13px] font-semibold text-[#123d84] border-b border-[#f0f1f5] pb-2">
                       <div>Semester</div>
                       <div className="text-center">Fee</div>
                       <div className="text-center">Paid</div>
                       <div className="text-center">Pending</div>
-                      <div></div>
                     </div>
 
                     {feeDetails.map((item) => (
                       <div
                         key={item._id}
-                        className="grid grid-cols-5 text-[13px] py-3 border-b items-center"
+                        className="grid grid-cols-4 text-[13px] py-3 border-b border-[#f0f1f5] items-center"
                       >
                         <div>Semester {item.noOfsem}</div>
-                        <div className="text-center">
-                          {editingFeeId === item._id ? (
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={
-                                editedFee.semFee === 0 ? "" : editedFee.semFee
-                              }
-                              onChange={(e) =>
-                                handleChange("semFee", e.target.value)
-                              }
-                              onFocus={(e) => e.target.select()}
-                              className="w-20 border rounded px-2 py-1 text-center outline-none focus:border-[#144196]"
-                            />
-                          ) : (
-                            `₹${item.semFee}`
-                          )}
-                        </div>
-                        <div className="text-center">
-                          {editingFeeId === item._id ? (
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={
-                                editedFee.paidAmount === 0
-                                  ? ""
-                                  : editedFee.paidAmount
-                              }
-                              onChange={(e) =>
-                                handleChange("paidAmount", e.target.value)
-                              }
-                              onFocus={(e) => e.target.select()}
-                              className="w-20 border rounded px-2 py-1 text-center outline-none focus:border-[#144196]"
-                            />
-                          ) : (
-                            `₹${item.paidAmount}`
-                          )}
-                        </div>
-                        <div className="text-center">
-                          ₹
-                          {editingFeeId === item._id
-                            ? editedFee.pendingAmount
-                            : item.pendingAmount}
-                        </div>
-
-                        <div className="flex justify-center gap-2">
-                          {editingFeeId === item._id ? (
-                            <>
-                              <CheckIcon
-                                sx={{
-                                  fontSize: 18,
-                                  color: "green",
-                                  cursor: "pointer",
-                                }}
-                                onClick={() => handleSaveFee(item._id)}
-                              />
-
-                              <CloseIcon
-                                sx={{
-                                  fontSize: 18,
-                                  color: "red",
-                                  cursor: "pointer",
-                                }}
-                                onClick={handleCancelFee}
-                              />
-                            </>
-                          ) : (
-                            <EditOutlinedIcon
-                              sx={{
-                                fontSize: 16,
-                                color: "#144196",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => handleEditFee(item)}
-                            />
-                          )}
-                        </div>
+                        <div className="text-center">₹{item.semFee}</div>
+                        <div className="text-center">₹{item.paidAmount}</div>
+                        <div className="text-center">₹{item.pendingAmount}</div>
                       </div>
                     ))}
 
                     {/* Total */}
-                    <div className="grid grid-cols-5 text-[13px] font-semibold py-3 items-center">
+                    <div className="grid grid-cols-4 text-[13px] font-semibold py-3 items-center">
                       <div>Total</div>
 
                       <div className="text-center">
@@ -1279,15 +1166,12 @@ const Studentdetails = () => {
                           0,
                         )}
                       </div>
-
-                      {/* Empty Action column */}
-                      <div></div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] my-3">
-                  <h4 className="text-[16px] font-medium">Documents</h4>
-                  <div className="text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 ">
+                <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] my-3">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">Documents</h4>
+                  <div className="text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-2 ">
                     <div className="flex justify-between items-center">
                       <h4>Aadhar card</h4>
                       <button
@@ -1298,7 +1182,7 @@ const Studentdetails = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 ">
+                  <div className="text-[12px] bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] my-2 ">
                     <div className="flex justify-between items-center">
                       <h4>Original</h4>
                       <button
@@ -1310,8 +1194,8 @@ const Studentdetails = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-[#F8F8F8] px-[20px] py-[10px] rounded-[10px] my-3">
-                  <h4 className="text-[16px] font-medium">Personal Details</h4>
+                <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] my-3">
+                  <h4 className="text-[16px] font-semibold text-[#123d84]">Personal Details</h4>
 
                   <div className="text-[14px] font-normal my-2">
                     <div className="flex justify-around items-center my-1">
@@ -1356,7 +1240,7 @@ const Studentdetails = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgb(21 21 21 / 81%)",
+            backgroundColor: "rgba(21, 21, 21, 0.6)",
             zIndex: 1000,
           },
           content: {
@@ -1366,12 +1250,13 @@ const Studentdetails = () => {
             transform: "translate(-50%, -50%)",
             padding: "2rem",
             backgroundColor: "#fff",
-            borderRadius: "8px",
-            width: "800px",
-            height: "600px",
+            borderRadius: "12px",
+            width: "min(800px, 94vw)",
+            height: "min(600px, 90vh)",
             overflow: "auto",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            boxShadow: "0 20px 45px rgba(15, 27, 51, 0.25)",
             zIndex: 1001,
+            fontFamily: '"Poppins", sans-serif',
           },
         }}
       >
@@ -1396,7 +1281,7 @@ const Studentdetails = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgb(21 21 21 / 81%)", // gray overlay
+            backgroundColor: "rgba(21, 21, 21, 0.6)",
             zIndex: 1000,
           },
           content: {
@@ -1406,17 +1291,18 @@ const Studentdetails = () => {
             transform: "translate(-50%, -50%)",
             padding: "2rem",
             backgroundColor: "#fff",
-            borderRadius: "8px",
-            width: "500px",
+            borderRadius: "12px",
+            width: "min(500px, 92vw)",
             height: "max-content",
             overflow: "auto",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            boxShadow: "0 20px 45px rgba(15, 27, 51, 0.25)",
             zIndex: 1001,
+            fontFamily: '"Poppins", sans-serif',
           },
         }}
       >
         <div>
-          <label className="font-[500]">Description</label>
+          <label className="font-[500] text-[#123d84]">Description</label>
           <div className="my-[20px]">
             <textarea
               placeholder="Enter description"
@@ -1431,7 +1317,7 @@ const Studentdetails = () => {
         </div>
         <button
           onClick={createabsent}
-          className="bg-[#144196] text-white py-[5px] px-[10px] rounded-[5px] m-auto"
+          className={`${styles.submit} block mx-auto`}
           disabled={absentloading || isDisabledToday}
           style={{
             cursor:
@@ -1450,17 +1336,24 @@ const Studentdetails = () => {
         isOpen={termModal}
         onRequestClose={() => setTermModal(false)}
         style={{
-          overlay: { backgroundColor: "rgba(0,0,0,0.7)", zIndex: 1000 },
+          overlay: { backgroundColor: "rgba(21, 21, 21, 0.6)", zIndex: 1000 },
           content: {
-            width: "600px",
-            height: "max-content",
-            margin: "auto",
-            borderRadius: "10px",
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(600px, 94vw)",
+            maxHeight: "90vh",
+            margin: 0,
+            borderRadius: "12px",
             padding: "24px",
+            overflow: "auto",
+            boxShadow: "0 20px 45px rgba(15, 27, 51, 0.25)",
+            fontFamily: '"Poppins", sans-serif',
           },
         }}
       >
-        <h3 className="text-lg font-semibold mb-6">
+        <h3 className="text-lg font-semibold mb-6 text-[#123d84]">
           {editMode ? "Edit Term / Sem Detail" : "Add Term / Sem Detail"}
         </h3>
 
@@ -1471,7 +1364,7 @@ const Studentdetails = () => {
           <select
             value={sem}
             onChange={(e) => handleSemesterChange(e)}
-            className="w-full border rounded p-2 bg-white"
+            className="w-full border border-[#e5e7eb] rounded-[10px] p-2.5 bg-white focus:outline-none focus:border-[#123d84]"
             disabled={editMode}
             style={{ cursor: editMode ? "not-allowed" : "pointer" }}
           >
@@ -1486,7 +1379,7 @@ const Studentdetails = () => {
           <label className="text-sm font-medium block mb-1">Term / Sem</label>
 
           <select
-            className="w-full border rounded p-2 bg-white"
+            className="w-full border border-[#e5e7eb] rounded-[10px] p-2.5 bg-white focus:outline-none focus:border-[#123d84]"
             value={Academic}
             onChange={(e) => setAcademic(e.target.value)}
             disabled={editMode || allAcademicsUsed}
@@ -1540,7 +1433,7 @@ const Studentdetails = () => {
           ) : (
             subjects.map((sub, index) => (
               <div key={sub.subjectCode} className=" mb-4">
-                <div className="flex gap-3 items-center mb-2">
+                <div className="flex flex-wrap gap-3 items-center mb-2">
                   <div className="w-1/10 text-sm font-medium">
                     {sub.subjectCode}
                   </div>
@@ -1564,7 +1457,7 @@ const Studentdetails = () => {
                           return;
                         }
                       }}
-                      className="border p-2 rounded w-full"
+                      className="border border-[#e5e7eb] p-2 rounded-[10px] w-full focus:outline-none focus:border-[#123d84]"
                     />
                   </div>
                   <div className="w-1/2 ">
@@ -1615,9 +1508,9 @@ const Studentdetails = () => {
         </div>
 
         {/* ================= Buttons ================= */}
-        <div className="flex justify-end gap-4 mt-6">
+        <div className="flex justify-end gap-3 mt-6">
           <button
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2.5 border border-[#e5e7eb] rounded-[10px] text-[#374151] hover:border-[#123d84] hover:text-[#123d84] transition-colors"
             onClick={() => {
               setTermModal(false); // close modal
               setEditMode(false); // exit edit mode
@@ -1635,8 +1528,8 @@ const Studentdetails = () => {
             type="button"
             onClick={handleSavePerformance}
             disabled={performanceLoading}
-            className={`px-5 py-2 rounded text-white flex items-center justify-center gap-2
-    ${performanceLoading ? "bg-gray-400 cursor-not-allowed" : "bg-[#144196]"}
+            className={`px-5 py-2.5 rounded-[10px] text-white flex items-center justify-center gap-2
+    ${performanceLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-b from-[#144196] to-[#0b2456]"}
   `}
           >
             {performanceLoading ? (
@@ -1656,25 +1549,31 @@ const Studentdetails = () => {
         isOpen={!!deleteId}
         onRequestClose={() => setDeleteId(null)}
         style={{
-          overlay: { backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1000 },
+          overlay: { backgroundColor: "rgba(21, 21, 21, 0.6)", zIndex: 1000 },
           content: {
-            width: "350px",
-            margin: "auto",
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "min(350px, 92vw)",
+            margin: 0,
             height: "max-content",
-            borderRadius: "10px",
-            padding: "20px",
+            borderRadius: "12px",
+            padding: "24px",
             textAlign: "center",
+            boxShadow: "0 20px 45px rgba(15, 27, 51, 0.25)",
+            fontFamily: '"Poppins", sans-serif',
           },
         }}
       >
-        <h3 className="text-lg font-semibold mb-4">Delete Record?</h3>
+        <h3 className="text-lg font-semibold mb-4 text-[#123d84]">Delete Record?</h3>
         <p className="text-sm text-gray-600 mb-6">
           Are you sure you want to delete this Term / Sem record?
         </p>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-3">
           <button
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2.5 border border-[#e5e7eb] rounded-[10px] text-[#374151] hover:border-[#123d84] hover:text-[#123d84] transition-colors"
             onClick={() => setDeleteId(null)}
             disabled={deleteLoading}
           >
@@ -1682,7 +1581,7 @@ const Studentdetails = () => {
           </button>
 
           <button
-            className="bg-red-600 text-white px-4 py-2 rounded flex items-center gap-2"
+            className="bg-[#d92d20] text-white px-4 py-2.5 rounded-[10px] flex items-center gap-2 hover:brightness-110 transition"
             onClick={confirmDeleteTermSem}
             disabled={deleteLoading}
           >

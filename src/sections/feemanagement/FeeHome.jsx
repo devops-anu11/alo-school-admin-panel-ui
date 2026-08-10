@@ -12,14 +12,14 @@ import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import magnification from "../../assets/glass.png";
 import Modal from "./Modal";
-import ModalView from "./ModalView";
+import FeeDetailModal from "./FeeDetailModal";
 import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import { BiSearchAlt } from "react-icons/bi";
 import CloseIcon from '@mui/icons-material/Close';
-import { calcfee, createFee, excelfee, getBatchbyid, getBatchName, getFee, getUser, getUserFilter, updateBalanceFee } from "../../api/Serviceapi";
+import { calcfee, createFee, excelfee, getAllCourses, getCourseBatch, getFee, getUser, getUserFilter, updateBalanceFee } from "../../api/Serviceapi";
 import Pagination from '@mui/material/Pagination';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import nodata from '../../assets/nodata.jpg'
@@ -40,7 +40,7 @@ const theme = createTheme({
           border: '1px solid #e5e7eb',
           color: '#1f2937', // text-gray-800
           '&.Mui-selected': {
-            background: 'linear-gradient(to bottom, #144196, #061530)',
+            background: 'linear-gradient(to bottom, #144196, #0b2456)',
             color: '#fff',
             border: 'none',
           },
@@ -58,14 +58,13 @@ const FeeHome = () => {
   const [enterName, setEntername] = useState("");
   const [showDiv2, setShowDiv2] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [openView, setOpenView] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailStudent, setDetailStudent] = useState(null);
   const [sendReqColor, setReqSendColor] = useState(false);
   const [studentField, setStudentField] = useState("");
   const [nameError, setNameError] = useState("");
   const [emailField, setEmailField] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [courseField, setCourseField] = useState("");
-  const [courseError, setCourseError] = useState("");
   const [semError, setSemError] = useState("");
   const [payError, setPayError] = useState('')
 
@@ -74,8 +73,9 @@ const FeeHome = () => {
   const [feeamountField, setFeeamountField] = useState("");
   const [feeamountError, setFeeamountError] = useState("");
   const [searchText, setSearchText] = useState('');
-  const [course, setCourse] = useState([])
-  const [batch, setBatch] = useState([])
+  const [batches, setBatches] = useState([])
+  const [courseOptions, setCourseOptions] = useState([])
+  const [allCourses, setAllCourses] = useState([])
   const [batchId, setBatchId] = useState('')
   const [courseId, setCourseId] = useState('')
   const [limit, setlimit] = useState(10);
@@ -101,16 +101,18 @@ const FeeHome = () => {
 
 
 
-  const handleChange = (event) => {
-    setBatchId(event.target.value);
+  const handleBatchChange = (event) => {
+    const selectedBatchId = event.target.value;
+    setBatchId(selectedBatchId);
+    setCourseId("");
+    setoffset(1);
+    const selectedBatch = batches.find((b) => b._id === selectedBatchId);
+    setCourseOptions(selectedBatch?.courses || []);
   };
 
   const handlecourseChange = (event) => {
-    const selectedId = event.target.value;
-    setCourseId(selectedId);
+    setCourseId(event.target.value);
     setoffset(1);
-    setBatchId("");
-    getBatchnameid(selectedId);
   };
 
   const handlesemChange = (event) => {
@@ -154,40 +156,38 @@ const FeeHome = () => {
   };
 
   useEffect(() => {
-    getBatchname()
+    fetchBatches()
+    fetchAllCourses()
   }, []);
 
-  const handleCourseName = (e) => {
-    const selectedCourseId = e.target.value;
-
-
-    setCourseField(e.target.value);
-    courseValidation(e.target.value);
-    getBatchnameid(selectedCourseId);
-  };
-
-  let getBatchnameid = async (id) => {
+  // Batch drives the filter now — a batch's own `courses` array supplies the
+  // second dropdown's options, so no separate per-batch fetch is needed.
+  let fetchBatches = async () => {
     try {
-      const res = await getBatchbyid(id);
-      const course = res?.data?.data?.find(c => c._id === id);
-      setBatch(
-        course?.batches
-          ? Array.isArray(course.batches)
-            ? course.batches
-            : [course.batches]
-          : []
-      );
-      // setBatchId("");
+      const res = await getCourseBatch();
+      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setBatches(list);
+
+      // Default the filter to the primary batch on first load only — don't
+      // override an already-selected batch.
+      if (!batchId) {
+        const primary = list.find((b) => b.isPrimary);
+        if (primary) {
+          setBatchId(primary._id);
+          setCourseOptions(primary.courses || []);
+        }
+      }
     } catch (error) {
       console.error("error", error.response?.data || error);
     }
   };
 
-
-  let getBatchname = async () => {
+  // Used only for the read-only Course field in the "Update Fee" search
+  // results below — that display needs every course, not just one batch's.
+  let fetchAllCourses = async () => {
     try {
-      const res = await getBatchName();
-      setCourse(Array.isArray(res?.data?.data) ? res.data.data : []);
+      const res = await getAllCourses();
+      setAllCourses(Array.isArray(res?.data?.data) ? res.data.data : []);
     } catch (error) {
       console.error("error", error.response?.data || error);
     }
@@ -198,7 +198,6 @@ const FeeHome = () => {
   }, [offset, courseId, batchId, semester, searchText]);
 
   const [loading, setLoading] = useState(false);
-  const [id, setID] = useState('')
   let getfeelist = async () => {
     setLoading(true);
     try {
@@ -214,14 +213,15 @@ const FeeHome = () => {
     }
   }
 
-  const handlecompleted = (id) => {
-    setOpenView(true),
-      setID(id)
+  const handleViewDetails = (student) => {
+    setDetailStudent(student);
+    setDetailOpen(true);
   }
 
-  const handleRequestfee = (id) => {
-    setShowModal(true)
-    setID(id)
+  const handleRequestfee = (rowId) => {
+    setDetailOpen(false);
+    setFeeID(rowId);
+    setShowModal(true);
   }
 
 
@@ -432,30 +432,39 @@ const FeeHome = () => {
         return; // stop execution
       }
 
-      // 1️⃣ Call createFee API
-      const feePayload = {
-        name: student.name,
-        email: student.email,
-        courseId: student.courseDetails?._id,
-        batchId: student.batchDetails?._id,
-        paidAmount: newPayment, // this payment only
-        noOfsem: formData.updatesemester,
-        modeOfPayment: formData.payment,
-        userId: student._id,
-        studentId: student.studentId,
-        paymentDate: formData.paymentDate,
-      };
-      await createFee(feePayload);
-
-      // 2️⃣ Call updateBalanceFee API 
+      // 1️⃣ Update the fee balance record — this is the authoritative source
+      // for both the dashboard totals and the fee list, so it must succeed
+      // even if the receipt/email side-effect below fails.
       const balancePayload = {
         ...semRow,
         paidAmount: totalPaid,
         pendingAmount: Math.max(0, semFee - totalPaid),
         paymentDate: formData.paymentDate,
+        modeOfPayment: formData.payment,
+        updatedBy: localStorage.getItem("userId"),
       };
 
       await updateBalanceFee(semRow._id, balancePayload);
+
+      // 2️⃣ Best-effort receipt/invoice email + legacy fee log entry.
+      // Failure here should not roll back the fee balance update above.
+      try {
+        const feePayload = {
+          name: student.name,
+          email: student.email,
+          courseId: student.courseDetails?._id,
+          batchId: student.batchDetails?._id,
+          paidAmount: newPayment, // this payment only
+          noOfsem: formData.updatesemester,
+          modeOfPayment: formData.payment,
+          userId: student._id,
+          studentId: student.studentId,
+          paymentDate: formData.paymentDate,
+        };
+        await createFee(feePayload);
+      } catch (receiptErr) {
+        console.error("Receipt email failed, fee balance was still updated:", receiptErr);
+      }
 
       // 🔄 Update local state
       setFormData(prev => {
@@ -522,9 +531,9 @@ const FeeHome = () => {
 
   }
 
-  // // Calculate visible range
-  // const startIndex = (offset - 1) * limit + 1;
-  // const endIndex = Math.min(offset * limit, totallist);
+  // Calculate visible range
+  const startIndex = totallist === 0 ? 0 : (offset - 1) * limit + 1;
+  const endIndex = Math.min(offset * limit, totallist);
 
   const [balancefee, setBalancefee] = useState([])
 
@@ -594,6 +603,7 @@ const FeeHome = () => {
     setSemester('');
     setCourseId('');
     setBatchId('');
+    setCourseOptions([]);
   }
 
 
@@ -609,7 +619,7 @@ const FeeHome = () => {
       let base64String = res.data.data;
   
       if (!base64String) {
-        alert("No Excel file data found");
+        toast.error("No Excel file data found");
         return;
       }
   
@@ -655,9 +665,49 @@ const FeeHome = () => {
                   size="small"
                   sx={{
                     minWidth: '100%',
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
+                  }}
+                >
+                  <Select
+                    value={batchId}
+                    onChange={handleBatchChange}
+                    displayEmpty
+                    IconComponent={KeyboardArrowDownIcon}
+                    sx={{
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        border: 'none',
+                      },
+                      fontSize: '14px',
+                      padding: '4px 10px',
+                      height: '36px',
+                      border: 'none'
+                    }}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    {batches.map((item, index) => {
+                      return (
+                        <MenuItem value={item._id} key={index}>{item.batchName}</MenuItem>
+                      )
+                    })}
+                  </Select>
+
+                </FormControl>
+              </div>
+            </div>
+            <div className={styles.formselect2}>
+              <div className={styles.selectWrapper}>
+
+                <FormControl
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    minWidth: '100%',
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb',
+
                   }}
                 >
                   <Select
@@ -674,54 +724,13 @@ const FeeHome = () => {
                       height: '36px',
                       border: 'none'
                     }}
+                    disabled={!batchId}
                   >
                     <MenuItem value="">All</MenuItem>
-                    {course.map((item, index) => {
-                      return (
-                        <MenuItem value={item._id} key={index}>{item.courseName}</MenuItem>
-                      )
-                    })}
-                  </Select>
-
-                </FormControl>
-              </div>
-            </div>
-            <div className={styles.formselect2}>
-              <div className={styles.selectWrapper}>
-
-                <FormControl
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    minWidth: '100%',
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none',
-
-                  }}
-                >
-                  <Select
-                    value={batchId}
-                    onChange={handleChange}
-                    displayEmpty
-                    IconComponent={KeyboardArrowDownIcon}
-                    sx={{
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        border: 'none',
-                      },
-                      fontSize: '14px',
-                      padding: '4px 10px',
-                      height: '36px',
-                      border: 'none'
-                    }}
-                    disabled={!courseId}
-                  // style={{ cursor: courseId ? 'pointer' : 'not-allowed' }}
-                  >
-                    <MenuItem value="">All</MenuItem>
-                    {Array.isArray(batch) &&
-                      batch.map((item, index) => (
-                        <MenuItem value={item._id} key={index}>
-                          {item.batchName}
+                    {Array.isArray(courseOptions) &&
+                      courseOptions.map((item, index) => (
+                        <MenuItem value={item.courseId} key={index}>
+                          {item.courseName}
                         </MenuItem>
                       ))}
                   </Select>
@@ -737,9 +746,9 @@ const FeeHome = () => {
                   size="small"
                   sx={{
                     minWidth: '100%',
-                    backgroundColor: '#F6F6F6', // match the image background
-                    borderRadius: '6px',
-                    border: 'none'
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
                   }}
                 >
                   <Select
@@ -791,9 +800,9 @@ const FeeHome = () => {
                       </InputAdornment>
                     ),
                     style: {
-                      backgroundColor: '#F6F6F6',
-                      borderRadius: '6px',
-                      height: '36px',
+                      backgroundColor: '#fff',
+                      borderRadius: '10px',
+                      height: '38px',
                       fontSize: '14px',
                       padding: '4px 10px'
                     },
@@ -801,7 +810,13 @@ const FeeHome = () => {
                   }}
                   sx={{
                     '& .MuiOutlinedInput-notchedOutline': {
-                      border: 'none',
+                      border: '1px solid #e5e7eb',
+                    },
+                    '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#123d84',
+                    },
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#123d84',
                     },
                     minWidth: 120,
                   }}
@@ -817,7 +832,7 @@ const FeeHome = () => {
               )}
 
             </div>
-            <div className={styles.formbtn}>
+            {/* <div className={styles.formbtn}>
               <button onClick={updateFee}>
                 {" "}
                 <FontAwesomeIcon
@@ -831,13 +846,14 @@ const FeeHome = () => {
                 />
                 Update Fee
               </button>
-            </div>
-          </div>
-        </div>
-        <div className='flex justify-end mt-4'>
-          <button className='bg-gradient-to-b from-[#144196] to-[#061530] text-white px-1 py-1 rounded-md flex items-center flex-end gap-1 cursor-pointer' onClick={getExcel}>Export<MdOutlineFileDownload />
+            </div> */}
+             <div className='flex justify-end mt-4'>
+          <button className='bg-gradient-to-b from-[#144196] to-[#0b2456] text-white px-5 py-2.5 rounded-[10px] text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 transition' onClick={getExcel}>Export<MdOutlineFileDownload />
           </button>
         </div>
+          </div>
+        </div>
+       
         {calloading ?
           <div className={styles.feeamount}>
             <div className={styles.feeamt}>
@@ -887,6 +903,7 @@ const FeeHome = () => {
           <table className={styles.tabledetails}>
             <thead>
               <tr>
+                <th>S.No</th>
                 <th>Fee ID</th>
                 <th>Name</th>
                 <th>ID No</th>
@@ -901,7 +918,7 @@ const FeeHome = () => {
             </thead>
             {loading ?
               <tr>
-                <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold" style={{ border: "none" }}>
+                <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold" style={{ border: "none" }}>
                   <Loader />
                 </td>
               </tr>
@@ -909,23 +926,29 @@ const FeeHome = () => {
               <tbody>
                 {
                   Array.isArray(list) && list.length > 0 ?
-                    list.map((item) => (
-                      <tr key={item._id}>
-                        <td>{item.receiptId}</td>
-                        <td style={{ textTransform: 'capitalize' }}>{item.userDetails?.name}</td>
-                        <td>{item.userDetails?.studentId}</td>
-                        <td>{item.userDetails?.mobileNo}</td>
-                        <td>{item.courseDetails?.courseName}</td>
-                        <td>{item.totalFeeAmount}</td>
-                        <td>{item.paidAmount}</td>
-                        <td style={{ color: item.pendingAmount === 0 ? "green" : "red" }}>{item.pendingAmount === 0 ? 'Completed' : item.pendingAmount}</td>
-                        <td >{item.paymentDate?.split("T")[0]}</td>
-                        <td
-                          className={styles.viewBtn}
-                          onClick={() => { item.pendingAmount === 0 && handlecompleted(item._id) }}
-                        >
-                          {item.pendingAmount === 0 ? (
-                            <div>
+                    list.map((item, index) => {
+                      const feeId = item.rows?.[0]?.receiptId;
+                      return (
+                        <tr key={item._id}>
+                          <td>{(offset - 1) * limit + index + 1}</td>
+                          <td>{feeId || '-'}</td>
+                          <td style={{ textTransform: 'capitalize' }}>{item.userDetails?.name}</td>
+                          <td>{item.userDetails?.studentId}</td>
+                          <td>{item.userDetails?.mobileNo}</td>
+                          <td>{item.courseDetails?.courseName}</td>
+                          <td>{item.totalFees}</td>
+                          <td>{item.paidAmount}</td>
+                          <td>
+                            <span className={item.pendingAmount === 0 ? styles.pillSuccess : styles.pillDanger}>
+                              {item.pendingAmount === 0 ? 'Completed' : item.pendingAmount}
+                            </span>
+                          </td>
+                          <td>{item.paymentDate?.split("T")[0] || '-'}</td>
+                          <td
+                            className={styles.viewBtnCell}
+                            onClick={() => handleViewDetails(item)}
+                          >
+                            <div className={styles.viewBtn}>
                               <FontAwesomeIcon
                                 icon={faEye}
                                 style={{ marginRight: "5px" }}
@@ -933,34 +956,13 @@ const FeeHome = () => {
                               />
                               <span className={styles.viewText}>View</span>
                             </div>
-                          ) : (
-                            <p
-                              style={{
-                                color: item?.mailStatus === 'Sent'
-                                  ? "blue"
-                                  : "red",
-
-                                cursor: item?.mailStatus === 'Sent' ? 'not-allowed' : 'pointer'
-                              }}
-                              onClick={() => {
-                                if (item?.mailStatus === "Sent") return;
-                                setFeeID(item?._id);
-                                setShowModal(true);
-                              }}
-                            >
-                              {item?.mailStatus === 'Sent'
-                                ? "Requested Fee"
-                                : 'Request Sent'
-                              }
-                            </p>
-                          )}
-
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                        </tr>
+                      );
+                    })
                     :
                     <tr >
-                      <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
+                      <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
                         <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
                         <p className="text-center">No Data Found</p>
                       </td>
@@ -974,13 +976,13 @@ const FeeHome = () => {
         </div>
 
         <div className='flex justify-between items-end mx-2'>
-          {/* {totalpages > 0 &&
+          {totallist > 0 &&
             <div className="flex justify-between items-center">
               <p className="text-gray-600 text-sm">
                 Showing {startIndex} – {endIndex} of {totallist} students
               </p>
             </div>
-          } */}
+          }
           {totalpages > 0 &&
             <ThemeProvider theme={theme}>
               <div style={{ marginLeft: "auto", marginTop: "20px" }}>
@@ -1003,20 +1005,15 @@ const FeeHome = () => {
 
 
 
-        {/* modal view starts */}
-        <ModalView viewOpen={openView} id={id} viewClose={() => setOpenView(false)}>
-          <div className={styles.viewHead1}>
-            <div className={styles.h1}>Fee Details</div>
-            <div className={styles.h1}>
-              <FontAwesomeIcon
-                cursor={"pointer"}
-                icon={faTimes}
-                onClick={() => { setOpenView(false) }}
-              />
-            </div>
-          </div>
-        </ModalView>
-        {/* modal view ends */}
+        {/* fee detail popup starts */}
+        <FeeDetailModal
+          open={detailOpen}
+          student={detailStudent}
+          onClose={() => setDetailOpen(false)}
+          onRequestFee={handleRequestfee}
+          onPaymentSaved={() => { getfeelist(); calculation(); }}
+        />
+        {/* fee detail popup ends */}
 
         {/* req send starts */}
         <Modal
@@ -1040,11 +1037,13 @@ const FeeHome = () => {
               left: 0,
               width: "100vw",
               height: "100vh",
-              backgroundColor: "rgba(0, 0, 0,0.4)",
+              backgroundColor: "rgba(21, 21, 21, .6)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               zIndex: 9999,
+              padding: "16px",
+              boxSizing: "border-box",
 
             }}>
             {/* <div className={styles.updatefeediv}> */}
@@ -1171,14 +1170,12 @@ const FeeHome = () => {
                                 }}
                               >
                                 <option value="">Select a course</option>
-                                {course.map((c) => (
+                                {allCourses.map((c) => (
                                   <option key={c._id} value={c._id}>
                                     {c.courseName}
                                   </option>
                                 ))}
                               </select>
-                              {/* <p className={styles.stderror1}>{courseError}</p> */}
-
                             </div>
                             <div className={styles.namediv1}>
                               <label className={styles.updatefeeinputlabel}>Batch</label>
@@ -1239,9 +1236,9 @@ const FeeHome = () => {
                                 size="small"
                                 sx={{
                                   minWidth: "100%",
-                                  backgroundColor: "#F6F6F6",
-                                  borderRadius: "6px",
-                                  border: 'none'
+                                  backgroundColor: "#fff",
+                                  borderRadius: "10px",
+                                  border: '1px solid #e5e7eb'
                                 }}
                               >
                                 <Select
@@ -1341,9 +1338,9 @@ const FeeHome = () => {
                                 size="small"
                                 sx={{
                                   minWidth: "100%",
-                                  backgroundColor: "#F6F6F6",
-                                  borderRadius: "6px",
-                                  border: 'none'
+                                  backgroundColor: "#fff",
+                                  borderRadius: "10px",
+                                  border: '1px solid #e5e7eb'
                                 }}
                               >
                                 <Select

@@ -36,6 +36,19 @@ export const getCourseById = (id) => {
 export const editCouse = (id, editData) => {
   return apiService.put(`/course/${id}`, editData);
 };
+
+// Course Management page (modules/course) — list already includes batchCount per course
+export const getAllCourses = () => {
+  return apiService.get(`/course`);
+};
+
+export const addCourse = (courseData) => {
+  return apiService.post(`/course`, courseData);
+};
+
+export const removeCourse = (id) => {
+  return apiService.delete(`/course/${id}`);
+};
 //getbatch
 export const getCourseBatch = () => {
   return apiService.get(`/batch`);
@@ -47,6 +60,24 @@ export const postCourseBatch = (data) => {
 //putbatch
 export const updateCourseBatch = (id, editdata) => {
   return apiService.put(`/batch/${id}`, editdata);
+};
+
+// Batch Management page (modules/batch) — list/detail already include
+// courseCount, studentCount and totalFees computed server-side
+export const getBatchById = (id, status = "active") => {
+  return apiService.get(`/batch/${id}?status=${status}`);
+};
+
+export const addBatch = (batchData) => {
+  return apiService.post(`/batch`, batchData);
+};
+
+export const removeBatch = (id) => {
+  return apiService.delete(`/batch/${id}`);
+};
+
+export const setPrimaryBatch = (id) => {
+  return apiService.put(`/batch/${id}/primary`);
 };
 
 // get batch by courseId
@@ -227,12 +258,8 @@ export const getFee = (
   searchtext,
 ) => {
   return apiService.get(
-    `/fee?limit=${limit}&offset=${offset}&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchtext}`,
+    `/feeBalance?limit=${limit}&offset=${offset}&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchtext}`,
   );
-};
-
-export const getFeeById = (id) => {
-  return apiService.get(`/fee/?_id=${id}`);
 };
 
 export const createFee = (formdata) => {
@@ -256,29 +283,43 @@ export const updateBalanceFee = (userId, payload) => {
 };
 
 export const emailFee = (userId) => {
-  return apiService.post(`/fee/mail`, { _id: userId });
+  return apiService.post(`/feeBalance/mail`, { _id: userId });
 };
 
 export const updateFeeEmail = (id) => {
-  return apiService.put(`/fee/${id}`, { mailStatus: "Sent" });
+  return apiService.put(`/feeBalance/${id}`, { mailStatus: "Sent" });
 };
 
-export const getDashboardUser = () => {
-  return apiService.get(`/user?limit=3&inStatus=ongoing&status=active`);
+export const getPaymentHistory = (userId) => {
+  return apiService.get(`/paymentLog/user/${userId}`);
+};
+
+// Student discount - add/edit share the same PUT (whatever amount is sent
+// becomes the new total discount); remove is a DELETE that zeroes it.
+export const setStudentDiscount = (userId, discountAmount) => {
+  return apiService.put(`/feeBalance/discount/${userId}`, { discountAmount });
+};
+
+export const removeStudentDiscount = (userId) => {
+  return apiService.delete(`/feeBalance/discount/${userId}`);
+};
+
+export const getDashboardUser = (batchId = "") => {
+  return apiService.get(`/user?limit=3&inStatus=ongoing&status=active${batchId ? `&batchId=${batchId}` : ""}`);
 };
 
 export const getDashboardEvents = (status) => {
   return apiService.get(`/event?status=${status}&limit=6`);
 };
 
-export const getDashboardLeave = (status) => {
+export const getDashboardLeave = (status, batchId = "") => {
   const today = new Date().toLocaleDateString("en-CA");
 
-  return apiService.get(`/leave?status=${status}&date=${today}&limit=5`);
+  return apiService.get(`/leave?status=${status}&date=${today}&limit=5${batchId ? `&batchId=${batchId}` : ""}`);
 };
 
-export const studentCount = () => {
-  return apiService.get(`/user/count`);
+export const studentCount = (batchId = "") => {
+  return apiService.get(`/user/count${batchId ? `?batchId=${batchId}` : ""}`);
 };
 
 export const getStudentAttendencemonth = (userId) => {
@@ -289,13 +330,13 @@ export const getAttendanceStudentList = (userId) => {
   return apiService.get(`/attendance?userId=${userId}&limit=4`);
 };
 
-export const getTodayrate = () => {
+export const getTodayrate = (batchId = "") => {
   const today = new Date().toLocaleDateString("en-CA");
-  return apiService.get(`/attendance/rate?date=${today}`);
+  return apiService.get(`/attendance/rate?date=${today}${batchId ? `&batchId=${batchId}` : ""}`);
 };
 
-export const getDashboardAttendencerate = (date) => {
-  return apiService.get(`/attendance/rate?date=${date}`);
+export const getDashboardAttendencerate = (date, batchId = "") => {
+  return apiService.get(`/attendance/rate?date=${date}${batchId ? `&batchId=${batchId}` : ""}`);
 };
 
 // notification
@@ -343,7 +384,7 @@ export const excelStudents = (
 
 export const excelfee = (courseId, batchId, semester, searchText) => {
   return apiService.get(
-    `/fee/excel?&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}`,
+    `/feeBalance/excel?&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}`,
   );
 };
 
@@ -558,4 +599,64 @@ export const getAllHarassment = (page = 1, limit = 10) => {
 
 export const markHarassmentAsRead = (id) => {
   return apiService.put(`/harassment/read/${id}`);
+};
+
+// admin task list, grouped by subject for a given date/course/batch
+export const getGroupedTasks = (params = {}) => {
+  return apiService.get(`/daily-task/admin/grouped-by-subject`, params);
+};
+
+// admin task list, grouped by student — who submitted, and what — for a given date/course/batch
+export const getGroupedTasksByStudent = (params = {}) => {
+  return apiService.get(`/daily-task/admin/grouped`, params);
+};
+
+export const updateTaskStatus = (id, status) => {
+  return apiService.put(`/daily-task/update-status/${id}`, {
+    status,
+  });
+};
+
+// daily task hours - powers the Time tab of task settings
+export const getDailyTaskHours = () => {
+  return apiService.get(`/daily-task-hour`);
+};
+
+export const updateDailyTaskHour = (id, payload) => {
+  return apiService.put(`/daily-task-hour/${id}`, payload);
+};
+
+// daily task subjects - powers the Subject tab of task settings, and can be
+// narrowed to a course (optionally + semester) for the course detail report
+export const getDailyTaskSubjects = (params = {}) => {
+  return apiService.get(`/daily-task-subject`, params);
+};
+
+export const createDailyTaskSubject = (payload) => {
+  return apiService.post(`/daily-task-subject/create`, payload);
+};
+
+export const updateDailyTaskSubject = (id, payload) => {
+  return apiService.put(`/daily-task-subject/${id}`, payload);
+};
+
+export const deleteDailyTaskSubject = (id) => {
+  return apiService.delete(`/daily-task-subject/${id}`);
+};
+
+// trainers - powers the Trainer tab of task settings
+export const getTrainers = () => {
+  return apiService.get(`/admin/trainer`);
+};
+
+export const createTrainer = (payload) => {
+  return apiService.post(`/admin/trainer/create`, payload);
+};
+
+export const updateTrainer = (id, payload) => {
+  return apiService.put(`/admin/trainer/${id}`, payload);
+};
+
+export const deleteTrainer = (id) => {
+  return apiService.delete(`/admin/trainer/${id}`);
 };

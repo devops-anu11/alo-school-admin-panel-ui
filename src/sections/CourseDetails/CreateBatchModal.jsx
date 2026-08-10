@@ -56,7 +56,9 @@ const CreateBatchModal = ({
         batchName: batchData.batchName || "",
         startDate: formatDate(batchData.startDate),
         endDate: formatDate(batchData.endDate),
-        classStartIn: to24HourTime(batchData.classStartIn || batchData.checkStartIn),
+        classStartIn: to24HourTime(
+          batchData.classStartIn || batchData.checkStartIn,
+        ),
         classEndIn: to24HourTime(batchData.classEndIn || batchData.checkEndIn),
         sem1FeeDate: formatDate(batchData.sem1PayDate),
         sem2FeeDate: formatDate(batchData.sem2PayDate),
@@ -73,8 +75,6 @@ const CreateBatchModal = ({
       });
     }
   }, [batchData]);
-
-
 
   const [errors, setErrors] = useState({});
 
@@ -98,8 +98,10 @@ const CreateBatchModal = ({
       newErrors.batchName = "Batch name is required";
     if (!formData.startDate) newErrors.startDate = "Start date is required";
     if (!formData.endDate) newErrors.endDate = "End date is required";
-    if (!formData.classStartIn) newErrors.classStartIn = "Class start time is required";
-    if (!formData.classEndIn) newErrors.classEndIn = "Class end time is required";
+    if (!formData.classStartIn)
+      newErrors.classStartIn = "Class start time is required";
+    if (!formData.classEndIn)
+      newErrors.classEndIn = "Class end time is required";
     if (!formData.sem1FeeDate)
       newErrors.sem1FeeDate = "Sem1 Fee Date is required";
     if (!formData.sem2FeeDate)
@@ -147,7 +149,6 @@ const CreateBatchModal = ({
     return newErrors;
   };
 
-
   const handleSubmit = async () => {
     const newErrors = validate();
     setErrors(newErrors);
@@ -169,7 +170,7 @@ const CreateBatchModal = ({
         .split(" ")
         .filter((word) => word.length > 0) // remove extra spaces
         .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
         )
         .join(" ");
       // ✅ map frontend keys to backend keys
@@ -183,7 +184,6 @@ const CreateBatchModal = ({
         sem1PayDate: formData.sem1FeeDate,
         sem2PayDate: formData.sem2FeeDate,
       };
-
 
       console.log("Submitting batch:", payload);
       let res;
@@ -201,7 +201,6 @@ const CreateBatchModal = ({
         const resedit = await updateCourseBatch(batchData._id, updatePayload);
         console.log("Update response:", resedit);
         toast.success("Batch updated successfully!");
-
       } else {
         res = await postCourseBatch(payload);
         console.log("Batch created:", res.data.data);
@@ -225,7 +224,6 @@ const CreateBatchModal = ({
     } finally {
       setIsLoading(false);
     }
-
   };
   const resetForm = () => {
     setFormData({
@@ -242,17 +240,20 @@ const CreateBatchModal = ({
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalBox}>
-        <h2 className={styles.modalTitle}>
-          {batchData ? "Edit Batch" : "Create Batch"}
-        </h2>
-        <button className={styles.closeBtn}
-          onClick={() => {
-            onClose()
-            resetForm();
-
-          }}>
-          ×
-        </button>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
+            {batchData ? "Edit Batch" : "Create Batch"}
+          </h2>
+          <button
+            className={styles.closeBtn}
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+          >
+            ×
+          </button>
+        </div>
 
         <div className={styles.formWrapper}>
           <div className={styles.rowSingle}>
@@ -328,7 +329,7 @@ const CreateBatchModal = ({
 
             <div className={styles.formGroup}>
               <label>
-                 Class End Time <span className={styles.required}>*</span>
+                Class End Time <span className={styles.required}>*</span>
               </label>
               <input
                 type="time"
@@ -345,12 +346,15 @@ const CreateBatchModal = ({
 
           <div className={styles.rowTwoGrid}>
             <div className={styles.formGroup}>
-              <label>Semester 1 Fee Date<span className={styles.required}>*</span></label>
+              <label>
+                Semester 1 Fee Date<span className={styles.required}>*</span>
+              </label>
               <input
                 type="date"
                 name="sem1FeeDate"
                 value={formData.sem1FeeDate}
                 onChange={handleChange}
+                className={errors.sem1FeeDate ? styles.errorInput : ""}
               />
               {errors.sem1FeeDate && (
                 <div className={styles.errorDiv}>{errors.sem1FeeDate}</div>
@@ -358,46 +362,51 @@ const CreateBatchModal = ({
             </div>
 
             <div className={styles.formGroup}>
-              <label>Semester 2 Fee Date<span className={styles.required}>*</span></label>
+              <label>
+                Semester 2 Fee Date<span className={styles.required}>*</span>
+              </label>
               <input
                 type="date"
                 name="sem2FeeDate"
                 value={formData.sem2FeeDate}
                 onChange={handleChange}
+                className={errors.sem2FeeDate ? styles.errorInput : ""}
               />
               {errors.sem2FeeDate && (
                 <div className={styles.errorDiv}>{errors.sem2FeeDate}</div>
               )}
             </div>
           </div>
-          {isLoading ? (<div className={styles.loader}>
-            {batchData ?
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              className={styles.cancelBtn}
+              onClick={() => {
+                onClose();
+                resetForm();
+              }}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            {isLoading ? (
+              <button type="button" className={styles.submitBtn} disabled>
+                {batchData ? "Updating...." : "Creating..."}
+              </button>
+            ) : (
               <button
                 type="button"
                 className={styles.submitBtn}
-
+                onClick={handleSubmit}
               >
-                Updating....
+                {batchData ? "Update" : "Create"}
               </button>
-              :
-              <button type="button" className={styles.submitBtn}>Creating...</button>
-
-            }
-          </div>) :
-
-            <button
-              type="button"
-              className={styles.submitBtn}
-              onClick={handleSubmit}
-            >
-              {batchData ? "Update" : "Create"}
-            </button>
-          }
-
+            )}
           </div>
+        </div>
       </div>
-      </div>
-      );
+    </div>
+  );
 };
 
       export default CreateBatchModal;

@@ -10,7 +10,7 @@ import { addUser } from '../../api/Serviceapi';
 import { uploadFile } from '../../api/Serviceapi';
 import { IoMdCloseCircle } from "react-icons/io";
 import { MdCancel } from "react-icons/md";
-import { getBatchName, getBatchbyid } from '../../api/Serviceapi';
+import { getCourseBatch } from '../../api/Serviceapi';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -25,8 +25,8 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
     const [user, setUser] = useState([])
     const [file, setFileName] = useState('');
     const [original, setOriginal] = useState('')
-    const [course, setCourse] = useState([])
-    const [batch, setBatch] = useState([])
+    const [batches, setBatches] = useState([])
+    const [courseOptions, setCourseOptions] = useState([])
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -270,71 +270,40 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
 
     useEffect(() => {
 
-        getBatchname()
+        fetchBatches()
     }, []);
 
-
-
-
-    let getBatchnameid = async (id) => {
+    // Batch drives the filter - a batch's own `courses` array supplies the
+    // course dropdown's options, matching the batch-first pattern used
+    // everywhere else in the app.
+    let fetchBatches = async () => {
         try {
-            const res = await getBatchbyid(id);
+            const res = await getCourseBatch();
 
-            // Extract imageURL from backend response
-
-            console.log(res?.data?.data, 'batch')
-            const course = res?.data?.data?.find(c => c._id === id);
-
-            // store only the batches array
-            setBatch(
-                course?.batches
-                    ? Array.isArray(course.batches)
-                        ? course.batches
-                        : [course.batches]
-                    : []
-            );
+            setBatches(Array.isArray(res?.data?.data) ? res.data.data : []);
         } catch (error) {
             console.error("error", error.response?.data || error);
         }
     };
 
-    let getBatchname = async () => {
-        try {
-            const res = await getBatchName();
+    const handleBatchName = (e) => {
+        const selectedBatchId = e.target.value;
 
-            // Extract imageURL from backend response
+        setFormdata(prev => ({
+            ...prev,
+            student_batch: selectedBatchId,
+            student_course: ""
+        }));
+        setErrors({ ...Errors, student_batch: '' })
 
-            // console.log(res?.data?.data, 'details')
-            // setBatch(res?.data?.data)    
-            setCourse(Array.isArray(res?.data?.data) ? res.data.data : []);
-
-
-        } catch (error) {
-            console.error("error", error.response?.data || error);
-        }
+        const selectedBatch = batches.find(b => b._id === selectedBatchId);
+        setCourseOptions(selectedBatch?.courses || []);
     };
 
     const handleCourseName = (e) => {
-        const selectedCourseId = e.target.value;
-
-
-        setFormdata({
-            ...Formdata,
-            student_course: selectedCourseId,
-            student_batch: ""
-        });
+        setFormdata(prev => ({ ...prev, student_course: e.target.value }))
         setErrors({ ...Errors, student_course: '' })
-
-
-        getBatchnameid(selectedCourseId);
     };
-
-
-    const handleBatchName = (e) => {
-        setFormdata(prev => ({ ...prev, student_batch: e.target.value }))
-        setErrors({ ...Errors, student_batch: '' })
-
-    }
 
     const handleBloodgroup = (e) => {
         setFormdata(prev => ({ ...prev, student_bloodgroup: e.target.value }))
@@ -597,41 +566,37 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
                         </div>
                         <div className={styles.sixth_detail}>
                             <div className={styles.course_batch_row}>
+                                <div className={styles.student_batch}>
+                                    <label htmlFor="batch">Select Batch<span className={styles.important}>*</span></label>
+                                    <div className={styles.select_container}>
+
+                                        <select onChange={handleBatchName} className={styles.select_field} value={Formdata.student_batch} id="batch" name="batch">
+                                            <option value="" >Select a batch</option>
+                                            {batches.map((b) => (
+                                                <option value={b._id} key={b._id}>
+                                                    {b.batchName}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <FaChevronDown className={styles.selectIcon} />
+                                        <p className={styles.error}>{Errors.student_batch}</p>
+
+                                    </div>
+                                </div>
                                 <div className={styles.student_course}>
                                     <label htmlFor="course">Select Course<span className={styles.important}>*</span></label>
                                     <div className={styles.select_container}>
-                                        <select className={styles.select_field} onChange={handleCourseName} value={Formdata.student_course} id="course" name="course">
+                                        <select className={styles.select_field} onChange={handleCourseName} disabled={!Formdata.student_batch} style={{ cursor: Formdata.student_batch ? 'pointer' : 'not-allowed' }} value={Formdata.student_course} id="course" name="course">
                                             <option value="">Select a course</option>
-                                            {course.map((course) => (
-                                                <option value={course._id} key={course._id}>{course.courseName}</option>
-
+                                            {courseOptions.map((c) => (
+                                                <option value={c.courseId} key={c.courseId}>{c.courseName}</option>
                                             ))}
 
                                         </select>
 
                                         <FaChevronDown className={styles.selectIcon} />
                                         <p className={styles.error}>{Errors.student_course}</p>
-                                    </div>
-                                </div>
-                                <div className={styles.student_batch}>
-                                    <label htmlFor="batch">Select Batch<span className={styles.important}>*</span></label>
-                                    <div className={styles.select_container}>
-
-                                        <select onChange={handleBatchName} disabled={!Formdata.student_course} style={{ cursor: Formdata.student_course ? 'pointer' : 'not-allowed' }} className={styles.select_field} value={Formdata.student_batch} id="batch" name="batch">
-                                            <option value="" >Select a batch</option>
-                                            {Array.isArray(batch) &&
-
-                                                batch.map((b) => (
-                                                    <option value={b._id} key={b._id}>
-                                                        {b.batchName}
-                                                    </option>
-                                                ))
-                                            }
-                                        </select>
-
-                                        <FaChevronDown className={styles.selectIcon} />
-                                        <p className={styles.error}>{Errors.student_batch}</p>
-
                                     </div>
                                 </div>
                             </div>

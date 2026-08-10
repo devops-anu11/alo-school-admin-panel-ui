@@ -67,14 +67,14 @@ const Details = () => {
 
     return (
         <>
-            <div className='px-5 pt-6   pb-[100px]'>
-                <div class="flex gap-[10px] items-center pb-[10px]">
+            <div className='px-4 sm:px-5 pt-5 sm:pt-6 pb-[100px] bg-[#f6f7fb] min-h-full' style={{ fontFamily: '"Poppins", sans-serif' }}>
+                <div class="flex gap-[10px] items-center pb-4">
                     <div >
-                        <IoMdArrowRoundBack style={{ cursor: 'pointer', fontSize: '20px', marginTop: '2px' }} onClick={() => window.history.back()} />
+                        <IoMdArrowRoundBack style={{ cursor: 'pointer', fontSize: '20px', marginTop: '2px', color: '#123d84' }} onClick={() => window.history.back()} />
 
                     </div>
                     <div>
-                        <h4 className='text-xl font-normal'>Student Details</h4>
+                        <h4 className='text-[22px] sm:text-[26px] font-semibold text-[#123d84]'>Student Details</h4>
 
                     </div>
                 </div>
@@ -84,7 +84,7 @@ const Details = () => {
 
                     <div>
                         <div>
-                            <div className='bg-[#F8F8F8] px-[10px] py-[10px] rounded-[10px]'>
+                            <div className='bg-white border border-[#eef0f5] px-4 py-4 sm:px-5 sm:py-5 rounded-xl'>
                                 <div className=''>
 
 
@@ -102,27 +102,27 @@ const Details = () => {
                                             <div style={{ width: '100%' }}>
 
                                                 <Skeleton variant="text" width={80} height={40} />
-                                                <div className='grid grid-cols-2 lg:grid-cols-6 md:grid-cols-3 sm:grid-cols-2 text-[14px]'>
+                                                <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 text-[14px] gap-3'>
 
                                                     <div>
 
-                                                        <div className='text-[#00000080]'>Phone</div>
+                                                        <div className='text-[#6b7280]'>Phone</div>
                                                         <Skeleton variant="text" width={80} height={40} />                                                    </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>E-Mail</div>
+                                                        <div className='text-[#6b7280]'>E-Mail</div>
                                                         <Skeleton variant="text" width={80} height={40} />                                                    </div>
 
                                                     <div>
-                                                        <div className='text-[#00000080]'>Blood</div>
+                                                        <div className='text-[#6b7280]'>Blood</div>
                                                         <Skeleton variant="text" width={80} height={40} />                                                    </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>D.O.B</div>
+                                                        <div className='text-[#6b7280]'>D.O.B</div>
                                                         <Skeleton variant="text" width={80} height={40} />                                                    </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>Gender</div>
+                                                        <div className='text-[#6b7280]'>Gender</div>
                                                         <Skeleton variant="text" width={80} height={40} />                                                    </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>Pincode</div>
+                                                        <div className='text-[#6b7280]'>Pincode</div>
                                                         <Skeleton variant="text" width={80} height={40} />                                                    </div>
                                                 </div>
                                             </div>
@@ -136,10 +136,10 @@ const Details = () => {
 
                             </div>
                         </div>
-                        <div className='grid grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 text-[14px] w-[100%] gap-[10px]'>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 text-[14px] w-[100%] gap-3'>
                             <div >
-                                <div className='bg-[#F8F8F8] px-[10px] py-[10px] mt-[10px] rounded-[10px] '>
-                                    <p className='text-[17px] font-[500] text-center md:text-left'>Personal Details</p>
+                                <div className='bg-white border border-[#eef0f5] px-4 py-4 sm:px-5 sm:py-5 mt-3 rounded-xl '>
+                                    <p className='text-[16px] font-semibold text-[#123d84] text-center md:text-left'>Personal Details</p>
 
                                     <div>
                                         <p className='py-[5px] flex items-center gap-[5px]'> <span>Address :</span> <Skeleton variant="text" width={80} height={40} /> </p>
@@ -154,18 +154,18 @@ const Details = () => {
                                     </div>
                                 </div>
 
-                                <div className='bg-[#F8F8F8] px-[10px] py-[10px] mt-[10px] rounded-[10px] '>
-                                    <p className='text-[17px] font-[500] text-center md:text-left'>Documents</p>
-                                    <div className='grid grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 text-[14px] w-[100%] gap-[10px]'>
+                                <div className='bg-white border border-[#eef0f5] px-4 py-4 sm:px-5 sm:py-5 mt-3 rounded-xl '>
+                                    <p className='text-[16px] font-semibold text-[#123d84] text-center md:text-left'>Documents</p>
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 text-[14px] w-[100%] gap-3'>
 
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
                                             <div className='flex justify-between items-center '>
                                                 <h4>Aadhar card</h4>
                                                 <Skeleton variant="text" width={80} height={20} />
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Profile</h4>
@@ -173,7 +173,7 @@ const Details = () => {
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Signature</h4>
@@ -181,7 +181,7 @@ const Details = () => {
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
 
                                             <div className='flex justify-between items-center'>
@@ -190,7 +190,7 @@ const Details = () => {
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Transfer Certificate</h4>
@@ -206,12 +206,12 @@ const Details = () => {
                             </div>
 
                             <div >
-                                <div className='bg-[#F8F8F8] px-[10px] py-[5px] mt-[10px] rounded-[10px] h-[100%] '>
-                                    <p className='text-[17px] font-[500] text-center md:text-left pb-3'>Academic Details</p>
+                                <div className='bg-white border border-[#eef0f5] px-4 py-3 sm:px-5 mt-3 rounded-xl h-[100%] '>
+                                    <p className='text-[16px] font-semibold text-[#123d84] text-center md:text-left pb-3'>Academic Details</p>
 
-                                    <div className='h-[490px] overflow-y-scroll'>
+                                    <div className='h-[420px] sm:h-[490px] overflow-y-auto'>
 
-                                        <div className='bg-white rounded-[10px] mt-2'>
+                                        <div className='bg-[#f6f7fb] border border-[#eef0f5] rounded-lg mt-2'>
                                             <div className=' px-[20px] py-[10px]  '>
                                                 <p className='py-[5px] flex items-center gap-[5px]   '>Degree\Qualification : <Skeleton variant="text" width={80} height={40} /></p>
                                                 <p className='py-[5px] flex items-center gap-[5px]   '>School\Unversity : <Skeleton variant="text" width={80} height={40} /></p>
@@ -236,7 +236,7 @@ const Details = () => {
                     :
                     <div>
                         <div>
-                            <div className='bg-[#F8F8F8] px-[10px] py-[10px] rounded-[10px]'>
+                            <div className='bg-white border border-[#eef0f5] px-4 py-4 sm:px-5 sm:py-5 rounded-xl'>
                                 <div className=''>
 
 
@@ -253,34 +253,34 @@ const Details = () => {
                                             </div>
                                             <div style={{ width: '100%' }}>
 
-                                                <h2 className='text-[22px] font-[500] text-center md:text-left'>{details?.firstName?.replace(/\b\w/g, (char) => char.toUpperCase())} {details?.lastName?.replace(/\b\w/g, (char) => char.toUpperCase())}</h2>
+                                                <h2 className='text-[20px] sm:text-[22px] font-semibold text-[#111827] text-center md:text-left'>{details?.firstName?.replace(/\b\w/g, (char) => char.toUpperCase())} {details?.lastName?.replace(/\b\w/g, (char) => char.toUpperCase())}</h2>
 
-                                                <div className='grid grid-cols-2 lg:grid-cols-6 md:grid-cols-3 sm:grid-cols-2 text-[14px]' >
+                                                <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 text-[14px] gap-3' >
 
                                                     <div>
 
-                                                        <div className='text-[#00000080]'>Phone</div>
+                                                        <div className='text-[#6b7280]'>Phone</div>
                                                         <p className='font-[500]'>+{details?.phoneNo}</p>
                                                     </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>E-Mail</div>
+                                                        <div className='text-[#6b7280]'>E-Mail</div>
                                                         <p title={details?.email} className='font-[500] truncate overflow-hidden whitespace-nowrap w-[90%]'>{details?.email}</p>
                                                     </div>
 
                                                     <div>
-                                                        <div className='text-[#00000080]'>Blood</div>
+                                                        <div className='text-[#6b7280]'>Blood</div>
                                                         <p className='font-[500]'>{details?.bloodgroup}</p>
                                                     </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>D.O.B</div>
+                                                        <div className='text-[#6b7280]'>D.O.B</div>
                                                         <p className='font-[500]'>{details?.DOB?.split("T")[0]}</p>
                                                     </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>Gender</div>
+                                                        <div className='text-[#6b7280]'>Gender</div>
                                                         <p className='font-[500]'>{details?.gender}</p>
                                                     </div>
                                                     <div>
-                                                        <div className='text-[#00000080]'>Pincode</div>
+                                                        <div className='text-[#6b7280]'>Pincode</div>
                                                         <p className='font-[500]'>{details?.pincode}</p>
                                                     </div>
                                                 </div>
@@ -291,10 +291,10 @@ const Details = () => {
 
                             </div>
                         </div>
-                        <div className='grid grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 text-[14px]  gap-[10px]'>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 text-[14px] gap-3'>
                             <div >
-                                <div className='bg-[#F8F8F8] px-[10px] py-[10px] mt-[10px] rounded-[10px] '>
-                                    <p className='text-[17px] font-[500] text-center md:text-left'>Personal Details</p>
+                                <div className='bg-white border border-[#eef0f5] px-4 py-4 sm:px-5 sm:py-5 mt-3 rounded-xl '>
+                                    <p className='text-[16px] font-semibold text-[#123d84] text-center md:text-left'>Personal Details</p>
 
                                     <div>
                                         <p className='py-[5px] flex items-center gap-[5px]'> <span>Address :</span> <span>{details?.fullAddress}</span> </p>
@@ -311,51 +311,51 @@ const Details = () => {
                                     </div>
                                 </div>
 
-                                <div className='bg-[#F8F8F8] px-[10px] py-[10px] mt-[10px] rounded-[10px] '>
-                                    <p className='text-[17px] font-[500] text-center md:text-left'>Documents</p>
-                                    <div className='grid grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 text-[14px] w-[100%] gap-[10px]'>
+                                <div className='bg-white border border-[#eef0f5] px-4 py-4 sm:px-5 sm:py-5 mt-3 rounded-xl '>
+                                    <p className='text-[16px] font-semibold text-[#123d84] text-center md:text-left'>Documents</p>
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 text-[14px] w-[100%] gap-3'>
 
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
                                             <div className='flex justify-between items-center '>
                                                 <h4>Aadhar card</h4>
-                                                <button className='flex items-center cursor-pointer text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530]' onClick={() => handleDownload(details?.aadharUrl)
+                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.aadharUrl)
                                                 }>Download <img src={Import} alt="" class="px-2" /></button>
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Profile</h4>
-                                                <button className='flex items-center cursor-pointer text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530]' onClick={() => handleDownload(details?.imageUrl)
+                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.imageUrl)
                                                 }>Download <img src={Import} alt="" class="px-2" /></button>
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Signature</h4>
-                                                <button className='flex items-center cursor-pointer text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530]' onClick={() => handleDownload(details?.signatureUrl)
+                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.signatureUrl)
                                                 }>Download <img src={Import} alt="" class="px-2" /></button>
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Marksheet</h4>
-                                                <button className='flex items-center cursor-pointer text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530]' onClick={() => handleDownload(details?.markSheetUrl)
+                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.markSheetUrl)
                                                 }>Download <img src={Import} alt="" class="px-2" /></button>
 
                                             </div>
                                         </div>
-                                        <div className='text-[12px] bg-white rounded-[10px] px-[20px] py-[10px] my-2 '>
+                                        <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Transfer Certificate</h4>
-                                                <button className='flex items-center cursor-pointer text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530]' onClick={() => handleDownload(details?.tcUrl)
+                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.tcUrl)
                                                 }>Download <img src={Import} alt="" class="px-2" /></button>
 
                                             </div>
@@ -368,12 +368,12 @@ const Details = () => {
                             </div>
 
                             <div >
-                                <div className='bg-[#F8F8F8] px-[10px] py-[5px] mt-[10px] rounded-[10px] h-[100%] '>
-                                    <p className='text-[17px] font-[500] text-center md:text-left pb-3'>Academic Details</p>
+                                <div className='bg-white border border-[#eef0f5] px-4 py-3 sm:px-5 mt-3 rounded-xl h-[100%] '>
+                                    <p className='text-[16px] font-semibold text-[#123d84] text-center md:text-left pb-3'>Academic Details</p>
 
-                                    <div className='h-[490px] overflow-y-scroll'>
+                                    <div className='h-[420px] sm:h-[490px] overflow-y-auto'>
                                         {details?.academicQualification?.map((item, index) => (
-                                            <div className='bg-white rounded-[10px] mt-2'>
+                                            <div className='bg-[#f6f7fb] border border-[#eef0f5] rounded-lg mt-2'>
                                                 <div className=' px-[20px] py-[10px]  '>
                                                     <p className='py-[5px] flex items-center gap-[5px]   '>Degree\Qualification : {item?.qualification}</p>
                                                     <p className='py-[5px] flex items-center gap-[5px]   '>School\University : {item?.university}</p>

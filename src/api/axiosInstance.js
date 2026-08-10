@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://alosodt.com/api',
+  // baseURL: 'https://dev.alosodt.com/api',
+    baseURL: 'http://localhost:5000/api',
   
 });
 
@@ -29,7 +30,7 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem('authToken'); 
     
       
-      window.location.href = '/login'; 
+      window.location.href = '/#/login';
 
       return Promise.reject(error);
     }

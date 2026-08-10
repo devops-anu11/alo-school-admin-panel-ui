@@ -108,20 +108,21 @@ const Eventlist = () => {
             {showModal && <AddEventModal closeModal={() => setShowModal(false)} onevent={getevents} />}
             {updateevent && <Updateevent closeModal={() => setUpdate(false)} onevent={getevents} id={id} />}
 
-            <div className='px-4 pt-4 pb-[100px]'>
-                <div className="flex justify-between items-center lg:flex-row md:flex-row flex-col">
-                    <h4 className='text-xl font-normal'>Events</h4>
-                    <div className=' flex items-end md:justify-around flex-wrap p-2 gap-2 '>
-                        <div style={{ width: '130px', }}>
+            <div className='px-4 sm:px-5 pt-5 sm:pt-6 pb-[100px] bg-[#f6f7fb] min-h-full' style={{ fontFamily: '"Poppins", sans-serif' }}>
+                <div className="flex justify-between items-center lg:flex-row md:flex-row flex-col gap-3">
+                    <h4 className='text-[22px] sm:text-[26px] font-semibold text-[#123d84]'>Events</h4>
+                    <div className='flex items-end md:justify-around flex-wrap gap-2'>
+                        <div style={{ width: '150px', }}>
 
                             <FormControl
                                 variant="outlined"
                                 size="small"
                                 sx={{
                                     minWidth: 120,
-                                    backgroundColor: '#F6F6F6', // match the image background
-                                    borderRadius: '6px',
-                                    border: 'none'
+                                    width: '100%',
+                                    backgroundColor: '#fff',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
                                 }}
                             >
                                 <Select
@@ -135,7 +136,7 @@ const Eventlist = () => {
                                         },
                                         fontSize: '14px',
                                         padding: '4px 10px',
-                                        height: '36px',
+                                        height: '40px',
                                         border: 'none'
                                     }}
                                 >
@@ -151,27 +152,27 @@ const Eventlist = () => {
                         </div>
 
                         <div className={styles.button}>
-                            <button onClick={() => setShowModal(true)} className='text-[#FFFFFF] bg-gradient-to-b from-[#144196] to-[#061530]  px-[20px] w-fit py-2 rounded-md mr-2 flex items-center justify-between cursor-pointer'><PlusIcon className='w-4 h-4 text-[600]' />Add Events</button>
+                            <button onClick={() => setShowModal(true)} className='text-[#FFFFFF] bg-gradient-to-b from-[#144196] to-[#0b2456] px-5 w-fit py-[11px] rounded-[10px] flex items-center gap-1.5 justify-center cursor-pointer text-sm font-medium shadow-sm hover:opacity-90 transition-opacity'><PlusIcon className='w-4 h-4' />Add Events</button>
                         </div>
 
                     </div>
                 </div>
-                <div className='mt-4'>
-                    <div className=' overflow-x-auto py-[0px]'>
+                <div className='mt-4 sm:mt-5'>
+                    <div className='overflow-x-auto py-[0px]'>
                         {loading ? (
                             <div className='text-center'><Loader /></div>
                         ) : (
                             <>
                                 {events.length > 0 ? (
-                                    <div className="grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-4 m-[10px]">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {events.map((item, index) => (
                                             <div
-                                                className={`bg-[#F9F9F9] p-4 rounded-[10px] shadow-[0px_0px_4px_2px_#0C0C0D0D] `}
+                                                className={`bg-white border border-[#eef0f5] p-4 sm:p-5 rounded-xl transition-shadow hover:shadow-[0_6px_18px_rgba(18,61,132,0.08)]`}
                                                 key={item._id}
                                             >
-                                                <div className="flex justify-between items-center">
-                                                    <div className="text-[14px] font-[500]">Event Title</div>
-                                                    <div className="text-[#06752B] font-medium text-[13px] bg-[#D1FFC2] px-[20px] rounded-[5px]" style={{
+                                                <div className="flex justify-between items-center gap-2">
+                                                    <div className="text-[14px] font-semibold text-[#111827]">Event Title</div>
+                                                    <div className="font-semibold text-[12.5px] px-3 py-1 rounded-full" style={{
                                                         background: item.status === 'upcoming' && '#FFCA96' || item.status === 'ongoing' && '#D7E9FF' || item.status === 'completed' && '#D1FFC2',
                                                         color: item.status === 'upcoming' && '#8D4600' || item.status === 'ongoing' && '#2274D4' || item.status === 'completed' && '#06752B',
 
@@ -180,25 +181,25 @@ const Eventlist = () => {
 
                                                     </div>
                                                 </div>
-                                                <p className="font-[600] text-[18px] my-2">{item.title?.replace(/\b\w/g, (char) => char.toUpperCase())}</p>
+                                                <p className="font-semibold text-[17px] text-[#111827] my-2">{item.title?.replace(/\b\w/g, (char) => char.toUpperCase())}</p>
                                                 <p
-                                                    title={item.description} className={`text-[14px] text-[#000] h-[41px] font-[400] my-3 ${styles['ellipsis-2']}`}
+                                                    title={item.description} className={`text-[13.5px] text-[#6b7280] h-[41px] font-normal my-3 ${styles['ellipsis-2']}`}
                                                 >
                                                     {item.description?.replace(/\b\w/g, (char) => char.toUpperCase())}
                                                 </p>
-                                                <p className="text-[14px] text-[#000] font-[500]  pb-3">
+                                                <p className="text-[13.5px] text-[#374151] font-medium pb-2">
                                                     Date : {item.date.split('T')[0]}, {item.day}
                                                 </p>
-                                                <p className="text-[14px] text-[#000] font-[500]  pb-3">
+                                                <p className="text-[13.5px] text-[#374151] font-medium pb-2">
                                                     Time : {item.time}
                                                 </p>
-                                                <div className="flex items-center justify-between mt-3">
+                                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#f0f1f5]">
                                                     <div>
                                                         {/* <p className="text-[14px] text-[#000] font-[400] ">
                                                             Time: {item.time}
                                                         </p> */}
                                                     </div>
-                                                    <div className="flex gap-4">
+                                                    <div className="flex gap-3">
                                                         <FaEdit
                                                             className={styles.edit}
                                                             style={{ cursor: 'pointer' }}
@@ -219,8 +220,8 @@ const Eventlist = () => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="flex justify-center h-[400px] items-center w-full my-auto flex-col text-gray-500 font-semibold">
-                                        <img src={nodata} alt="No Data" className="w-[200px] h-[200px]" />
+                                    <div className="flex justify-center h-[400px] items-center w-full my-auto flex-col text-[#9ca3af] font-medium">
+                                        <img src={nodata} alt="No Data" className="w-[160px] h-[160px]" />
                                         <p>No Data Found</p>
 
                                     </div>
@@ -233,7 +234,7 @@ const Eventlist = () => {
                 </div>
 
 
-                <div className='flex justify-between items-end ms-auto w-[50%]'>
+                <div className='flex flex-wrap justify-between items-center gap-3 mt-2'>
 
                     {totalpages > 0 &&
                         <ThemeProvider theme={theme}>
@@ -250,7 +251,7 @@ const Eventlist = () => {
                     }
                     {totalpages > 0 &&
                         <div className="flex justify-end items-center">
-                            <p className="text-gray-600 text-sm">
+                            <p className="text-[#6b7280] text-[13px]">
                                 Showing {startIndex} – {endIndex} of {totaluser} Events
                             </p>
                         </div>
@@ -269,7 +270,7 @@ const Eventlist = () => {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: 'rgb(21 21 21 / 81%)', // gray overlay
+                        backgroundColor: 'rgba(21,21,21,.6)',
                         zIndex: 1000,
                     },
                     content: {
@@ -277,13 +278,15 @@ const Eventlist = () => {
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        padding: '3rem',
+                        padding: '2.5rem',
                         backgroundColor: '#fff',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         width: 'max-content',
+                        maxWidth: '90vw',
                         height: 'max-content',
                         overflow: 'auto',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        boxShadow: '0 20px 40px rgba(15, 27, 51, 0.25)',
+                        border: '1px solid #eef0f5',
                         zIndex: 1001,
                     },
                 }}

@@ -3,41 +3,20 @@ import styles from "./TermExam.module.css";
 import Pagination from '@mui/material/Pagination';
 import {
   getPerformance,
-  getCourse,
-  getCourseBatchByCourseId,
+  getCourseBatch,
   getUser,
   excelPerformance,
 } from "../../api/Serviceapi";
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { IoIosCloseCircle } from "react-icons/io";
 import { MdOutlineFileDownload } from "react-icons/md";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const theme = createTheme({
-  components: {
-    MuiPaginationItem: {
-      styleOverrides: {
-        root: {
-          borderRadius: '8px',
-          border: '1px solid #e5e7eb',
-          color: '#1f2937', // text-gray-800
-          '&.Mui-selected': {
-            background: 'linear-gradient(to bottom, #144196, #061530)',
-            color: '#fff',
-            border: 'none',
-          },
-          '&:hover': {
-            backgroundColor: '#f3f4f6', // hover:bg-gray-100
-          },
-        },
-      },
-    },
-  },
-});
 const Sem = () => {
   const [performance, setPerformance] = useState([]);
   const [users, setUsers] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [courseOptions, setCourseOptions] = useState([]);
 
   const [search, setSearch] = useState("");
   const [courseId, setCourseId] = useState("");
@@ -81,7 +60,7 @@ const Sem = () => {
   };
 
   useEffect(() => {
-    fetchCourses();
+    fetchBatches();
     // fetchPerformance();
     fetchUsers();
   }, []);
@@ -144,42 +123,52 @@ const Sem = () => {
   };
 
 
-  const fetchCourses = async () => {
+  // Batch drives the filter - a batch's own `courses` array supplies the
+  // course dropdown's options, matching the batch-first pattern used
+  // everywhere else in the app.
+  const fetchBatches = async () => {
     try {
-      const res = await getCourse(100, 0);
-      setCourses(res?.data?.data?.data || []);
+      const res = await getCourseBatch();
+      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setBatches(list);
+
+      if (!batchId) {
+        const primary = list.find((b) => b.isPrimary);
+        if (primary) setBatchId(primary._id);
+      }
     } catch (err) {
-      console.error("Course fetch error", err);
+      console.error("Batch fetch error", err);
     }
   };
 
+  // Re-derive course options whenever batchId or the batch list changes,
+  // and drop courseId if it no longer belongs to the selected batch.
   useEffect(() => {
-    if (!courseId) {
-      setBatches([]);
-      setBatchId("");
+    if (!batchId) {
+      setCourseOptions([]);
+      setCourseId("");
       fetchUsers(search, "", "");
       setoffset(1);
       return;
     }
 
-    const fetchBatches = async () => {
-      try {
-        const res = await getCourseBatchByCourseId(courseId, 100, 0);
-        setBatches(res?.data?.data?.data || []);
-      } catch {
-        setBatches([]);
-      }
-    };
+    const selectedBatch = batches.find((b) => b._id === batchId);
+    const options = selectedBatch?.courses || [];
+    setCourseOptions(options);
+    if (courseId && !options.some((c) => c.courseId === courseId)) {
+      setCourseId("");
+    }
 
-    fetchBatches();
-    fetchUsers(search, courseId, "");
+    fetchUsers(search, courseId, batchId);
     setoffset(1);
-  }, [courseId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchId, batches]);
 
   useEffect(() => {
     fetchUsers(search, courseId, batchId);
     setoffset(1);
-  }, [batchId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
 
 
   const filteredData = performance.filter((row) => {
@@ -215,7 +204,7 @@ const Sem = () => {
       let base64String = res.data.data;
 
       if (!base64String) {
-        alert("No Excel file data found");
+        toast.error("No Excel file data found");
         return;
       }
 
@@ -245,34 +234,32 @@ const Sem = () => {
   };
   return (
     <div className={styles.container}>
+      <ToastContainer />
       <div className={styles.headerBar}>
         <h3>Semester Details</h3>
 
         <div className={styles.filters}>
           <select
-            value={courseId}
-            onChange={(e) => {
-              setCourseId(e.target.value);
-              setBatchId("");
-            }}
-          >
-            <option value="">All Courses</option>
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.courseName}
-              </option>
-            ))}
-          </select>
-
-          <select
             value={batchId}
-            disabled={!courseId}
             onChange={(e) => setBatchId(e.target.value)}
           >
             <option value="">All Batches</option>
             {batches.map((b) => (
               <option key={b._id} value={b._id}>
                 {b.batchName}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={courseId}
+            disabled={!batchId}
+            onChange={(e) => setCourseId(e.target.value)}
+          >
+            <option value="">All Courses</option>
+            {courseOptions.map((c) => (
+              <option key={c.courseId} value={c.courseId}>
+                {c.courseName}
               </option>
             ))}
           </select>
@@ -328,95 +315,86 @@ const Sem = () => {
             </button>
           )}
 
-          <div className=''>
-            <button className='bg-gradient-to-b from-[#144196] to-[#061530] text-white px-1 py-1 rounded-md flex items-center flex-end gap-1 cursor-pointer' onClick={getExcel}>Export<MdOutlineFileDownload />
-            </button>
-          </div>
+          <button className={styles.exportBtn} onClick={getExcel}>
+            Export
+            <MdOutlineFileDownload />
+          </button>
         </div>
       </div>
 
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Student ID</th>
-            <th>Semester</th>
-            <th>Academic</th>
-            <th>Course</th>
-            <th>Batch</th>
-            <th>Total</th>
-            <th>Percentage</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {totalpages > 0 ? (
-
-            performance.map((row) => (
-              <tr key={row.id}>
-                <td>{row.userDetails.name}</td>
-                <td>{row.userDetails.studentId}</td>
-                <td>{row.exam}</td>
-                <td>{row.Academic}</td>
-                <td>{row.courseDetails.courseName}</td>
-                <td>{row.batchDetails[0]?.batchName}</td>
-                <td>{row.total}</td>
-                <td>{row.average}%</td>
-                <td>
-                  <button
-                    className={styles.viewBtn}
-                    onClick={() => {
-                      setViewRecord(row);
-                      setViewModal(true);
-                    }}
-                  >
-                    View
-                  </button>
-                </td>
+      <div className={styles.tableCard}>
+        <div className={styles.tableScroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Student ID</th>
+                <th>Semester</th>
+                <th>Academic</th>
+                <th>Course</th>
+                <th>Batch</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Action</th>
               </tr>
-            ))
+            </thead>
 
-          ) : (
-            <tr>
-              <td colSpan="8" className={styles.noData}>
-                No Data Found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            <tbody>
+              {totalpages > 0 ? (
 
-      <div className='flex justify-between my-4 ms-auto w-[50%]'>
+                performance.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.userDetails.name}</td>
+                    <td>{row.userDetails.studentId}</td>
+                    <td>{row.exam}</td>
+                    <td>{row.Academic}</td>
+                    <td>{row.courseDetails.courseName}</td>
+                    <td>{row.batchDetails[0]?.batchName}</td>
+                    <td>{row.total}</td>
+                    <td>{row.average}%</td>
+                    <td>
+                      <button
+                        className={styles.viewBtn}
+                        onClick={() => {
+                          setViewRecord(row);
+                          setViewModal(true);
+                        }}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
 
-        {totalpages > 0 &&
-
-
-          <ThemeProvider theme={theme} >
-            <div className="flex justify-center ">
-              <Pagination
-                count={totalpages}
-                page={offset}
-                onChange={handlePageChange}
-                showFirstButton
-                showLastButton
-              />
-            </div>
-          </ThemeProvider>
-        }
-
-
-        {totalpages > 0 &&
-
-          <div className="flex justify-between items-center">
-            <p className="text-gray-600 text-sm">
-              Showing {startIndex} – {endIndex} of {totaluser} students
-            </p>
-          </div>
-
-
-        }
+              ) : (
+                <tr>
+                  <td colSpan="9" className={styles.noData}>
+                    No Data Found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {totalpages > 0 && (
+        <div className={styles.tableFooter}>
+          <p className={styles.showing}>
+            Showing {startIndex} – {endIndex} of {totaluser} students
+          </p>
+
+          <div className={styles.paginationWrap}>
+            <Pagination
+              count={totalpages}
+              page={offset}
+              onChange={handlePageChange}
+              showFirstButton
+              showLastButton
+            />
+          </div>
+        </div>
+      )}
       {viewModal && viewRecord && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalCard}>

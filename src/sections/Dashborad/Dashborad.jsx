@@ -4,8 +4,6 @@ import profile from '../../assets/dashboardimgs/profile.png'
 import profile1 from '../../assets/dashboardimgs/profile1.png'
 import profile2 from '../../assets/dashboardimgs/profile2.png'
 import profile3 from '../../assets/dashboardimgs/profile3.png'
-import profileicon from '../../assets/dashboardimgs/profile_icon.png'
-import resizeicon from '../../assets/dashboardimgs/re-size.png'
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
@@ -19,11 +17,12 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { getAttendancerate, getCourse, getCourseBatchByCourseId, getDashboardAttendencerate, getDashboardEvents, getDashboardLeave, getDashboardUser, getTodayrate, studentCount } from '../../api/Serviceapi'
+import { getAttendancerate, getCourse, getCourseBatch, getCourseBatchByCourseId, getDashboardAttendencerate, getDashboardEvents, getDashboardLeave, getDashboardUser, getTodayrate, studentCount } from '../../api/Serviceapi'
 import {
     getDashboardTermToppers,
     getDashboardSemesterToppers,
 } from "../../api/Serviceapi";
+import { LuGraduationCap, LuUsers, LuCalendarCheck, LuCalendar, LuArrowRight } from "react-icons/lu";
 
 export const Dashboard = () => {
     const [days, setdays] = useState('this_week');
@@ -35,6 +34,26 @@ export const Dashboard = () => {
     const [open, setOpen] = useState(false)
     const [status, setStatus] = useState('');
     const [leavestatus, setLeaveStatus] = useState('');
+
+    // Page-level batch filter - drives every widget below (except Events,
+    // which isn't batch-scoped), defaulting to the primary batch.
+    const [pageBatches, setPageBatches] = useState([]);
+    const [pageBatchId, setPageBatchId] = useState('');
+
+    useEffect(() => {
+        const fetchPageBatches = async () => {
+            try {
+                const res = await getCourseBatch();
+                const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+                setPageBatches(list);
+                const primary = list.find((b) => b.isPrimary);
+                if (primary) setPageBatchId(primary._id);
+            } catch (err) {
+                console.error('error', err.response?.data || err);
+            }
+        };
+        fetchPageBatches();
+    }, []);
 
     const todayDate = new Date().toLocaleDateString("en-CA");
 
@@ -112,19 +131,19 @@ export const Dashboard = () => {
 
     useEffect(() => {
         studentlist()
-    }, [])
+    }, [pageBatchId])
     useEffect(() => {
         eventlist()
     }, [status])
     useEffect(() => {
         leavelist()
-    }, [leavestatus])
+    }, [leavestatus, pageBatchId])
     useEffect(() => {
         countStudent()
-    }, [])
+    }, [pageBatchId])
     let studentlist = async () => {
         try {
-            let res = await getDashboardUser()
+            let res = await getDashboardUser(pageBatchId)
             setStudentList(res?.data?.data?.data)
 
         } catch (err) {
@@ -136,7 +155,7 @@ export const Dashboard = () => {
 
     let countStudent = async () => {
         try {
-            let res = await studentCount();
+            let res = await studentCount(pageBatchId);
             setStudentData(res?.data?.data?.[0]); // since your API returns array inside data
         } catch (err) {
             console.log(err);
@@ -150,12 +169,8 @@ export const Dashboard = () => {
     }, []);
 
     useEffect(() => {
-        countStudent();
-    }, []);
-
-    useEffect(() => {
         attendanceRate();
-    }, []);
+    }, [pageBatchId]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -180,7 +195,7 @@ export const Dashboard = () => {
 
     let leavelist = async () => {
         try {
-            let res = await getDashboardLeave(leavestatus)
+            let res = await getDashboardLeave(leavestatus, pageBatchId)
             setLeaveList(res?.data?.data?.result)
         } catch (err) {
             console.log(err)
@@ -189,7 +204,7 @@ export const Dashboard = () => {
 
     let attendanceRate = async () => {
         try {
-            let res = await getTodayrate()
+            let res = await getTodayrate(pageBatchId)
             setToday(res?.data?.data)
         } catch (err) {
             console.log(err)
@@ -200,11 +215,11 @@ export const Dashboard = () => {
         if (!date) return;
 
         attendanceDashboradRate()
-    }, [date])
+    }, [date, pageBatchId])
 
     let attendanceDashboradRate = async () => {
         try {
-            let res = await getDashboardAttendencerate(date)
+            let res = await getDashboardAttendencerate(date, pageBatchId)
             setAttendance(res?.data?.data)
         } catch (err) {
             console.log(err)
@@ -227,15 +242,41 @@ export const Dashboard = () => {
     return (
         <>
             <div className={dashboradcss.dashboradcontainer}>
-                <div className="flex justify-between items-center">
-                    <h4 className=' m-[10px] text-xl font-normal'>Dashboard Overview</h4>
+                <div className={dashboradcss.pageHeader}>
+                    <div>
+                        <h4 className={dashboradcss.pageTitle}>
+                            Welcome Back, {localStorage.getItem('username') || 'Admin'}! <span className={dashboradcss.wave}>👋</span>
+                        </h4>
+                        <p className={dashboradcss.pageSubtitle}>Here's what's happening in your institute today.</p>
+                    </div>
+                    <div className={dashboradcss.headerActions}>
+                        <select
+                            value={pageBatchId}
+                            onChange={(e) => setPageBatchId(e.target.value)}
+                            className={dashboradcss.filterSelect}
+                        >
+                            <option value="">All Batches</option>
+                            {pageBatches.map((b) => (
+                                <option key={b._id} value={b._id}>
+                                    {b.batchName}
+                                </option>
+                            ))}
+                        </select>
+                        <div className={dashboradcss.dateBadge}>
+                            <LuCalendar />
+                            <div>
+                                <p>{formattedDate}</p>
+                                <span>{weekday}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-3 sm:grid-cols-1 ">
+                <div className={dashboradcss.statsGrid}>
                     <div className={dashboradcss.dashcard}>
                         <div className="flex justify-between items-center">
-                            <div><p className=' text-lg font-normal'>Total Students</p></div>
-                            <div className={dashboradcss.profileicon}><img src={profileicon} alt="" width={'100%'} /></div>
+                            <div><p className={dashboradcss.cardTitle}>Total Students</p></div>
+                            <div className={`${dashboradcss.profileicon} ${dashboradcss.iconBlue}`}><LuGraduationCap /></div>
                         </div>
                         <div className={dashboradcss.dashcount}>{studentData?.totalStudents ?? 0}</div>
                         <div className="flex justify-between items-center">
@@ -265,8 +306,8 @@ export const Dashboard = () => {
                     </div>
                     <div className={dashboradcss.dashcard}>
                         <div className="flex justify-between items-center">
-                            <div><p className=' text-lg font-normal'>Active Students</p></div>
-                            <div className={dashboradcss.profileicon}><img src={profileicon} alt="" width={'100%'} /></div>
+                            <div><p className={dashboradcss.cardTitle}>Active Students</p></div>
+                            <div className={`${dashboradcss.profileicon} ${dashboradcss.iconGreen}`}><LuUsers /></div>
                         </div>
                         <div className={dashboradcss.dashcount}>      {studentData?.activeStudents ?? 0}
                         </div>
@@ -296,29 +337,29 @@ export const Dashboard = () => {
                     </div>
                     <div className={dashboradcss.dashcard} >
                         <div className="flex justify-between items-center">
-                            <div><p className=' text-lg font-normal'>Attendance rate</p><p className={dashboradcss.dashdate}>{displayDate}</p></div>
-                            <div className={dashboradcss.profileicon}><img src={profileicon} alt="" width={'100%'} /></div>
+                            <div><p className={dashboradcss.cardTitle}>Attendance rate</p><p className={dashboradcss.dashdate}>{displayDate}</p></div>
+                            <div className={`${dashboradcss.profileicon} ${dashboradcss.iconPurple}`}><LuCalendarCheck /></div>
                         </div>
                         <div className="flex justify-between items-center pt-[20px]">
                             <div className={dashboradcss.dashcount}>{todayAttendance?.attendanceRate}</div>
-                            <Link to='/attendence'><div className={dashboradcss.avatar_text}>ViewDetails</div></Link>
+                            <Link to='/attendence'><div className={dashboradcss.viewDetailsLink}>View Details</div></Link>
                         </div>
                     </div>
 
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 ">
-                    <div className={dashboradcss.dashcard} style={{ height: '420px', overflowY: 'hidden' }} >
-                        <div className="flex justify-between items-center mx-2 mb-[20px]">
-                            <div><h4 className=' text-lg font-normal'>Leave Request</h4></div>
+                <div className={dashboradcss.widgetsGrid}>
+                    <div className={`${dashboradcss.dashcard} ${dashboradcss.panelLg}`} >
+                        <div className={dashboradcss.panelHead}>
+                            <div><h4 className={dashboradcss.panelTitle}>Leave Request</h4></div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <FormControl
                                     variant="outlined"
                                     size="small"
                                     sx={{
                                         minWidth: 120,
-                                        backgroundColor: '#ffffff', // match the image background
-                                        borderRadius: '6px',
-                                        border: 'none'
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '10px',
+                                        border: '1px solid #e5e7eb'
                                     }}
                                 >
                                     <Select
@@ -332,7 +373,7 @@ export const Dashboard = () => {
                                             },
                                             fontSize: '14px',
                                             padding: '4px 10px',
-                                            height: '36px',
+                                            height: '38px',
                                             border: 'none'
                                         }}
                                     >
@@ -343,18 +384,18 @@ export const Dashboard = () => {
 
                                     </Select>
                                 </FormControl>
-                                <div>
-                                    <Link to={`/attendence/leaverequest/${todayDate}//`}><img src={resizeicon} alt="resizeicon" /></Link>
-                                </div>
+                                <Link to={`/attendence/leaverequest/${todayDate}//`} className={dashboradcss.viewAllLink}>
+                                    View All <LuArrowRight />
+                                </Link>
 
                             </div>
                         </div>
-                        <div style={{ height: '400px', overflowY: 'auto', paddingBottom: '40px' }} >
+                        <div className={dashboradcss.scrollLeave} >
                             {leaveList?.length > 0 ? (
                                 leaveList.map((leave) => (
                                     <div
                                         key={leave._id}
-                                        className="flex justify-between items-center py-[10px] border-b-[2px] border-b-[#0000001A] border-b-solid"
+                                        className={`flex justify-between items-center ${dashboradcss.listRow}`}
                                     >
                                         {/* Left section */}
                                         <div className="flex items-center">
@@ -376,25 +417,15 @@ export const Dashboard = () => {
                                         {/* Status button */}
                                         <div>
                                             <button
-                                                className="text-[14px] p-[5px] w-[100px] mx-[10px] rounded-lg"
-                                                style={{
-                                                    background:
-                                                        leave?.status === "Rejected"
-                                                            ? "#FFD6D6"
-                                                            : leave?.status === "Created"
-                                                                ? "#D7E9FF"
-                                                                : leave?.status === "Approved"
-                                                                    ? "#C5FFD8"
-                                                                    : "#f1f1f1",
-                                                    color:
-                                                        leave?.status === "Rejected"
-                                                            ? "#F81111"
-                                                            : leave?.status === "Created"
-                                                                ? "#2274D4"
-                                                                : leave?.status === "Approved"
-                                                                    ? "#08792E"
-                                                                    : "#333",
-                                                }}
+                                                className={`${dashboradcss.pill} ${leave?.status === "Rejected"
+                                                    ? dashboradcss.pillRejected
+                                                    : leave?.status === "Created"
+                                                        ? dashboradcss.pillPending
+                                                        : leave?.status === "Approved"
+                                                            ? dashboradcss.pillApproved
+                                                            : ""
+                                                    }`}
+                                                style={{ minWidth: '90px' }}
                                             >
                                                 {leave?.status}
                                             </button>
@@ -402,9 +433,9 @@ export const Dashboard = () => {
                                     </div>
                                 ))
                             ) : (
-                                <div>
-                                    <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
-                                    <p className="text-center text-gray-500 font-semibold">No Data Found</p>
+                                <div className={dashboradcss.noData}>
+                                    <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
+                                    <p className={dashboradcss.noDataText}>No Data Found</p>
                                 </div>
                             )}
 
@@ -413,8 +444,8 @@ export const Dashboard = () => {
                     </div>
                     <div className={dashboradcss.dashcard}>
                         <div className='flex justify-between flex-col h-100'>
-                            <div className="flex justify-between items-center mb-[20px] mx-2">
-                                <div><h4 className=' text-lg font-normal'>Attendance Rate</h4></div>
+                            <div className={dashboradcss.panelHead}>
+                                <div><h4 className={dashboradcss.panelTitle}>Attendance Rate</h4></div>
                                 <div style={{ width: '150px', }}>
                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                                         <DatePicker
@@ -458,48 +489,65 @@ export const Dashboard = () => {
                                 </div>
                             </div>
 
-                            <div style={{ width: 200, height: 200, margin: 'auto', display: 'block' }}>
-                                <CircularProgressbarWithChildren
-                                    value={parseFloat(Attendance.attendanceRate)}
-                                    styles={buildStyles({
-                                        pathColor: 'url(#gradient)',
-                                        trailColor: '#eee',
-                                        strokeLinecap: 'butt',
-                                    })}
-                                >
+                            <div className={dashboradcss.donutRow}>
+                                <div style={{ width: 150, height: 150, flexShrink: 0 }}>
+                                    <CircularProgressbarWithChildren
+                                        value={parseFloat(Attendance.attendanceRate) || 0}
+                                        styles={buildStyles({
+                                            pathColor: 'url(#gradient)',
+                                            trailColor: '#eef0f5',
+                                            strokeLinecap: 'butt',
+                                        })}
+                                    >
 
-                                    <svg style={{ height: 0 }}>
-                                        <defs>
-                                            <linearGradient id="gradient" gradientTransform="rotate(90)">
-                                                <stop offset="0%" stopColor="#144196" />
-                                                <stop offset="100%" stopColor="#061530" />
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-                                    <div style={{ fontSize: 24, fontWeight: 'bold' }}>{Attendance.attendanceRate}</div>
-                                </CircularProgressbarWithChildren>
+                                        <svg style={{ height: 0 }}>
+                                            <defs>
+                                                <linearGradient id="gradient" gradientTransform="rotate(90)">
+                                                    <stop offset="0%" stopColor="#144196" />
+                                                    <stop offset="100%" stopColor="#0b2456" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        <div className={dashboradcss.donutCenter}>
+                                            <strong>{Attendance.attendanceRate}</strong>
+                                            <span>Attendance Rate</span>
+                                        </div>
+                                    </CircularProgressbarWithChildren>
+                                </div>
+
+                                <div className={dashboradcss.donutLegend}>
+                                    <div className={dashboradcss.legendRow}>
+                                        <span className={`${dashboradcss.legendDot} ${dashboradcss.legendDotBlue}`} />
+                                        <span className={dashboradcss.legendLabel}>Present</span>
+                                        <span className={dashboradcss.legendValue}>{Attendance.fetchCount ?? 0}</span>
+                                    </div>
+                                    <div className={dashboradcss.legendRow}>
+                                        <span className={`${dashboradcss.legendDot} ${dashboradcss.legendDotGray}`} />
+                                        <span className={dashboradcss.legendLabel}>Absent</span>
+                                        <span className={dashboradcss.legendValue}>{Attendance.leaveApproved ?? 0}</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className='flex justify-between '>
-                                <div style={{ color: 'green', fontSize: '14px' }}>No of student present: {Attendance.fetchCount}</div>
-
-                                <div style={{ color: 'red', fontSize: '14px' }}>No of student absent: {Attendance.leaveApproved}</div>
+                            <div className={dashboradcss.donutFooter}>
+                                <span className={dashboradcss.presentText}>No of student present: {Attendance.fetchCount ?? 0}</span>
+                                <span className={dashboradcss.absentText}>No of student absent: {Attendance.leaveApproved ?? 0}</span>
                             </div>
                         </div>
 
                     </div>
-                    <div className={`${dashboradcss.dashcard} h-100 `} style={{ height: '420px', overflowY: 'hidden' }}>
-                        <div className="flex justify-between items-center mx-2 mb-[20px]">
-                            <div><h4 className=' text-lg font-normal'>Events</h4></div>
+                    <div className={`${dashboradcss.dashcard} ${dashboradcss.panelLg}`}>
+                        <div className={dashboradcss.panelHead}>
+                            <div><h4 className={dashboradcss.panelTitle}>Events</h4></div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <FormControl
                                     variant="outlined"
                                     size="small"
                                     sx={{
                                         minWidth: 120,
-                                        backgroundColor: '#ffffff', // match the image background
-                                        borderRadius: '6px',
-                                        border: 'none'
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '10px',
+                                        border: '1px solid #e5e7eb'
                                     }}
                                 >
                                     <Select
@@ -513,7 +561,7 @@ export const Dashboard = () => {
                                             },
                                             fontSize: '14px',
                                             padding: '4px 10px',
-                                            height: '36px',
+                                            height: '38px',
                                             border: 'none'
                                         }}
                                     >
@@ -525,80 +573,81 @@ export const Dashboard = () => {
 
                                     </Select>
                                 </FormControl>
-                                <div><Link to='/events'><img src={resizeicon} alt="resizeicon" /></Link></div>
+                                <Link to='/events' className={dashboradcss.viewAllLink}>View All <LuArrowRight /></Link>
 
                             </div>
 
                         </div>
-                        <div style={{ height: '680px', overflowY: 'scroll', paddingBottom: '20px' }}>
+                        <div className={dashboradcss.scrollEvents}>
                             {eventList?.length > 0 ? (
                                 eventList.map((item) => {
                                     const { day, month, year } = formatDate(item.date);
                                     return (
-                                        <div key={item._id} className="flex justify-around items-center py-[10px] border-b-[2px] border-b-[#0000001A] border-b-solid">
+                                        <div key={item._id} className={dashboradcss.eventCard}>
                                             <div className="flex items-center w-[70%]">
 
                                                 <div>
-                                                    <h6 className=' text-[17px] text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-[500] my-1' style={{ textTransform: 'capitalize' }}>{item?.title}</h6>
-                                                    <p className='text-[13px] text-[#555]' style={{ textTransform: 'capitalize' }}>
-                                                        {item?.description}                                            </p>
-                                                    <div className='text-[13px] text-[#06752B] px-[10px] bg-[#D1FFC2] rounded inline-block my-2' style={{
-                                                        background: item.status === 'upcoming' && '#FFCA96' || item.status === 'ongoing' && '#D7E9FF' || item.status === 'completed' && '#D1FFC2',
-                                                        color: item.status === 'upcoming' && '#8D4600' || item.status === 'ongoing' && '#2274D4' || item.status === 'completed' && '#06752B',
+                                                    <h6 className={dashboradcss.eventTitle}>{item?.title}</h6>
+                                                    <p className={dashboradcss.eventDesc}>
+                                                        {item?.description}
+                                                    </p>
+                                                    <div className={dashboradcss.pill} style={{
+                                                        background: item.status === 'upcoming' && '#fff3e0' || item.status === 'ongoing' && '#e8eefc' || item.status === 'completed' && '#e7f7ee',
+                                                        color: item.status === 'upcoming' && '#f59e0b' || item.status === 'ongoing' && '#2563eb' || item.status === 'completed' && '#12805c',
 
                                                     }}>{item?.status}</div>
                                                 </div>
                                             </div>
                                             <div>
-                                                <div className='bg-[#D9D9D9] px-[5px] py-[5px]  rounded-lg text-center'>
-                                                    <h5 className='text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-[600]'>{day}</h5>
-                                                    <p className='text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-[600] text-[13px]'>{month} {year}</p>
-                                                    <p className='text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530]  text-[12px]'>{item?.time}</p>
+                                                <div className={dashboradcss.eventDateBox}>
+                                                    <h5 className={dashboradcss.eventDay}>{day}</h5>
+                                                    <p className={dashboradcss.eventMonth}>{month} {year}</p>
+                                                    <p className={dashboradcss.eventTime}>{item?.time}</p>
                                                 </div>
                                             </div>
                                         </div>
                                     )
                                 })
                             ) : (
-                                <div>
-                                    <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
-                                    <p className="text-center text-gray-500 font-semibold">No Data Found</p>
+                                <div className={dashboradcss.noData}>
+                                    <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
+                                    <p className={dashboradcss.noDataText}>No Data Found</p>
                                 </div>
 
                             )}
                         </div>
 
                     </div>
-                    <div className={`${dashboradcss.dashcard} `} style={{ height: '320px', overflowY: 'hidden' }}>
-                        <div className="flex justify-between items-center mx-2 my-[10px]">
-                            <div><h4 className=' text-lg font-normal'>Student List</h4></div>
-                            <div><Link to='/students'><img src={resizeicon} alt="resizeicon" /></Link></div>
+                    <div className={`${dashboradcss.dashcard} ${dashboradcss.panelMd}`}>
+                        <div className={dashboradcss.panelHead}>
+                            <div><h4 className={dashboradcss.panelTitle}>Student List</h4></div>
+                            <Link to='/students' className={dashboradcss.viewAllLink}>View All <LuArrowRight /></Link>
                         </div>
 
-                        <div className="overflow-x-auto " style={{ height: '300px', overflowY: 'scroll', paddingBottom: '60px' }}>
-                            <table className="min-w-full text-sm text-left rounded-[10px] overflow-hidden">
-                                <thead className="bg-[#ffff]">
+                        <div className={`${dashboradcss.tableWrap} ${dashboradcss.scrollStudents}`}>
+                            <table className={dashboradcss.table}>
+                                <thead>
                                     <tr >
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">Profile</th>
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">ID No</th>
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">Name</th>
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">Mobile</th>
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">Course</th>
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">Batch</th>
-                                        <th className="px-4 py-3 text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] font-semibold">Status</th>
+                                        <th>Profile</th>
+                                        <th>ID No</th>
+                                        <th>Name</th>
+                                        <th>Mobile</th>
+                                        <th>Course</th>
+                                        <th>Batch</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {studentList.map((item) => (
-                                        <tr className="border-b border-gray-200" key={item?._id}>
-                                            <td className="px-4 py-3">
+                                        <tr key={item?._id}>
+                                            <td>
                                                 <img src={item?.profileURL} alt="Profile" className="rounded-full w-10 h-10" />                                           </td>
-                                            <td className="px-4 py-3">{item?.studentId}</td>
-                                            <td className="px-4 py-3" style={{ textTransform: 'capitalize' }}>{item?.name}</td>
-                                            <td className="px-4 py-3">{item?.mobileNo}</td>
-                                            <td className="px-4 py-3">{item?.courseDetails?.courseName}</td>
-                                            <td className="px-4 py-3">{item?.batchDetails?.batchName}</td>
-                                            <td className="px-4 py-3 text-green-500 font-medium" style={item?.inStatus === 'ongoing' ? { color: '#1D4ED8' } : ''}>{item.inStatus}</td>
+                                            <td>{item?.studentId}</td>
+                                            <td style={{ textTransform: 'capitalize' }}>{item?.name}</td>
+                                            <td>{item?.mobileNo}</td>
+                                            <td>{item?.courseDetails?.courseName}</td>
+                                            <td>{item?.batchDetails?.batchName}</td>
+                                            <td className={item?.inStatus === 'ongoing' ? dashboradcss.statusOngoing : dashboradcss.statusDefault}>{item.inStatus}</td>
                                         </tr>
                                     ))}
 
@@ -611,77 +660,79 @@ export const Dashboard = () => {
                     </div>
                     <div className="lg:col-span-2 md:col-span-2 col-span-1  ">
 
-                        <div className={dashboradcss.dashcard} style={{ height: "320px", overflow: 'auto' }}>
-                            <div className="flex justify-between items-center mx-2 mb-3">
-                                <h4 className="text-lg font-normal">Toppers</h4>
+                        <div className={`${dashboradcss.dashcard} ${dashboradcss.panelAuto}`}>
+                            <div className={dashboradcss.panelHead}>
+                                <h4 className={dashboradcss.panelTitle}>Toppers</h4>
 
 
 
 
 
 
-                                <select
-                                    value={courseId}
-                                    onChange={(e) => {
-                                        setCourseId(e.target.value);
-                                        setBatchId("");
-                                    }}
-                                    className="border border-gray-300 rounded-md px-2 py-1"
-                                >
-                                    <option value="">All Courses</option>
-                                    {courses.map((c) => (
-                                        <option key={c._id} value={c._id}>
-                                            {c.courseName}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className={dashboradcss.toppersFilters}>
+                                    <select
+                                        value={courseId}
+                                        onChange={(e) => {
+                                            setCourseId(e.target.value);
+                                            setBatchId("");
+                                        }}
+                                        className={dashboradcss.filterSelect}
+                                    >
+                                        <option value="">All Courses</option>
+                                        {courses.map((c) => (
+                                            <option key={c._id} value={c._id}>
+                                                {c.courseName}
+                                            </option>
+                                        ))}
+                                    </select>
 
 
-                                <select
-                                    value={batchId}
-                                    disabled={!courseId}
-                                    onChange={(e) => setBatchId(e.target.value)}
-                                    className="border border-gray-300 rounded-md px-2 py-1"
+                                    <select
+                                        value={batchId}
+                                        disabled={!courseId}
+                                        onChange={(e) => setBatchId(e.target.value)}
+                                        className={dashboradcss.filterSelect}
 
-                                >
-                                    <option value="">All Batches</option>
-                                    {batches.map((b) => (
-                                        <option key={b._id} value={b._id}>
-                                            {b.batchName}
-                                        </option>
-                                    ))}
-                                </select>
+                                    >
+                                        <option value="">All Batches</option>
+                                        {batches.map((b) => (
+                                            <option key={b._id} value={b._id}>
+                                                {b.batchName}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                <select
-                                    value={semester}
-                                    onChange={(e) => setSemester(e.target.value)}
-                                    className="border border-gray-300 rounded-md px-2 py-1"
+                                    <select
+                                        value={semester}
+                                        onChange={(e) => setSemester(e.target.value)}
+                                        className={dashboradcss.filterSelect}
 
-                                >
-                                    <option value="sem1">Semester 1</option>
-                                    <option value="sem2">Semester 2</option>
-                                </select>
+                                    >
+                                        <option value="sem1">Semester 1</option>
+                                        <option value="sem2">Semester 2</option>
+                                    </select>
 
-                                {/* <FormControl size="small"> */}
-                                <select
-                                    value={academic}
-                                    onChange={(e) => setAcademic(e.target.value)}
-                                    className="border border-gray-300 rounded-md px-2 py-1"
-                                >
-                                    <option value="Term1">Term 1</option>
-                                    <option value="Term2">Term 2</option>
-                                    <option value="Semester">Semester</option>
-                                </select>
-                                {/* </FormControl> */}
+                                    {/* <FormControl size="small"> */}
+                                    <select
+                                        value={academic}
+                                        onChange={(e) => setAcademic(e.target.value)}
+                                        className={dashboradcss.filterSelect}
+                                    >
+                                        <option value="Term1">Term 1</option>
+                                        <option value="Term2">Term 2</option>
+                                        <option value="Semester">Semester</option>
+                                    </select>
+                                    {/* </FormControl> */}
+                                </div>
                             </div>
                             {termToppers.length > 0 ? (
                                 termToppers.map((s, i) => (
                                     <div
                                         key={s._id}
-                                        className="flex justify-between items-center px-3 py-2 border-b"
+                                        className={dashboradcss.topperRow}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="font-bold">{i + 1}</span>
+                                            <span className={dashboradcss.topperRank}>{i + 1}</span>
 
                                             <img
                                                 src={s.userDetails?.profileURL}
@@ -690,22 +741,22 @@ export const Dashboard = () => {
                                             />
 
                                             <div>
-                                                <p className="text-sm">
+                                                <p className={dashboradcss.topperName}>
                                                     {s.userDetails?.name}
                                                 </p>
-                                                <p className="text-xs text-gray-500">
+                                                <p className={dashboradcss.topperMeta}>
                                                     {s.courseDetails?.courseName}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="font-semibold">
+                                        <div className={dashboradcss.topperScore}>
                                             {s.average}%
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-center text-gray-400 mt-10">
+                                <p className={dashboradcss.noDataText} style={{ marginTop: '40px' }}>
                                     No Data Found
                                 </p>
                             )}

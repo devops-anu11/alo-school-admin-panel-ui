@@ -73,55 +73,58 @@ const Application = () => {
     };
     return (
         <>
-            <div className='px-5 pt-6   pb-[100px]'>
-                <h4 className='text-xl font-normal'>Applications</h4>
-                <div className='overflow-x-auto w-full mt-5  '>
-                    <table className="w-full  rounded-md    ">
-                        <thead className="bg-white text-[16px] ">
-                            <tr className="bg-[#F8F8F8] text-left ">
-                                <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Name</th>
-                                <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Phone Number</th>
-                                <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Email</th>
-                                <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Blood Group</th>
-                                <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Gender</th>
-                                <th className="px-4 py-2 bg-gradient-to-b from-[#144196] to-[#061530] bg-clip-text text-transparent font-semibold">Action</th>
+            <div className='px-4 sm:px-5 pt-5 sm:pt-6 pb-[100px] bg-[#f6f7fb] min-h-full' style={{ fontFamily: '"Poppins", sans-serif' }}>
+                <h4 className='text-[22px] sm:text-[26px] font-semibold text-[#123d84]'>Applications</h4>
+                <div className='bg-white border border-[#eef0f5] rounded-xl overflow-hidden mt-4 sm:mt-5'>
+                    <div className='overflow-x-auto w-full'>
+                        <table className="w-full border-collapse" style={{ minWidth: '760px' }}>
+                            <thead>
+                                <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456]">
+                                    <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Name</th>
+                                    <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Phone Number</th>
+                                    <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
+                                    <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Blood Group</th>
+                                    <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Gender</th>
+                                    <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Action</th>
 
-                            </tr>
-                        </thead>
-                        {loading ?
-                            <tr>
-                                <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
-                                    <Loader />
-                                </td>
-                            </tr>
-
-                            : <tbody className="bg-white text-gray-800 text-[15px] ">
-
-                                {student?.length > 0 ? (
-                                    student.map((item, index) => (
-                                        <tr key={item._id || index} style={{ borderBottom: '1px solid #e5e7eba4' }}>
-                                            <td className="px-4 py-4">{item?.firstName || "-"}</td>
-                                            <td className="px-4 py-2">+{item?.phoneNo || "-"}</td>
-                                            <td className="px-4 py-2">{item?.email || "-"}</td>
-                                            <td className="px-4 py-2">{item?.bloodgroup || "-"}</td>
-                                            <td className="px-4 py-2">{item?.gender || "-"}</td>
-                                            <td className="px-4 py-2 text-sm"> <button className='text-blue-700 flex items-center gap-1 cursor-pointer' onClick={() => navigate(`/application/details/${item._id}`)}> <VisibilityIcon />view</button></td>
-
-                                        </tr>
-                                    ))
-                                ) : (
+                                </tr>
+                            </thead>
+                            {loading ?
+                                <tbody>
                                     <tr>
-                                        <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold">
-                                            <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
-                                            <p>No Data Found</p>
+                                        <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold ">
+                                            <Loader />
                                         </td>
                                     </tr>
-                                )}
+                                </tbody>
 
-                            </tbody>
-                        }
-                    </table>
+                                : <tbody>
 
+                                    {student?.length > 0 ? (
+                                        student.map((item, index) => (
+                                            <tr key={item._id || index} className="border-b border-[#f0f1f5] last:border-0 hover:bg-[#f5f8ff] transition-colors">
+                                                <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.firstName || "-"}</td>
+                                                <td className="px-4 py-3.5 text-sm text-[#374151]">+{item?.phoneNo || "-"}</td>
+                                                <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.email || "-"}</td>
+                                                <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.bloodgroup || "-"}</td>
+                                                <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.gender || "-"}</td>
+                                                <td className="px-4 py-3.5 text-sm"> <button className='text-[#123d84] border border-[#123d84] rounded-lg px-3 py-1.5 flex items-center gap-1 cursor-pointer text-xs font-medium hover:bg-[#123d84] hover:text-white transition-colors' onClick={() => navigate(`/application/details/${item._id}`)}> <VisibilityIcon style={{ fontSize: '16px' }} />view</button></td>
+
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="10" className="text-center py-16 text-sm text-[#9ca3af] font-medium">
+                                                <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
+                                                <p>No Data Found</p>
+                                            </td>
+                                        </tr>
+                                    )}
+
+                                </tbody>
+                            }
+                        </table>
+                    </div>
                 </div>
                 {totalpages > 1 &&
                     <ThemeProvider theme={theme}>
