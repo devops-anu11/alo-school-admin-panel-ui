@@ -18,6 +18,7 @@ import dayjs from 'dayjs';
 import defaultimg from '../../../src/assets/profile.png'
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Loader from '../loader/Loader';
 const UpdateStudent = ({ closeModal, id, onSuccess }) => {
     const [user, setUser] = useState([])
     const [file, setFileName] = useState('');
@@ -267,8 +268,9 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                 console.log(err.response?.data.message)
 
                 // toast.error(err?.response?.data?.message)
-                setLoading(false)
 
+            } finally {
+                setLoading(false)
             }
         }
     }
@@ -299,7 +301,10 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
         setCourseOptions(selectedBatch?.courses || []);
     }, [Formdata.student_batch, batches]);
 
+    const [fetching, setFetching] = useState(true);
+
     const getUserById = async (id) => {
+        setFetching(true);
         try {
             const res = await getUserId(id);
             const userData = res?.data?.data?.data?.[0] || {};
@@ -334,6 +339,8 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
             }
         } catch (err) {
             console.error("Error fetching user:", err);
+        } finally {
+            setFetching(false);
         }
     };
 
@@ -458,6 +465,9 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                 </div>
                 <p style={{ color: 'red', fontSize: '12px', marginTop: '1rem' }}>Note: File size should be less than 500KB*</p>
 
+                {fetching ? (
+                    <div style={{ padding: '40px 0' }}><Loader /></div>
+                ) : (
                 <form action="">
                     <div className={styles.form_body}>
 
@@ -748,12 +758,20 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                         </div>
 
                         <div className={styles.submit_button}>
-                            <input type="submit" value={loading ? "Updating..." : "Update Student"} className={styles.submit} onClick={handleSubmit} />
+                            <input
+                                type="submit"
+                                value={loading ? "Updating..." : "Update Student"}
+                                style={{ cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}
+                                className={styles.submit}
+                                onClick={handleSubmit}
+                                disabled={loading}
+                            />
                         </div>
                         <p style={{ color: "red", fontSize: "12px", marginTop: "10px" }}>{mes}</p>
 
                     </div>
                 </form>
+                )}
             </div>
         </>
 

@@ -23,6 +23,7 @@ const AddCourseModal = ({ open, onClose, onSubmit, existingCourses, course }) =>
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [duplicate, setDuplicate] = useState("");
+  const [saving, setSaving] = useState(false);
   const isEdit = Boolean(course);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ const AddCourseModal = ({ open, onClose, onSubmit, existingCourses, course }) =>
     onClose();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {
@@ -76,12 +77,21 @@ const AddCourseModal = ({ open, onClose, onSubmit, existingCourses, course }) =>
       return;
     }
 
-    onSubmit({
-      courseName: formattedName,
-      duration: Number(form.duration),
-      noOfSem: Number(form.noOfSem),
-    });
-    handleCancel();
+    setSaving(true);
+    try {
+      await onSubmit({
+        courseName: formattedName,
+        duration: Number(form.duration),
+        noOfSem: Number(form.noOfSem),
+      });
+      // Only close once the API call has actually succeeded - onSubmit
+      // throws on failure, so the modal stays open with the entered data.
+      handleCancel();
+    } catch (err) {
+      // Failure toast already shown by App.jsx; keep the modal open.
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -136,11 +146,17 @@ const AddCourseModal = ({ open, onClose, onSubmit, existingCourses, course }) =>
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.cancelBtn} onClick={handleCancel}>
+          <button type="button" className={styles.cancelBtn} onClick={handleCancel} disabled={saving}>
             Cancel
           </button>
-          <button type="submit" className={styles.submitBtn}>
-            {isEdit ? "Update Course" : "Create Course"}
+          <button type="submit" className={styles.submitBtn} disabled={saving}>
+            {saving
+              ? isEdit
+                ? "Updating..."
+                : "Creating..."
+              : isEdit
+                ? "Update Course"
+                : "Create Course"}
           </button>
         </div>
       </form>

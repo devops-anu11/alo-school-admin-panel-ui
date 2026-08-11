@@ -31,6 +31,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
   const [editingDiscount, setEditingDiscount] = useState(false);
   const [discountForm, setDiscountForm] = useState("");
   const [discountSaving, setDiscountSaving] = useState(false);
+  const [confirmingRemoveDiscount, setConfirmingRemoveDiscount] = useState(false);
 
   const studentUserId = student?.userDetails?._id || student?._id;
 
@@ -92,7 +93,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
       const totalPaid = (row.paidAmount || 0) + amount;
       const balancePayload = {
         paidAmount: totalPaid,
-        pendingAmount: Math.max(0, row.semFee - totalPaid),
+        pendingAmount: Math.max(0, row.semFee - totalPaid - (row.discountCredited || 0)),
         paymentDate: form.date,
         modeOfPayment: form.mode,
         updatedBy: localStorage.getItem("userId"),
@@ -135,9 +136,10 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
   const totalFees = rows.reduce((sum, r) => sum + (r.semFee || 0), 0);
   const paidAmount = rows.reduce((sum, r) => sum + (r.paidAmount || 0), 0);
   const pendingAmount = rows.reduce((sum, r) => sum + (r.pendingAmount || 0), 0);
-  // A discount never touches semFee - it's credited into paidAmount instead,
-  // so the most it can ever be is whatever's currently pending plus however
-  // much of the existing discount is already counted toward that pending.
+  // A discount never touches semFee or paidAmount - it's credited straight
+  // off the pending balance instead, so the most it can ever be is whatever's
+  // currently pending plus however much of the existing discount is already
+  // counted toward that pending.
   const maxDiscount = pendingAmount + discountAmount;
 
   const applyDiscountToRows = (updatedRows) => {
@@ -145,7 +147,9 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
     setRows((prev) =>
       prev.map((r) => {
         const match = updatedRows.find((u) => u._id === r._id);
-        return match ? { ...r, paidAmount: match.paidAmount, pendingAmount: match.pendingAmount } : r;
+        return match
+          ? { ...r, paidAmount: match.paidAmount, pendingAmount: match.pendingAmount, discountCredited: match.discountCredited }
+          : r;
       }),
     );
   };
@@ -194,6 +198,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
       applyDiscountToRows(res?.data?.data);
       setDiscountAmount(0);
       cancelEditDiscount();
+      setConfirmingRemoveDiscount(false);
       toast.success("Discount removed");
       onPaymentSaved && onPaymentSaved();
     } catch (err) {
@@ -268,23 +273,44 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                 </button>
               </>
             ) : discountAmount > 0 ? (
-              <>
-                <span className={styles.discountLabel}>
-                  Discount applied: <strong>{formatAmount(discountAmount)}</strong>
-                  <span className={styles.discountSticker}> (credited toward paid amount)</span>
-                </span>
-                <button className={styles.editBtn} onClick={startEditDiscount}>
-                  <FaEdit /> Edit
-                </button>
-                <button
-                  className={styles.requestLink}
-                  style={{ color: "#d92d20" }}
-                  onClick={removeDiscount}
-                  disabled={discountSaving}
-                >
-                  Remove
-                </button>
-              </>
+              confirmingRemoveDiscount ? (
+                <>
+                  <span className={styles.discountLabel}>Remove this discount?</span>
+                  <button
+                    className={styles.requestLink}
+                    style={{ color: "#d92d20" }}
+                    onClick={removeDiscount}
+                    disabled={discountSaving}
+                  >
+                    {discountSaving ? "Removing..." : "Yes, remove"}
+                  </button>
+                  <button
+                    className={styles.requestLink}
+                    style={{ color: "#6b7280" }}
+                    onClick={() => setConfirmingRemoveDiscount(false)}
+                    disabled={discountSaving}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className={styles.discountLabel}>
+                    Discount applied: <strong>{formatAmount(discountAmount)}</strong>
+                    <span className={styles.discountSticker}> (deducted from pending balance)</span>
+                  </span>
+                  <button className={styles.editBtn} onClick={startEditDiscount}>
+                    <FaEdit /> Edit
+                  </button>
+                  <button
+                    className={styles.requestLink}
+                    style={{ color: "#d92d20" }}
+                    onClick={() => setConfirmingRemoveDiscount(true)}
+                  >
+                    Remove
+                  </button>
+                </>
+              )
             ) : (
               <button className={styles.editBtn} onClick={startEditDiscount}>
                 + Add Discount

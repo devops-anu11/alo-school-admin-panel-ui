@@ -135,11 +135,53 @@
   filter: none;
 }
 
+.dangerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  transition:
+    filter 0.2s ease,
+    transform 0.18s ease;
+}
+
+.dangerBtn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.dangerBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  filter: none;
+}
+
 /* ============ Summary ============ */
 
 .summaryGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.statRow {
   display: grid;
-  grid-template-columns: 1.6fr repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.amountRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
 
@@ -398,6 +440,13 @@
   text-align: right;
 }
 
+/* `.table th` (class + tag) otherwise beats the plain `.actionsCol` class on
+   specificity, so the "Action" header stays left-aligned while the row
+   cells correctly go right - this wins that fight explicitly. */
+.table th.actionsCol {
+  text-align: right;
+}
+
 .rowActions {
   display: inline-flex;
   align-items: center;
@@ -521,24 +570,14 @@
 
 /* ============ Responsive ============ */
 
-@media screen and (max-width: 1350px) {
-  .summaryGrid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .hero {
-    grid-column: 1 / -1;
-  }
-}
-
 @media screen and (max-width: 900px) {
-  .summaryGrid {
+  .amountRow {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media screen and (max-width: 560px) {
-  .summaryGrid {
+  .amountRow {
     grid-template-columns: 1fr;
   }
 

@@ -324,18 +324,59 @@
 }
 
 .subjectName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
   font-weight: 500;
   color: #374151;
 }
 
+.subjectMarks {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f5f8ff;
+  font-size: 11px;
+  font-weight: 500;
+  color: #123d84;
+}
+
 /* ================= NO DATA ================= */
 
 .noData {
-  padding: 50px;
+  padding: 0;
   text-align: center;
   font-size: 15px;
   color: #9ca3af;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 20px 26px;
+  color: #9ca3af;
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #f8fafd;
+  border: 1px dashed #e5e7eb;
+  color: #9ca3af;
+  font-size: 19px;
+}
+
+.emptyTitle {
+  color: #6b7280;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin: 0;
 }
 
 /* ================= MODAL ================= */
@@ -355,13 +396,16 @@
   width: 100%;
   max-width: 460px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 12px 34px rgba(17, 24, 39, 0.24);
 }
 
 .modalHeader {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -397,8 +441,12 @@
 }
 
 .modalBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 16px;
   padding: 20px;
 }
@@ -503,6 +551,10 @@
   flex: 1;
 }
 
+.multiNameRow .multiMarksInput {
+  flex: 0 0 90px;
+}
+
 .addAnotherBtn {
   display: inline-flex;
   align-items: center;
@@ -531,6 +583,7 @@
 }
 
 .modalFooter {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -552,6 +605,11 @@
 
 .cancelBtn:hover {
   background: #f3f4f6;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .saveBtn {

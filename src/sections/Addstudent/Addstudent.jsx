@@ -142,10 +142,15 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
         return newErrors;
     };
 
+    const [aadharUploading, setAadharUploading] = useState(false);
+    const [profileUploading, setProfileUploading] = useState(false);
+    const [originalUploading, setOriginalUploading] = useState(false);
+
     const aadharfile = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        setAadharUploading(true);
         try {
             const res = await uploadFile(file);
 
@@ -161,6 +166,9 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
 
         } catch (error) {
             console.error("File upload failed", error.response?.data || error);
+            toast.error(error?.response?.data?.message || "Failed to upload aadhar card");
+        } finally {
+            setAadharUploading(false);
         }
     };
 
@@ -168,6 +176,7 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        setProfileUploading(true);
         try {
             const res = await uploadFile(file);
 
@@ -183,6 +192,9 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
 
         } catch (error) {
             console.error("File upload failed", error.response?.data || error);
+            toast.error(error?.response?.data?.message || "Failed to upload photo");
+        } finally {
+            setProfileUploading(false);
         }
     };
 
@@ -190,6 +202,7 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        setOriginalUploading(true);
         try {
             const res = await uploadFile(file);
 
@@ -206,6 +219,9 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
 
         } catch (error) {
             console.error("File upload failed", error.response?.data || error);
+            toast.error(error?.response?.data?.message || "Failed to upload document");
+        } finally {
+            setOriginalUploading(false);
         }
     };
 
@@ -260,8 +276,9 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
             } catch (err) {
 
                 // toast.error(err?.response?.data?.message);
-                setLoading(false);
                 setMes(err?.response?.data?.message);
+            } finally {
+                setLoading(false);
             }
 
         }
@@ -398,7 +415,8 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
                     <h2 className={styles.title}>Add Student</h2>
                     <span className={styles.close_icon} onClick={closeModal}><AiOutlineClose /></span>
                 </div>
-                <p style={{ color: 'red', fontSize: '12px', marginTop: '1rem' }}>Note: File size should be less than 500KB*</p>
+                <div className={styles.scrollArea}>
+                <p className={styles.notice}>Note: File size should be less than 500KB*</p>
                 <form action="">
                     <div className={styles.form_body}>
 
@@ -416,8 +434,9 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
                                         <img src={defaultimg} className={styles.defaultimg} alt="" width={'100%'} height={'100%'} />
                                     </label>
 
-                                    <input type="file" id="photoUpload" className={styles.hiddenInput} onChange={Profilefile} />
-                                    <p className={styles.error}>{Errors.student_profile}</p>
+                                    <input type="file" id="photoUpload" className={styles.hiddenInput} onChange={Profilefile} disabled={profileUploading} />
+                                    {profileUploading && <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0' }}>Uploading...</p>}
+                                    {Errors.student_profile && <p className={styles.error}>{Errors.student_profile}</p>}
                                 </div>
                             }
                         </div>
@@ -617,11 +636,11 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
                                             type="file"
                                             id="aadharupload"
                                             className={styles.hidden_file_input}
-
+                                            disabled={aadharUploading}
                                             onChange={aadharfile}
                                         />
                                         <label htmlFor="aadharupload" className={styles.custom_file_upload}>
-                                            Upload document
+                                            {aadharUploading ? "Uploading..." : "Upload document"}
                                             <span className={styles.download_icon}><FiDownload /></span>
                                         </label>
 
@@ -641,9 +660,9 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
                                             </label>
                                         </div>
                                         : <div>
-                                            <input type="file" id="documentupload" className={styles.hidden_file_input} onChange={originalFile} />
+                                            <input type="file" id="documentupload" className={styles.hidden_file_input} disabled={originalUploading} onChange={originalFile} />
                                             <label htmlFor="documentupload" className={styles.custom_file_upload}>
-                                                Upload document
+                                                {originalUploading ? "Uploading..." : "Upload document"}
                                                 <span className={styles.download_icon}><FiDownload /></span>
                                             </label>
                                             <p className={styles.error}>{Errors.student_original}</p>
@@ -653,13 +672,20 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
                                 </div>
                             </div>
                         </div>
-                        {/* <p className={styles.error}>{mes}</p> */}
-                        <div className={styles.submit_button}>
-                            <input type="submit" value={loading ? "Loading..." : "Add Student"} style={{ cursor: "pointer" }} className={styles.submit} onClick={handleSubmit} />
-                        </div>
-                        <p style={{ color: "red", fontSize: "12px", marginTop: "10px" }}>{mes}</p>
                     </div>
                 </form>
+                </div>
+                <div className={styles.footer}>
+                    {mes && <p className={styles.footerError}>{mes}</p>}
+                    <button
+                        type="button"
+                        className={styles.submit}
+                        onClick={handleSubmit}
+                        disabled={loading}
+                    >
+                        {loading ? "Loading..." : "Add Student"}
+                    </button>
+                </div>
             </div>
             {/* <div className={styles.toastWrapper}>
                 <ToastContainer

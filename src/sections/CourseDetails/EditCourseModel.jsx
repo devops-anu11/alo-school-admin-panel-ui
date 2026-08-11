@@ -182,10 +182,11 @@ const EditCourseModal = ({ visible, onCancel, onUpdate, formData,id }) => {
             type="button"
             className={styles.cancelBtn}
             onClick={onCancel}
+            disabled={loading}
           >
             Cancel
           </button>
-          <button type="submit" form="edit-course-form" className={styles.submitBtn}>
+          <button type="submit" form="edit-course-form" className={styles.submitBtn} disabled={loading}>
             {loading ? "Updating..." : "Update"}
           </button>
         </div>

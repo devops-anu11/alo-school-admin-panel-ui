@@ -105,6 +105,7 @@ const TABS = [
     ],
     fields: [
       { key: "label", label: "Subject Name", type: "text", required: true },
+      { key: "totalMarks", label: "Total Marks", type: "number", required: true },
       { key: "courseIds", label: "Course", type: "single-dropdown", required: true },
       {
         key: "semesters",
@@ -121,16 +122,18 @@ const TABS = [
       name: form.label,
       courseIds: form.courseIds || [],
       semesters: form.semesters || [],
+      totalMarks: Number(form.totalMarks) || 100,
     }),
     deserialize: (row) => ({
       label: row.label,
       courseIds: row.courseIds || [],
       semesters: row.semesters || [],
+      totalMarks: row.totalMarks ?? 100,
     }),
     seed: [
-      { _id: "subject-1", label: "Graphic Design", courseIds: [], courseNames: "", semesters: [], semesterNames: "" },
-      { _id: "subject-2", label: "Web Development", courseIds: [], courseNames: "", semesters: [], semesterNames: "" },
-      { _id: "subject-3", label: "Branding", courseIds: [], courseNames: "", semesters: [], semesterNames: "" },
+      { _id: "subject-1", label: "Graphic Design", courseIds: [], courseNames: "", semesters: [], semesterNames: "", totalMarks: 100 },
+      { _id: "subject-2", label: "Web Development", courseIds: [], courseNames: "", semesters: [], semesterNames: "", totalMarks: 100 },
+      { _id: "subject-3", label: "Branding", courseIds: [], courseNames: "", semesters: [], semesterNames: "", totalMarks: 100 },
     ],
     api: {
       list: getDailyTaskSubjects,
@@ -149,6 +152,7 @@ const TABS = [
             "Not assigned",
           semesters,
           semesterNames: semesters.map((s) => `Sem ${s}`).join(", ") || "Not assigned",
+          totalMarks: item.totalMarks ?? 100,
         };
       },
     },
@@ -220,9 +224,10 @@ const TaskSettings = () => {
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  // Only used when adding on a multiAddKey tab — several names sharing the
-  // rest of `form` (e.g. Course/Semester for subjects).
-  const [multiValues, setMultiValues] = useState([""]);
+  // Only used when adding on a multiAddKey tab — several names (each with
+  // its own total marks) sharing the rest of `form` (e.g. Course/Semester).
+  const emptyMultiRow = { name: "", totalMarks: "100" };
+  const [multiValues, setMultiValues] = useState([emptyMultiRow]);
 
   const activeTab = useMemo(
     () => TABS.find((tab) => tab.key === activeKey),
@@ -281,7 +286,7 @@ const TaskSettings = () => {
   // Subjects grouped Course -> Semester, for the accordion view on that tab.
   const [expandedCourses, setExpandedCourses] = useState({});
   const toggleCourse = (courseId) =>
-    setExpandedCourses((current) => ({ ...current, [courseId]: current[courseId] === false }));
+    setExpandedCourses((current) => ({ ...current, [courseId]: current[courseId] !== true }));
 
   const subjectGroups = useMemo(() => {
     if (activeKey !== "subject") return [];
@@ -326,7 +331,7 @@ const TaskSettings = () => {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm(activeTab));
-    setMultiValues([""]);
+    setMultiValues([emptyMultiRow]);
     setErrors({});
     setModalOpen(true);
   };
@@ -348,26 +353,39 @@ const TaskSettings = () => {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
-    setMultiValues([""]);
+    setMultiValues([emptyMultiRow]);
   };
 
   const isMultiAddMode = Boolean(activeTab.multiAddKey && !editing);
-  const updateMultiValue = (index, value) =>
-    setMultiValues((current) => current.map((item, i) => (i === index ? value : item)));
-  const addMultiRow = () => setMultiValues((current) => [...current, ""]);
+  const updateMultiValue = (index, field, value) =>
+    setMultiValues((current) =>
+      current.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    );
+  const addMultiRow = () => setMultiValues((current) => [...current, { ...emptyMultiRow }]);
   const removeMultiRow = (index) =>
-    setMultiValues((current) => (current.length === 1 ? [""] : current.filter((_, i) => i !== index)));
+    setMultiValues((current) =>
+      current.length === 1 ? [{ ...emptyMultiRow }] : current.filter((_, i) => i !== index),
+    );
 
   const validate = () => {
     const nextErrors = {};
 
-    if (isMultiAddMode && multiValues.every((name) => !name.trim())) {
-      nextErrors[activeTab.multiAddKey] = "Enter at least one name";
+    if (isMultiAddMode) {
+      if (multiValues.every((row) => !row.name.trim())) {
+        nextErrors[activeTab.multiAddKey] = "Enter at least one name";
+      } else if (
+        multiValues.some(
+          (row) => row.name.trim() && (!Number(row.totalMarks) || Number(row.totalMarks) <= 0),
+        )
+      ) {
+        nextErrors[activeTab.multiAddKey] = "Enter a valid total marks (greater than 0) for each subject";
+      }
     }
 
     activeTab.fields.forEach((field) => {
-      // In multi-add mode this field is the dynamic name list, validated above.
-      if (isMultiAddMode && field.key === activeTab.multiAddKey) return;
+      // In multi-add mode the name + total marks are the dynamic row list,
+      // validated above instead.
+      if (isMultiAddMode && (field.key === activeTab.multiAddKey || field.key === "totalMarks")) return;
 
       const raw = form[field.key];
 
@@ -428,14 +446,25 @@ const TaskSettings = () => {
   const handleSave = async () => {
     if (!validate()) return;
 
-    /* Adding several subjects at once — one create call per name, all
-       sharing the rest of the form (e.g. Course/Semester). */
+    /* Adding several subjects at once — one create call per name (each with
+       its own total marks), all sharing the rest of the form (e.g.
+       Course/Semester). */
     if (isMultiAddMode) {
-      const names = [...new Set(multiValues.map((n) => n.trim()).filter(Boolean))];
-      const payloads = names.map((name) =>
+      const seenNames = new Set();
+      const uniqueRows = multiValues.filter((row) => {
+        const name = row.name.trim();
+        if (!name || seenNames.has(name)) return false;
+        seenNames.add(name);
+        return true;
+      });
+      const payloads = uniqueRows.map((row) =>
         activeTab.serialize
-          ? activeTab.serialize({ ...form, [activeTab.multiAddKey]: name })
-          : { ...form, [activeTab.multiAddKey]: name },
+          ? activeTab.serialize({
+              ...form,
+              [activeTab.multiAddKey]: row.name.trim(),
+              totalMarks: row.totalMarks,
+            })
+          : { ...form, [activeTab.multiAddKey]: row.name.trim(), totalMarks: row.totalMarks },
       );
 
       if (usingSample) {
@@ -609,7 +638,7 @@ const TaskSettings = () => {
             <div className={styles.accordionWrap}>
               {subjectGroups.length > 0 ? (
                 subjectGroups.map((course) => {
-                  const isOpen = expandedCourses[course.courseId] !== false;
+                  const isOpen = expandedCourses[course.courseId] === true;
 
                   return (
                     <div key={course.courseId} className={styles.accordionGroup}>
@@ -642,7 +671,12 @@ const TaskSettings = () => {
 
                               {semGroup.subjects.map((row) => (
                                 <div key={row._id} className={styles.subjectRow}>
-                                  <span className={styles.subjectName}>{row.label}</span>
+                                  <span className={styles.subjectName}>
+                                    {row.label}
+                                    <span className={styles.subjectMarks}>
+                                      {row.totalMarks ?? 100} marks
+                                    </span>
+                                  </span>
 
                                   <div className={styles.rowActions}>
                                     <button
@@ -671,7 +705,10 @@ const TaskSettings = () => {
                   );
                 })
               ) : (
-                <p className={styles.noData}>No Subject Settings Found</p>
+                <div className={styles.emptyState}>
+                  <span className={styles.emptyIcon}>{activeTab.icon}</span>
+                  <p className={styles.emptyTitle}>No Subject Settings Found</p>
+                </div>
               )}
             </div>
           ) : (
@@ -737,7 +774,12 @@ const TaskSettings = () => {
                         colSpan={activeTab.columns.length + 1}
                         className={styles.noData}
                       >
-                        No {activeTab.label} Settings Found
+                        <div className={styles.emptyState}>
+                          <span className={styles.emptyIcon}>{activeTab.icon}</span>
+                          <p className={styles.emptyTitle}>
+                            No {activeTab.label} Settings Found
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -774,15 +816,25 @@ const TaskSettings = () => {
                   </label>
 
                   <div className={styles.multiNameList}>
-                    {multiValues.map((value, index) => (
+                    {multiValues.map((row, index) => (
                       <div key={index} className={styles.multiNameRow}>
                         <input
                           className={styles.input}
                           type="text"
                           autoComplete="off"
                           placeholder={`Subject ${index + 1} name`}
-                          value={value}
-                          onChange={(event) => updateMultiValue(index, event.target.value)}
+                          value={row.name}
+                          onChange={(event) => updateMultiValue(index, "name", event.target.value)}
+                        />
+                        <input
+                          className={`${styles.input} ${styles.multiMarksInput}`}
+                          type="number"
+                          min="1"
+                          autoComplete="off"
+                          placeholder="Marks"
+                          title="Total marks"
+                          value={row.totalMarks}
+                          onChange={(event) => updateMultiValue(index, "totalMarks", event.target.value)}
                         />
                         <button
                           type="button"
@@ -807,7 +859,10 @@ const TaskSettings = () => {
               )}
 
               {activeTab.fields
-                .filter((field) => !(isMultiAddMode && field.key === activeTab.multiAddKey))
+                .filter(
+                  (field) =>
+                    !(isMultiAddMode && (field.key === activeTab.multiAddKey || field.key === "totalMarks")),
+                )
                 .map((field) => (
                 <div
                   key={field.key}
@@ -948,7 +1003,7 @@ const TaskSettings = () => {
             </LocalizationProvider>
 
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={closeModal}>
+              <button className={styles.cancelBtn} onClick={closeModal} disabled={saving}>
                 Cancel
               </button>
 

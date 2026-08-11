@@ -27,7 +27,7 @@ import Loader from "../../component/loader/Loader";
 import Skeleton from '@mui/material/Skeleton';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { IoIosCloseCircle } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 
 
@@ -827,7 +827,7 @@ const FeeHome = () => {
             <div>
               {(semester?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim()) && (
                 <button className={styles.clear} onClick={handlefilterSearch}>
-                  <IoIosCloseCircle />
+                  <IoClose />
                 </button>
               )}
 
@@ -868,6 +868,10 @@ const FeeHome = () => {
               <Skeleton variant="text" width={120} height={20} />
               <Skeleton variant="text" width={80} height={40} />
             </div>
+            <div className={styles.feeamt}>
+              <Skeleton variant="text" width={120} height={20} />
+              <Skeleton variant="text" width={80} height={40} />
+            </div>
           </div>
           :
           calc && (
@@ -896,6 +900,14 @@ const FeeHome = () => {
                   <p className={styles.amtValue}>{calc?.pendingFee || 0}</p>
                 </div>
               </div>
+              <div className={styles.feeamt}>
+                <div className={styles.feeamthead}>
+                  <p className={styles.amtText}>Total Admission Fee</p>
+                </div>
+                <div className={styles.feeamtamount}>
+                  <p className={styles.amtValue}>{calc?.totalAdmissionFee || 0}</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -904,11 +916,8 @@ const FeeHome = () => {
             <thead>
               <tr>
                 <th>S.No</th>
-                <th>Fee ID</th>
-                <th>Name</th>
-                <th>ID No</th>
-                <th>Mobile</th>
-                <th style={{ width: "45%" }}>Course</th>
+                <th style={{ minWidth: "200px" }}>Profile Info</th>
+                <th style={{ maxWidth: "200px" }}>Course</th>
                 <th>Total Fees</th>
                 <th>Paid Amount</th>
                 <th>Pending Fees</th>
@@ -918,7 +927,7 @@ const FeeHome = () => {
             </thead>
             {loading ?
               <tr>
-                <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold" style={{ border: "none" }}>
+                <td colSpan="8" className="text-center py-20 text-lg text-gray-500 font-semibold" style={{ border: "none" }}>
                   <Loader />
                 </td>
               </tr>
@@ -927,15 +936,27 @@ const FeeHome = () => {
                 {
                   Array.isArray(list) && list.length > 0 ?
                     list.map((item, index) => {
-                      const feeId = item.rows?.[0]?.receiptId;
                       return (
                         <tr key={item._id}>
                           <td>{(offset - 1) * limit + index + 1}</td>
-                          <td>{feeId || '-'}</td>
-                          <td style={{ textTransform: 'capitalize' }}>{item.userDetails?.name}</td>
-                          <td>{item.userDetails?.studentId}</td>
-                          <td>{item.userDetails?.mobileNo}</td>
-                          <td>{item.courseDetails?.courseName}</td>
+                          <td style={{ textTransform: 'capitalize' }}>
+                            <div className={styles.profileInfo}>
+                              <span className={styles.profileName}>{item.userDetails?.name}</span>
+                              <span className={styles.profileMeta}>{item.userDetails?.studentId}</span>
+                              <span className={styles.profileMeta} style={{ textTransform: 'none' }}>{item.userDetails?.mobileNo}</span>
+                            </div>
+                          </td>
+                          <td
+                            style={{
+                              maxWidth: "200px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                            title={item.courseDetails?.courseName}
+                          >
+                            {item.courseDetails?.courseName}
+                          </td>
                           <td>{item.totalFees}</td>
                           <td>{item.paidAmount}</td>
                           <td>
@@ -962,7 +983,7 @@ const FeeHome = () => {
                     })
                     :
                     <tr >
-                      <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
+                      <td colSpan="8" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
                         <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
                         <p className="text-center">No Data Found</p>
                       </td>
@@ -1564,7 +1585,7 @@ const FeeHome = () => {
                             </div>
                           </div>
                           <div className={styles.updatefeebtn} >
-                            <button onClick={() => update(student)}>{updating ? "Updating..." : "Update"}</button>
+                            <button onClick={() => update(student)} disabled={updating}>{updating ? "Updating..." : "Update"}</button>
                           </div>
                         </div>
                       );

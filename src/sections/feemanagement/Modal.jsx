@@ -11,41 +11,37 @@ const Modal = ({
   id,
   list
 }) => {
+  const [sending, setSending] = useState(false);
+
   if (!isOpen) return null;
   function close() {
+    if (sending) return;
     onClose();
   }
-  function sendReq() {
-    onClose();
-    setReqSendColor(true);
-    email()
-    update()
-    list()
-    status('Requested Fee')
+  async function sendReq() {
+    setSending(true);
+    try {
+      await email();
+      await update();
+      setReqSendColor(true);
+      list();
+      status('Requested Fee');
+      onClose();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSending(false);
+    }
   }
 
  let update = async () => {
-
-    try {
       let res = await updateFeeEmail(id)
       console.log(res)
-    }
-    catch (err) {
-      console.log(err)
-    }
-
   }
 
   let email = async () => {
-
-    try {
       let res = await emailFee(id)
       console.log(res)
-    }
-    catch (err) {
-      console.log(err)
-    }
-
   }
   return (
     <div className={styles.overlay}>
@@ -58,14 +54,15 @@ const Modal = ({
               className={styles.gradientbutton1}
               role="button"
               onClick={close}
+              disabled={sending}
             >
               Cancel
             </button>
           </div>
 
           <div className={styles.btn}>
-            <button className={styles.gradientbutton2} onClick={sendReq}>
-              Send request
+            <button className={styles.gradientbutton2} onClick={sendReq} disabled={sending}>
+              {sending ? "Sending..." : "Send request"}
             </button>
           </div>
         </div>

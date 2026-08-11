@@ -14,10 +14,9 @@
 .attendancetop {
   width: 100%;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 4px;
 }
 .attendanceleft {
@@ -32,19 +31,41 @@
   margin: 0;
 }
 .attendanceright {
-  width: auto;
-  flex: 1 1 auto;
+  width: 100%;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 10px;
 }
 .attendancerightdiv {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
   gap: 12px;
+}
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(15, 27, 51, 0.15);
+  transition: filter 0.2s ease;
+}
+
+.exportBtn:hover {
+  filter: brightness(1.1);
 }
 
 .selectWrapper {
@@ -152,17 +173,37 @@
 .attendancemiddlediv:hover {
   box-shadow: 0 6px 18px rgba(18, 61, 132, 0.08);
 }
-.attendancemiddlediv p:nth-child(1) {
+.attendancemiddlediv p:nth-of-type(1) {
   font-size: 13px;
   font-weight: 500;
   color: #6b7280;
   margin: 0;
 }
-.attendancemiddlediv p:nth-child(2) {
+.attendancemiddlediv p:nth-of-type(2) {
   font-size: 26px;
   font-weight: 700;
   color: #111827;
   margin: 4px 0 0;
+}
+
+/* Color-coded stat cards — green for positive metrics, red for
+   negative/attention metrics, matching the pattern used on Studentdetails. */
+.statGreen {
+  background: #e9f7ef;
+  border-color: #d3f0de;
+}
+.statGreen p:nth-of-type(1),
+.statGreen p:nth-of-type(2) {
+  color: #12805c;
+}
+
+.statRed {
+  background: #fdecec;
+  border-color: #fbdada;
+}
+.statRed p:nth-of-type(1),
+.statRed p:nth-of-type(2) {
+  color: #d92d20;
 }
 .attendancemiddlediv1 {
   display: flex;
@@ -240,18 +281,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fdecec;
   color: #d92d20;
   font-size: 18px;
-  transition: all 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 .clear:hover {
-  background: #fdecec;
-  border-color: #fdecec;
+  color: #fff;
+  background: #d92d20;
 }
 
 .table td {

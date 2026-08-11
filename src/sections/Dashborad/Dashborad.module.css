@@ -267,6 +267,10 @@
     flex-direction: column;
 }
 
+.panelFull {
+    grid-column: 1 / -1;
+}
+
 .panelAuto {
     height: 320px;
     overflow: auto;
@@ -289,20 +293,17 @@
 .viewAllLink {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 600;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
     color: #123d84;
-    padding: 7px 14px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: 50%;
     text-decoration: none;
     transition: all 0.2s ease;
-    white-space: nowrap;
 }
 
 .viewAllLink:hover {
-    border-color: #123d84;
     background: #f5f8ff;
 }
 
@@ -310,9 +311,10 @@
 
 .donutRow {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 20px;
-    margin: 8px 0;
+    gap: 18px;
+    margin: 16px 0;
 }
 
 .donutCenter {
@@ -338,7 +340,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex: 1;
+    width: 100%;
+    max-width: 220px;
 }
 
 .legendRow {
@@ -360,6 +363,10 @@
 
 .legendDotGray {
     background: #eef0f5;
+}
+
+.legendDotAmber {
+    background: #d97706;
 }
 
 .legendLabel {
@@ -390,6 +397,12 @@
 
 .absentText {
     color: #d92d20;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.notCheckedInText {
+    color: #b45309;
     font-size: 12.5px;
     font-weight: 500;
 }

@@ -79,6 +79,12 @@
   cursor: pointer;
 }
 
+.gradientbutton1:disabled,
+.gradientbutton2:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 480px) {
   .content {
     padding: 22px 18px;

@@ -7,6 +7,7 @@ import { updateEvent, getEventById } from '../../api/Serviceapi';
 import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { toast, ToastContainer } from 'react-toastify';
+import Loader from '../loader/Loader';
 
 const Updateevent = ({ closeModal, id, onevent }) => {
   const [formdata, setFormdata] = useState({
@@ -50,7 +51,10 @@ const Updateevent = ({ closeModal, id, onevent }) => {
     setErrors({ ...errors, eventType: '' })
   }
 
+  const [fetching, setFetching] = useState(true);
+
   let geteventbyid = async (id) => {
+    setFetching(true);
     try {
       const res = await getEventById(id);
       let data = res?.data?.data;
@@ -72,6 +76,8 @@ const Updateevent = ({ closeModal, id, onevent }) => {
 
     } catch (err) {
       console.log(err.response?.data.message);
+    } finally {
+      setFetching(false);
     }
 
   }
@@ -128,8 +134,12 @@ const Updateevent = ({ closeModal, id, onevent }) => {
       <div className={styles.modal_content}>
         <div className={styles.header}>
           <h2>Update Event</h2>
-          <span className={styles.close_icon} onClick={closeModal}><AiOutlineClose /></span>
+          <span className={styles.close_icon} onClick={() => !loading && closeModal()}><AiOutlineClose /></span>
         </div>
+        <div className={styles.scrollArea}>
+        {fetching ? (
+          <div style={{ padding: '40px 0' }}><Loader /></div>
+        ) : (
         <form className={styles.form}>
           <div className={styles.row}>
 
@@ -145,12 +155,10 @@ const Updateevent = ({ closeModal, id, onevent }) => {
                 size="small"
                 sx={{
                   minWidth: '100%',
-                  backgroundColor: '#F6F6F6', // match the image background
-                  borderRadius: '6px',
-                  border: 'none',
-                  height: '45px',
-                  border: ' 1px solid #eceaeae1'
-
+                  backgroundColor: '#fff',
+                  borderRadius: '10px',
+                  height: '44px',
+                  border: '1px solid #e5e7eb',
                 }}
               >
                 <Select
@@ -164,7 +172,7 @@ const Updateevent = ({ closeModal, id, onevent }) => {
                     },
                     fontSize: '14px',
                     padding: '4px 10px',
-                    height: '36px',
+                    height: '44px',
                     border: 'none'
                   }}
                 >
@@ -200,8 +208,12 @@ const Updateevent = ({ closeModal, id, onevent }) => {
               <p className={styles.error}>{errors.time}</p>
             </div>
           </div>
-          <button type="submit" onClick={handleSubmit} className={styles.submit_btn}>{loading ? 'Updating...' : " Update"}</button>
         </form>
+        )}
+        </div>
+        <div className={styles.footer}>
+          <button type="submit" onClick={handleSubmit} className={styles.submit_btn} disabled={loading || fetching}>{loading ? 'Updating...' : " Update"}</button>
+        </div>
       </div>
     </div>
   );

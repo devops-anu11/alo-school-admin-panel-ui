@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { getLittleStepsEnquiry } from '../../../api/Serviceapi';
 import Pagination from '@mui/material/Pagination';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import nodata from '../../../assets/nodata.jpg'
 import Loader from '../../../component/loader/Loader';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 
 const theme = createTheme({
   components: {
@@ -103,9 +103,9 @@ const LittleStepsEnquiry = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center py-16 text-sm text-[#9ca3af]">
-                      <img src={nodata} width="150" className="m-auto" />
-                      <p>No Data Found</p>
+                    <td colSpan="6" className="text-center py-16">
+                      <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                      <p className="text-sm text-[#9ca3af] font-medium mt-2">No Data Found</p>
                     </td>
                   </tr>
                 )}

@@ -68,7 +68,7 @@ const Details = () => {
     return (
         <>
             <div className='px-4 sm:px-5 pt-5 sm:pt-6 pb-[100px] bg-[#f6f7fb] min-h-full' style={{ fontFamily: '"Poppins", sans-serif' }}>
-                <div class="flex gap-[10px] items-center pb-4">
+                <div className="flex gap-[10px] items-center pb-4">
                     <div >
                         <IoMdArrowRoundBack style={{ cursor: 'pointer', fontSize: '20px', marginTop: '2px', color: '#123d84' }} onClick={() => window.history.back()} />
 
@@ -89,7 +89,7 @@ const Details = () => {
 
 
                                     <div className='w-[100%]'>
-                                        <div class="flex  items-center pb-[10px]">
+                                        <div className="flex  items-center pb-[10px]">
                                             <div>
 
                                                 <div className='  m-auto rounded-[50%] overflow-hidden mx-2 border-[3px] border-[#ffff] border-solid'>
@@ -241,7 +241,7 @@ const Details = () => {
 
 
                                     <div className='w-[100%]'>
-                                        <div class="flex   items-center pb-[10px] " >
+                                        <div className="flex   items-center pb-[10px] " >
                                             <div>
 
                                                 <div className='  m-auto rounded-[50%] overflow-hidden mx-2 border-[3px] border-[#ffff] border-solid'>
@@ -318,8 +318,8 @@ const Details = () => {
                                         <div className='text-xs bg-[#f6f7fb] border border-[#eef0f5] rounded-lg px-4 py-2.5 my-2 hover:border-[#123d84] transition-colors '>
                                             <div className='flex justify-between items-center '>
                                                 <h4>Aadhar card</h4>
-                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.aadharUrl)
-                                                }>Download <img src={Import} alt="" class="px-2" /></button>
+                                                <button className='inline-flex items-center gap-1 cursor-pointer bg-[#eef2ff] text-[#123d84] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-[#123d84] hover:text-white' onClick={() => handleDownload(details?.aadharUrl)
+                                                }>Download <img src={Import} alt="" className="w-3.5 ml-1" /></button>
 
                                             </div>
                                         </div>
@@ -327,8 +327,8 @@ const Details = () => {
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Profile</h4>
-                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.imageUrl)
-                                                }>Download <img src={Import} alt="" class="px-2" /></button>
+                                                <button className='inline-flex items-center gap-1 cursor-pointer bg-[#eef2ff] text-[#123d84] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-[#123d84] hover:text-white' onClick={() => handleDownload(details?.imageUrl)
+                                                }>Download <img src={Import} alt="" className="w-3.5 ml-1" /></button>
 
                                             </div>
                                         </div>
@@ -336,8 +336,8 @@ const Details = () => {
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Signature</h4>
-                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.signatureUrl)
-                                                }>Download <img src={Import} alt="" class="px-2" /></button>
+                                                <button className='inline-flex items-center gap-1 cursor-pointer bg-[#eef2ff] text-[#123d84] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-[#123d84] hover:text-white' onClick={() => handleDownload(details?.signatureUrl)
+                                                }>Download <img src={Import} alt="" className="w-3.5 ml-1" /></button>
 
                                             </div>
                                         </div>
@@ -346,8 +346,8 @@ const Details = () => {
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Marksheet</h4>
-                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.markSheetUrl)
-                                                }>Download <img src={Import} alt="" class="px-2" /></button>
+                                                <button className='inline-flex items-center gap-1 cursor-pointer bg-[#eef2ff] text-[#123d84] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-[#123d84] hover:text-white' onClick={() => handleDownload(details?.markSheetUrl)
+                                                }>Download <img src={Import} alt="" className="w-3.5 ml-1" /></button>
 
                                             </div>
                                         </div>
@@ -355,8 +355,8 @@ const Details = () => {
 
                                             <div className='flex justify-between items-center'>
                                                 <h4>Transfer Certificate</h4>
-                                                <button className='flex items-center gap-1 cursor-pointer text-[#123d84] text-xs font-semibold hover:underline' onClick={() => handleDownload(details?.tcUrl)
-                                                }>Download <img src={Import} alt="" class="px-2" /></button>
+                                                <button className='inline-flex items-center gap-1 cursor-pointer bg-[#eef2ff] text-[#123d84] text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-[#123d84] hover:text-white' onClick={() => handleDownload(details?.tcUrl)
+                                                }>Download <img src={Import} alt="" className="w-3.5 ml-1" /></button>
 
                                             </div>
                                         </div>

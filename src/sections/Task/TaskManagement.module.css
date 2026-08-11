@@ -260,11 +260,33 @@
 
 /* ================= NO DATA ================= */
 
-.noData {
-  padding: 50px;
-  text-align: center;
-  font-size: 15px;
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 46px 20px;
   color: #9ca3af;
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #f8fafd;
+  border: 1px dashed #e5e7eb;
+  color: #9ca3af;
+  font-size: 20px;
+}
+
+.emptyTitle {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
 }
 
 /* ================= RESPONSIVE ================= */

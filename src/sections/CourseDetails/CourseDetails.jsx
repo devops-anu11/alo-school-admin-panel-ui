@@ -134,17 +134,25 @@ const CourseDetails = () => {
     setShowModal(true);
   };
 
+  const [deleting, setDeleting] = useState(false);
+
   const handleDeleteCards = async (batch) => {
+    setDeleting(true);
     try {
       await updateCourseBatch(batch._id, { ...batch, deleted: true });
       setBatches((prev) => prev.filter((b) => b._id !== batch._id));
-      console.log("Batch marked as deleted:", batch._id);
+      toast.success("Batch deleted successfully");
+      setDeleteOpen(false);
+      setId(null);
     } catch (err) {
       console.error("Error deleting batch:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete batch");
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const [delid, setId] = useState([])
+  const [delid, setId] = useState(null)
 
 
  return (
@@ -350,6 +358,59 @@ const CourseDetails = () => {
            fetchCourse();
          }}
        />
+
+       <Modal
+         isOpen={deleteOpen}
+         onRequestClose={() => !deleting && setDeleteOpen(false)}
+         contentLabel="Delete Batch"
+         style={{
+           overlay: {
+             position: "fixed",
+             top: 0,
+             left: 0,
+             right: 0,
+             bottom: 0,
+             backgroundColor: "rgb(21 21 21 / 81%)",
+             zIndex: 1000,
+           },
+           content: {
+             position: "fixed",
+             top: "50%",
+             left: "50%",
+             transform: "translate(-50%, -50%)",
+             padding: "1.75rem",
+             backgroundColor: "#fff",
+             borderRadius: "12px",
+             width: "min(420px, 92vw)",
+             height: "max-content",
+             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+             zIndex: 1001,
+           },
+         }}
+       >
+         <h3 style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>Delete batch?</h3>
+         <p style={{ margin: "0 0 20px", color: "#6b7280", fontSize: "0.9rem" }}>
+           This deletes {delid?.batchName || "this batch"}. This can't be undone.
+         </p>
+         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+           <button
+             type="button"
+             className={styles.tableheadicon}
+             onClick={() => setDeleteOpen(false)}
+             disabled={deleting}
+           >
+             Cancel
+           </button>
+           <button
+             type="button"
+             className={styles.dangerBtn}
+             onClick={() => handleDeleteCards(delid)}
+             disabled={deleting}
+           >
+             {deleting ? "Deleting..." : "Delete"}
+           </button>
+         </div>
+       </Modal>
      </div>
    </div>
  );

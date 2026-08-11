@@ -9,13 +9,14 @@ import { RiFileList2Line } from "react-icons/ri";
 import { PiFlagPennantLight } from "react-icons/pi";
 import { RiSettings5Line } from "react-icons/ri";
 import { RiLogoutCircleLine } from "react-icons/ri";
-import { FaBullseye, FaPlus } from "react-icons/fa6";
+import { FaBullseye } from "react-icons/fa6";
 import { IoMenu } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 import { FaExclamationCircle } from "react-icons/fa";
 import { FaRegCommentDots } from "react-icons/fa";
 import { MdTaskAlt } from "react-icons/md";
 import { MdOutlineTaskAlt } from "react-icons/md";
+import { MdWork, MdOutlineWork } from "react-icons/md";
 import { GoBell } from "react-icons/go";
 import user_image from '../assets/user.png'
 import { IoMdPerson } from "react-icons/io";
@@ -25,11 +26,9 @@ import { PiFlagPennantFill } from "react-icons/pi";
 import { RiSettings5Fill } from "react-icons/ri";
 import { FaIdBadge } from "react-icons/fa";
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import Addstudent from '../sections/Addstudent/Addstudent'
-import Modal from 'react-modal';
 import { FaMoneyBill } from "react-icons/fa";
 import LogoutModal from '../sections/Logout/LogoutModal';
-import { getNotification, updateNotification } from '../api/Serviceapi';
+import { getNotification, updateNotification, markAllNotificationsRead, getNotificationCategoryCounts } from '../api/Serviceapi';
 import { IoMdCloseCircle } from "react-icons/io";
 import { format } from "date-fns";
 import { FaRegIdBadge } from "react-icons/fa";
@@ -95,20 +94,7 @@ const Header = ({ setLoginUser }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isNavbarOpen]);
 
-  const [isOpen, setIsOpen] = useState(false);
   const [isLogoutOpen, setIsLogutOpen] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
 
 
   const handleLogout = () => {
@@ -138,9 +124,11 @@ const Header = ({ setLoginUser }) => {
 
   if (userRole !== "sub-admin") {
     notificationget();
+    fetchCategoryCounts();
 
     const interval = setInterval(() => {
       notificationget();
+      fetchCategoryCounts();
     }, 60000);
 
     return () => clearInterval(interval);
@@ -149,6 +137,21 @@ const Header = ({ setLoginUser }) => {
 }, [userRole]);
 
   const [count, setCount] = useState(0)
+  // Per-sidebar-section unread counts (Leave Management, Complaint,
+  // Harassment, both Enquiry types) - independent of `count` above, which
+  // is the bell icon's all-categories total.
+  const [categoryCounts, setCategoryCounts] = useState({
+    leave: 0,
+    complaint: 0,
+    harassment: 0,
+    "enquiry-aloschool": 0,
+    "enquiry-littlesteps": 0,
+  });
+  const enquiryTotalCount =
+    categoryCounts.complaint +
+    categoryCounts.harassment +
+    categoryCounts["enquiry-aloschool"] +
+    categoryCounts["enquiry-littlesteps"];
 
   let notificationget = async () => {
     try {
@@ -160,6 +163,15 @@ const Header = ({ setLoginUser }) => {
       console.error('Error fetching notifications:', error);
     }
 
+  }
+
+  let fetchCategoryCounts = async () => {
+    try {
+      const res = await getNotificationCategoryCounts();
+      if (res?.data?.data) setCategoryCounts(res.data.data);
+    } catch (error) {
+      console.error('Error fetching notification category counts:', error);
+    }
   }
 
   useEffect(() => {
@@ -189,6 +201,29 @@ const Header = ({ setLoginUser }) => {
       console.error('Error updating notifications:', error);
     }
   };
+
+  // Opening a sidebar section with its own unread badge (Leave Management,
+  // Complaint, Harassment, either Enquiry type) is treated as "seen" - clear
+  // that section's count immediately (optimistic) and mark its notifications
+  // read on the server, scoped to just that category so opening one section
+  // doesn't clear the others' badges too.
+  const markSectionRead = async (path, category) => {
+    navigate(path);
+    setCategoryCounts((prev) => ({ ...prev, [category]: 0 }));
+    try {
+      await markAllNotificationsRead('admin', category);
+      notificationget();
+      fetchCategoryCounts();
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    }
+  };
+
+  const handleLeaveManagementClick = () => markSectionRead('/attendence/leaverequest', 'leave');
+  const handleComplaintClick = () => markSectionRead('/complaint', 'complaint');
+  const handleHarassmentClick = () => markSectionRead('/harassment', 'harassment');
+  const handleEnquiryAloSchoolClick = () => markSectionRead('/enquiry/aloschool', 'enquiry-aloschool');
+  const handleEnquiryLittleStepsClick = () => markSectionRead('/enquiry/littlesteps', 'enquiry-littlesteps');
 
 
   const formatDate = (dateString) => {
@@ -372,7 +407,10 @@ const Header = ({ setLoginUser }) => {
                           ) : (
                             <BsPerson className={styles.outline_person_icon} />
                           )}
-                          Students &amp; Academics
+                          Student Management
+                          {!isStudentOpen && categoryCounts.leave > 0 && (
+                            <span className={styles.countBadge}>{categoryCounts.leave}</span>
+                          )}
                         </div>
 
                         {isStudentOpen ? (
@@ -397,13 +435,30 @@ const Header = ({ setLoginUser }) => {
 
                           <button
                             className={`${styles.settings_button} text-sm ${
-                              location.pathname.startsWith("/attendence")
+                              location.pathname.startsWith("/attendence") &&
+                              !location.pathname.startsWith("/attendence/leaverequest")
                                 ? styles.navactive
                                 : ""
                             }`}
                             onClick={() => navigate("/attendence")}
                           >
                             Attendance
+                          </button>
+
+                          <button
+                            className={`${styles.settings_button} text-sm ${
+                              location.pathname.startsWith("/attendence/leaverequest")
+                                ? styles.navactive
+                                : ""
+                            }`}
+                            onClick={handleLeaveManagementClick}
+                          >
+                            Leave Management
+                            {categoryCounts.leave > 0 && (
+                              <span className={`${styles.countBadge} ${styles.countBadgeRight}`}>
+                                {categoryCounts.leave}
+                              </span>
+                            )}
                           </button>
 
                           <button
@@ -463,6 +518,9 @@ const Header = ({ setLoginUser }) => {
                             />
                           )}
                           Enquiry &amp; Complaints
+                          {!isEnquiryOpen && enquiryTotalCount > 0 && (
+                            <span className={styles.countBadge}>{enquiryTotalCount}</span>
+                          )}
                         </div>
 
                         {isEnquiryOpen ? (
@@ -480,9 +538,14 @@ const Header = ({ setLoginUser }) => {
                                 ? styles.navactive
                                 : ""
                             }`}
-                            onClick={() => navigate("/complaint")}
+                            onClick={handleComplaintClick}
                           >
                             Complaint
+                            {categoryCounts.complaint > 0 && (
+                              <span className={`${styles.countBadge} ${styles.countBadgeRight}`}>
+                                {categoryCounts.complaint}
+                              </span>
+                            )}
                           </button>
 
                           <button
@@ -491,9 +554,14 @@ const Header = ({ setLoginUser }) => {
                                 ? styles.navactive
                                 : ""
                             }`}
-                            onClick={() => navigate("/harassment")}
+                            onClick={handleHarassmentClick}
                           >
                             Harassment
+                            {categoryCounts.harassment > 0 && (
+                              <span className={`${styles.countBadge} ${styles.countBadgeRight}`}>
+                                {categoryCounts.harassment}
+                              </span>
+                            )}
                           </button>
 
                           <button
@@ -502,9 +570,14 @@ const Header = ({ setLoginUser }) => {
                                 ? styles.navactive
                                 : ""
                             }`}
-                            onClick={() => navigate("/enquiry/aloschool")}
+                            onClick={handleEnquiryAloSchoolClick}
                           >
                             ALO School Enquiry
+                            {categoryCounts["enquiry-aloschool"] > 0 && (
+                              <span className={`${styles.countBadge} ${styles.countBadgeRight}`}>
+                                {categoryCounts["enquiry-aloschool"]}
+                              </span>
+                            )}
                           </button>
 
                           <button
@@ -513,9 +586,14 @@ const Header = ({ setLoginUser }) => {
                                 ? styles.navactive
                                 : ""
                             }`}
-                            onClick={() => navigate("/enquiry/littlesteps")}
+                            onClick={handleEnquiryLittleStepsClick}
                           >
                             ALO LittleSteps Enquiry
+                            {categoryCounts["enquiry-littlesteps"] > 0 && (
+                              <span className={`${styles.countBadge} ${styles.countBadgeRight}`}>
+                                {categoryCounts["enquiry-littlesteps"]}
+                              </span>
+                            )}
                           </button>
                         </div>
                       )}
@@ -552,16 +630,22 @@ const Header = ({ setLoginUser }) => {
                         Application
                       </button>
                     </div>
-
-                    <div className={styles.add_student}>
+                    <div className={styles.settings}>
                       <button
-                        className={styles.add_student_button}
-                        onClick={() => setIsOpen(true)}
+                        className={`${styles.settings_button} ${location.pathname.startsWith("/placement") ? styles.navactive : ""}`}
+                        onClick={() => navigate("/placement")}
                       >
-                        <FaPlus />
-                        Add Student
+                        {location.pathname.startsWith("/placement") ? (
+                          <MdWork className={styles.filled_settings_icon} />
+                        ) : (
+                          <MdOutlineWork
+                            className={styles.outline_settings_icon}
+                          />
+                        )}
+                        Placement Management
                       </button>
                     </div>
+
                   </>
                 )}
 
@@ -617,17 +701,6 @@ const Header = ({ setLoginUser }) => {
                     </div>
                   </>
                 )}
-                <div className={styles.logout}>
-                  <button
-                    className={styles.logout_button}
-                    onClick={() => setIsLogutOpen(true)}
-                  >
-                    <RiLogoutCircleLine
-                      className={styles.outline_logout_icon}
-                    />{" "}
-                    Logout
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -661,7 +734,7 @@ const Header = ({ setLoginUser }) => {
               {userRole !== "sub-admin" && (
                 <button
                   type="button"
-                  className={styles.notification_icon}
+                  className={`${styles.notification_icon} ${count > 0 ? styles.hasUnread : ""}`}
                   onClick={() =>
                     Array.isArray(notificationlist) &&
                     notificationlist.length > 0 &&
@@ -673,6 +746,15 @@ const Header = ({ setLoginUser }) => {
                   {count > 0 && <span className={styles.dot}></span>}
                 </button>
               )}
+              <button
+                type="button"
+                className={styles.notification_icon}
+                onClick={() => setIsLogutOpen(true)}
+                aria-label="Logout"
+                title="Logout"
+              >
+                <RiLogoutCircleLine />
+              </button>
             </div>
           </div>
 
@@ -684,38 +766,6 @@ const Header = ({ setLoginUser }) => {
           </div>
         </div>
       </div>
-      <Modal
-        isOpen={isOpen}
-        onRequestClose={() => setIsOpen(true)}
-        contentLabel="Add Student"
-        style={{
-          overlay: {
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgb(21 21 21 / 81%)", // gray overlay
-            zIndex: 1000,
-          },
-          content: {
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            padding: "2rem",
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            width: "800px",
-            height: "600px",
-            overflow: "auto",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-            zIndex: 1001,
-          },
-        }}
-      >
-        <Addstudent closeModal={() => setIsOpen(false)} />
-      </Modal>
 
       {isLogoutOpen && (
         <LogoutModal
@@ -728,49 +778,52 @@ const Header = ({ setLoginUser }) => {
           <div ref={notificationRef} className={styles.notification_content}>
             <div className={styles.notification_header}>
               <p className={styles.notification_title}>Notifications</p>
-              <IoMdCloseCircle
-                style={{ cursor: "pointer", fontSize: "20px" }}
+              <span
+                className={styles.notification_close}
                 onClick={() => setNotification(false)}
-              />
-
-              {/* <p className={styles.notification_count}>{count}</p> */}
+              >
+                <IoMdCloseCircle />
+              </span>
             </div>
-            {notificationlist.map((item, index) => {
-              const { day, month, year } = formatDate(item.date);
-              const firstLetter = item.message?.charAt(0).toUpperCase(); // Get first letter
+            <div className={styles.notification_scrollArea}>
+              {notificationlist.map((item, index) => {
+                const { day, month, year } = formatDate(item.date);
+                const firstLetter = item.message?.charAt(0).toUpperCase(); // Get first letter
 
-              return (
-                <div
-                  className={styles.notification_box}
-                  onClick={() => {
-                    updatenotification(item?._id);
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <div className="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center text-white font-semibold">
-                        {firstLetter}
+                return (
+                  <div
+                    key={item?._id || index}
+                    className={styles.notification_box}
+                    onClick={() => {
+                      updatenotification(item?._id);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center text-white font-semibold">
+                          {firstLetter}
+                        </div>
+                      </div>
+                      <div>
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            textTransform: "capitalize",
+                          }}
+                          className={`${item.isRead ? "" : styles.notification_read}`}
+                        >
+                          {item.message}
+                        </p>
+
+                        <span className="text-xs text-gray-400">
+                          {day} {month} {year}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          textTransform: "capitalize",
-                        }}
-                        className={`${item.isRead ? "" : styles.notification_read}`}
-                      >
-                        {item.message}
-                      </p>
-
-                      <span className="text-xs text-gray-400">
-                        {day} {month} {year}
-                      </span>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

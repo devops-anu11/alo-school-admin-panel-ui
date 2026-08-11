@@ -4,7 +4,7 @@ import Modal from "react-modal";
 import styles from "./BatchDetails.module.css";
 import CreateBatchModal from "./CreateBatchModal";
 import Addstudent from "../Addstudent/Addstudent";
-import { getUser, getBatchById } from "../../api/Serviceapi";
+import { getUser, getBatchById, calcfee } from "../../api/Serviceapi";
 import {
   ArrowLeftIcon,
   CapIcon,
@@ -86,6 +86,25 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
     // on screen until the status dropdown is touched.
   }, [batch, studentStatus]);
 
+  // Paid/pending totals across every semester and course in this batch, for
+  // whichever student status is currently selected.
+  const [feeSummary, setFeeSummary] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    calcfee("", batch.id, "", "", studentStatus)
+      .then((res) => {
+        if (!cancelled) setFeeSummary(res?.data?.data?.data?.[0] || null);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch fee summary:", error.response?.data || error);
+        if (!cancelled) setFeeSummary(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [batch, studentStatus]);
+
   const isActive = batch.active !== false;
 
   const durationLabel = useMemo(() => {
@@ -145,11 +164,26 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
   const showingFrom = totalCount === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const showingTo = Math.min(safePage * PAGE_SIZE, totalCount);
 
-  const removeCourse = (courseId) => {
-    onSaveBatch({
-      ...batch,
-      courses: rows.filter((c) => c.courseId !== courseId),
-    });
+  // Removing a course is destructive (drops its pricing from the batch), so
+  // it goes through a confirm step rather than firing on the trash click.
+  const [courseToRemove, setCourseToRemove] = useState(null);
+  const [removingCourse, setRemovingCourse] = useState(false);
+
+  const confirmRemoveCourse = async () => {
+    if (!courseToRemove) return;
+    setRemovingCourse(true);
+    try {
+      await onSaveBatch({
+        ...batch,
+        courses: rows.filter((c) => c.courseId !== courseToRemove.courseId),
+      });
+      setCourseToRemove(null);
+    } catch (err) {
+      // onSaveBatch already toasts the error - keep the dialog open so the
+      // user can retry or cancel.
+    } finally {
+      setRemovingCourse(false);
+    }
   };
 
   return (
@@ -227,56 +261,84 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
           </div>
         </article>
 
-        <article className={styles.card}>
-          <span className={`${styles.statIcon} ${styles.toneBlue}`}>
-            <UsersIcon width={20} height={20} />
-          </span>
-          <small>Students</small>
-          <strong>{totalCount}</strong>
-          <span className={styles.statFoot}>
-            {studentStatus === "active" ? "Total Active Students" : "Total Inactive Students"}
-          </span>
-        </article>
+        {/* Counts row */}
+        <div className={styles.statRow}>
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.toneBlue}`}>
+              <UsersIcon width={20} height={20} />
+            </span>
+            <small>Students</small>
+            <strong>{totalCount}</strong>
+            <span className={styles.statFoot}>
+              {studentStatus === "active" ? "Total Active Students" : "Total Inactive Students"}
+            </span>
+          </article>
 
-        <article className={styles.card}>
-          <span className={`${styles.statIcon} ${styles.toneGreen}`}>
-            <BookIcon width={20} height={20} />
-          </span>
-          <small>Courses</small>
-          <strong>{rows.length}</strong>
-          <span className={styles.statFoot}>Total Courses</span>
-        </article>
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.toneGreen}`}>
+              <BookIcon width={20} height={20} />
+            </span>
+            <small>Courses</small>
+            <strong>{rows.length}</strong>
+            <span className={styles.statFoot}>Total Courses</span>
+          </article>
 
-        <article className={styles.card}>
-          <span className={`${styles.statIcon} ${styles.tonePurple}`}>
-            <span className={styles.rupee}>₹</span>
-          </span>
-          <small>Overall Total Amount</small>
-          <strong>₹ {formatMoney(totalCourseRevenue)}</strong>
-          <span className={styles.statFoot}>
-            {studentStatus === "active" ? "Active" : "Inactive"} students per course × course fee
-          </span>
-        </article>
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.toneRed}`}>
+              <CalendarIcon width={20} height={20} />
+            </span>
+            <small>Batch Duration</small>
+            <strong>{durationLabel}</strong>
+            <span className={styles.statFoot}>Duration</span>
+          </article>
+        </div>
 
-        <article className={styles.card}>
-          <span className={`${styles.statIcon} ${styles.toneOrange}`}>
-            <span className={styles.rupee}>₹</span>
-          </span>
-          <small>Total Admission Fee</small>
-          <strong>₹ {formatMoney(totalAdmissionFees)}</strong>
-          <span className={styles.statFoot}>
-            {totalCount} students × ₹{formatMoney(admissionFee)}
-          </span>
-        </article>
+        {/* Amounts row */}
+        <div className={styles.amountRow}>
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.tonePurple}`}>
+              <span className={styles.rupee}>₹</span>
+            </span>
+            <small>Overall Total Amount</small>
+            <strong>₹ {formatMoney(totalCourseRevenue)}</strong>
+            <span className={styles.statFoot}>
+              {studentStatus === "active" ? "Active" : "Inactive"} students per course × course fee
+            </span>
+          </article>
 
-        <article className={styles.card}>
-          <span className={`${styles.statIcon} ${styles.toneRed}`}>
-            <CalendarIcon width={20} height={20} />
-          </span>
-          <small>Batch Duration</small>
-          <strong>{durationLabel}</strong>
-          <span className={styles.statFoot}>Duration</span>
-        </article>
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.toneOrange}`}>
+              <span className={styles.rupee}>₹</span>
+            </span>
+            <small>Total Admission Fee</small>
+            <strong>₹ {formatMoney(totalAdmissionFees)}</strong>
+            <span className={styles.statFoot}>
+              {totalCount} students × ₹{formatMoney(admissionFee)}
+            </span>
+          </article>
+
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.toneGreen}`}>
+              <span className={styles.rupee}>₹</span>
+            </span>
+            <small>Total Paid Amount</small>
+            <strong>₹ {formatMoney(feeSummary?.paidFee || 0)}</strong>
+            <span className={styles.statFoot}>
+              Collected from {studentStatus} students
+            </span>
+          </article>
+
+          <article className={styles.card}>
+            <span className={`${styles.statIcon} ${styles.toneRed}`}>
+              <span className={styles.rupee}>₹</span>
+            </span>
+            <small>Total Pending Amount</small>
+            <strong>₹ {formatMoney(feeSummary?.pendingFee || 0)}</strong>
+            <span className={styles.statFoot}>
+              Due from {studentStatus} students
+            </span>
+          </article>
+        </div>
       </div>
 
       {/* --- Course list --- */}
@@ -320,17 +382,6 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
                       <button
                         type="button"
                         className={styles.iconBtn}
-                        aria-label={`View subjects for ${courseName(c.courseId)}`}
-                        title="View Subjects"
-                        onClick={() =>
-                          navigate(`/course/Subjects/${c.courseId}/${batch.id}`)
-                        }
-                      >
-                        <BookIcon width={15} height={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.iconBtn}
                         aria-label={`Edit ${courseName(c.courseId)}`}
                         onClick={onEdit}
                       >
@@ -340,7 +391,7 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
                         type="button"
                         className={`${styles.iconBtn} ${styles.danger}`}
                         aria-label={`Remove ${courseName(c.courseId)}`}
-                        onClick={() => removeCourse(c.courseId)}
+                        onClick={() => setCourseToRemove(c)}
                       >
                         <TrashIcon width={15} height={15} />
                       </button>
@@ -487,13 +538,14 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            padding: "2rem",
+            padding: 0,
             backgroundColor: "#fff",
-            borderRadius: "8px",
+            borderRadius: "16px",
             width: "800px",
-            height: "600px",
-            overflow: "auto",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            maxWidth: "92vw",
+            height: "min(650px, 90vh)",
+            overflow: "hidden",
+            boxShadow: "0 20px 50px rgba(15, 27, 51, 0.35)",
             zIndex: 1001,
           },
         }}
@@ -502,6 +554,60 @@ const BatchDetailsView = ({ batch, courses, onBack, onEdit, onSaveBatch }) => {
           closeModal={() => setAddStudentOpen(false)}
           onStudentAdded={fetchStudents}
         />
+      </Modal>
+
+      <Modal
+        isOpen={!!courseToRemove}
+        onRequestClose={() => !removingCourse && setCourseToRemove(null)}
+        contentLabel="Remove Course"
+        style={{
+          overlay: {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgb(21 21 21 / 81%)",
+            zIndex: 1000,
+          },
+          content: {
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            padding: "1.75rem",
+            backgroundColor: "#fff",
+            borderRadius: "12px",
+            width: "min(420px, 92vw)",
+            height: "max-content",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            zIndex: 1001,
+          },
+        }}
+      >
+        <h3 style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>Remove course?</h3>
+        <p style={{ margin: "0 0 20px", color: "var(--ink-soft)", fontSize: "0.9rem" }}>
+          This removes {courseToRemove ? courseName(courseToRemove.courseId) : "this course"}{" "}
+          and its pricing from this batch. This can't be undone.
+        </p>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button
+            type="button"
+            className={styles.outlineBtn}
+            onClick={() => setCourseToRemove(null)}
+            disabled={removingCourse}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={styles.dangerBtn}
+            onClick={confirmRemoveCourse}
+            disabled={removingCourse}
+          >
+            {removingCourse ? "Removing..." : "Remove"}
+          </button>
+        </div>
       </Modal>
     </div>
   );

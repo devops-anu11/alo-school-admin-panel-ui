@@ -91,12 +91,18 @@ const Eventlist = () => {
 
     const [id, setId] = useState('')
 
+    const [deleting, setDeleting] = useState(false);
+
     const handleDelete = async (id) => {
+        setDeleting(true);
         try {
             await deleteEvent(id);
             getevents(); // refresh the list
+            setDelete(false);
         } catch (error) {
             console.error("Error deleting user:", error);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -261,7 +267,7 @@ const Eventlist = () => {
 
             <Modal
                 isOpen={deleteevent}
-                onRequestClose={() => setDelete(true)}
+                onRequestClose={() => !deleting && setDelete(false)}
                 contentLabel="Delete Student"
                 style={{
                     overlay: {
@@ -294,9 +300,9 @@ const Eventlist = () => {
                 {/* <Addstudent closeModal={() => setIsOpen(false)} onStudentAdded={getuserlist} /> */}
                 <p className={styles.popmessage}>Are you sure you want to delete this event</p>
                 <div className='flex gap-4 justify-center mt-10'>
-                    <button onClick={() => { setDelete(false); handleDelete(id) }}
-                        className={styles.popyes} >Yes</button>
-                    <button className={styles.popno} onClick={() => setDelete(false)}>No</button>
+                    <button onClick={() => handleDelete(id)}
+                        className={styles.popyes} disabled={deleting}>{deleting ? "Deleting..." : "Yes"}</button>
+                    <button className={styles.popno} onClick={() => setDelete(false)} disabled={deleting}>No</button>
                 </div>
             </Modal>
 

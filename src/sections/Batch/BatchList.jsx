@@ -104,9 +104,6 @@ const BatchList = ({
           <div className={styles.grid}>
             {batches.map((b) => {
               const isActive = b.active !== false;
-              // Admission fee is a one-time, per-student charge — total it as
-              // students × fee, not summed again per course in the batch.
-              const totalAdmissionFees = (b.studentsCount ?? 0) * (Number(b.admissionFee) || 0);
               return (
                 <article key={b.id} className={styles.batchCard}>
                   <header className={styles.cardHead}>
@@ -149,18 +146,18 @@ const BatchList = ({
                   <div className={styles.statRow}>
                     <div className={styles.miniStat}>
                       <UsersIcon width={16} height={16} />
-                      <strong>{b.studentsCount ?? 0}</strong>
-                      <small>Students</small>
+                      <strong>{b.activeStudentsCount ?? 0}</strong>
+                      <small>Active</small>
+                    </div>
+                    <div className={styles.miniStat}>
+                      <UsersIcon width={16} height={16} />
+                      <strong>{b.inactiveStudentsCount ?? 0}</strong>
+                      <small>Inactive</small>
                     </div>
                     <div className={styles.miniStat}>
                       <BookIcon width={16} height={16} />
                       <strong>{b.courses?.length || 0}</strong>
                       <small>Courses</small>
-                    </div>
-                    <div className={styles.miniStat}>
-                      <span className={styles.rupee}>₹</span>
-                      <strong>{totalAdmissionFees.toLocaleString("en-IN")}</strong>
-                      <small>Total Admission Fee</small>
                     </div>
                   </div>
 

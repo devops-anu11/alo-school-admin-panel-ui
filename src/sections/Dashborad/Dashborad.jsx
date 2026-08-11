@@ -4,7 +4,7 @@ import profile from '../../assets/dashboardimgs/profile.png'
 import profile1 from '../../assets/dashboardimgs/profile1.png'
 import profile2 from '../../assets/dashboardimgs/profile2.png'
 import profile3 from '../../assets/dashboardimgs/profile3.png'
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, Pagination } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
     CircularProgressbarWithChildren,
@@ -17,16 +17,19 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { getAttendancerate, getCourse, getCourseBatch, getCourseBatchByCourseId, getDashboardAttendencerate, getDashboardEvents, getDashboardLeave, getDashboardUser, getTodayrate, studentCount } from '../../api/Serviceapi'
+import { getAttendance, getAttendancerate, getCourse, getCourseBatch, getDashboardAttendencerate, getDashboardEvents, getDashboardLeave, getTodayrate, studentCount } from '../../api/Serviceapi'
 import {
     getDashboardTermToppers,
     getDashboardSemesterToppers,
 } from "../../api/Serviceapi";
 import { LuGraduationCap, LuUsers, LuCalendarCheck, LuCalendar, LuArrowRight } from "react-icons/lu";
+import Loader from "../../component/loader/Loader";
 
 export const Dashboard = () => {
     const [days, setdays] = useState('this_week');
-    const [studentList, setStudentList] = useState([])
+    const [notCheckedInAll, setNotCheckedInAll] = useState([])
+    const [notCheckedInPage, setNotCheckedInPage] = useState(1)
+    const notCheckedInLimit = 5;
     const [eventList, setEventList] = useState([])
     const [leaveList, setLeaveList] = useState([])
     const [todayAttendance, setToday] = useState()
@@ -80,28 +83,28 @@ export const Dashboard = () => {
         // fetchPerformance();
         // fetchUsers();
     }, []);
-    useEffect(() => {
-        if (!courseId) {
-            setBatches([]);
-            setBatchId("");
-            // fetchUsers(search, "", "");
-            // setoffset(1);
-            return;
-        }
 
-        const fetchBatches = async () => {
+    // All batches load up front so the Batch filter is usable immediately;
+    // the Course filter is the dependent one, scoped down to whichever
+    // courses belong to the selected batch (a batch can span courses).
+    useEffect(() => {
+        const fetchAllBatches = async () => {
             try {
-                const res = await getCourseBatchByCourseId(courseId, 100, 0);
-                setBatches(res?.data?.data?.data || []);
+                const res = await getCourseBatch();
+                setBatches(Array.isArray(res?.data?.data) ? res.data.data : []);
             } catch {
                 setBatches([]);
             }
         };
+        fetchAllBatches();
+    }, []);
 
-        fetchBatches();
-        // fetchUsers(search, courseId, "");
-        // setoffset(1);
-    }, [courseId]);
+    const selectedBatch = batches.find((b) => b._id === batchId);
+    const filteredCourses = batchId
+        ? courses.filter((c) =>
+              selectedBatch?.courses?.some((bc) => bc.courseId === c._id),
+          )
+        : courses;
 
     useEffect(() => {
         getTermToppers();
@@ -110,9 +113,16 @@ export const Dashboard = () => {
     // useEffect(() => {
     //     getSemesterToppers();
     // }, [semester]);
+    const [termToppersLoading, setTermToppersLoading] = useState(true);
+
     const getTermToppers = async () => {
-        const res = await getDashboardTermToppers(academic, semester, courseId, batchId);
-        setTermToppers(res?.data?.data || []);
+        setTermToppersLoading(true);
+        try {
+            const res = await getDashboardTermToppers(academic, semester, courseId, batchId);
+            setTermToppers(res?.data?.data || []);
+        } finally {
+            setTermToppersLoading(false);
+        }
     };
 
     // const getSemesterToppers = async () => {
@@ -130,7 +140,8 @@ export const Dashboard = () => {
 
 
     useEffect(() => {
-        studentlist()
+        setNotCheckedInPage(1)
+        fetchNotCheckedIn()
     }, [pageBatchId])
     useEffect(() => {
         eventlist()
@@ -141,15 +152,30 @@ export const Dashboard = () => {
     useEffect(() => {
         countStudent()
     }, [pageBatchId])
-    let studentlist = async () => {
-        try {
-            let res = await getDashboardUser(pageBatchId)
-            setStudentList(res?.data?.data?.data)
+    const [notCheckedInLoading, setNotCheckedInLoading] = useState(true);
 
+    // Students with no attendance record yet for today, for the selected
+    // batch - same endpoint/onLeave=noLeave the Attendance page uses.
+    // The backend doesn't reliably honor limit/page for this filter, so we
+    // fetch the whole list once and paginate 5-at-a-time on the client.
+    let fetchNotCheckedIn = async () => {
+        setNotCheckedInLoading(true)
+        try {
+            let res = await getAttendance(1000, 0, '', '', pageBatchId, todayDate, 'noLeave')
+            setNotCheckedInAll(res?.data?.data?.data || [])
         } catch (err) {
             console.log(err)
+            setNotCheckedInAll([])
+        } finally {
+            setNotCheckedInLoading(false)
         }
     }
+
+    const notCheckedInTotal = notCheckedInAll.length;
+    const notCheckedInList = notCheckedInAll.slice(
+        (notCheckedInPage - 1) * notCheckedInLimit,
+        notCheckedInPage * notCheckedInLimit,
+    );
     const [studentData, setStudentData] = useState(null);
 
 
@@ -184,21 +210,31 @@ export const Dashboard = () => {
         setStatus(event.target.value);
     }
 
+    const [eventListLoading, setEventListLoading] = useState(true);
+
     let eventlist = async () => {
+        setEventListLoading(true)
         try {
             let res = await getDashboardEvents(status)
             setEventList(res?.data?.data?.data)
         } catch (err) {
             console.log(err)
+        } finally {
+            setEventListLoading(false)
         }
     }
 
+    const [leaveListLoading, setLeaveListLoading] = useState(true);
+
     let leavelist = async () => {
+        setLeaveListLoading(true)
         try {
             let res = await getDashboardLeave(leavestatus, pageBatchId)
             setLeaveList(res?.data?.data?.result)
         } catch (err) {
             console.log(err)
+        } finally {
+            setLeaveListLoading(false)
         }
     }
 
@@ -238,6 +274,13 @@ export const Dashboard = () => {
         setLeaveStatus(e.target.value)
     }
 
+    // studentData is scoped to the same pageBatchId as Attendance, so the
+    // gap between the batch's active students and present+absent is
+    // whoever hasn't checked in yet.
+    const notCheckedInCount = Math.max(
+        0,
+        (studentData?.activeStudents ?? 0) - (Attendance.fetchCount ?? 0) - (Attendance.leaveApproved ?? 0),
+    );
 
     return (
         <>
@@ -384,14 +427,16 @@ export const Dashboard = () => {
 
                                     </Select>
                                 </FormControl>
-                                <Link to={`/attendence/leaverequest/${todayDate}//`} className={dashboradcss.viewAllLink}>
-                                    View All <LuArrowRight />
+                                <Link to={`/attendence/leaverequest/${todayDate}//`} className={dashboradcss.viewAllLink} aria-label="View All" title="View All">
+                                    <LuArrowRight />
                                 </Link>
 
                             </div>
                         </div>
                         <div className={dashboradcss.scrollLeave} >
-                            {leaveList?.length > 0 ? (
+                            {leaveListLoading ? (
+                                <Loader />
+                            ) : leaveList?.length > 0 ? (
                                 leaveList.map((leave) => (
                                     <div
                                         key={leave._id}
@@ -443,7 +488,7 @@ export const Dashboard = () => {
                         </div>
                     </div>
                     <div className={dashboradcss.dashcard}>
-                        <div className='flex justify-between flex-col h-100'>
+                        <div className='flex flex-col h-100'>
                             <div className={dashboradcss.panelHead}>
                                 <div><h4 className={dashboradcss.panelTitle}>Attendance Rate</h4></div>
                                 <div style={{ width: '150px', }}>
@@ -526,12 +571,12 @@ export const Dashboard = () => {
                                         <span className={dashboradcss.legendLabel}>Absent</span>
                                         <span className={dashboradcss.legendValue}>{Attendance.leaveApproved ?? 0}</span>
                                     </div>
+                                    <div className={dashboradcss.legendRow}>
+                                        <span className={`${dashboradcss.legendDot} ${dashboradcss.legendDotAmber}`} />
+                                        <span className={dashboradcss.legendLabel}>Not Checked In</span>
+                                        <span className={dashboradcss.legendValue}>{notCheckedInCount}</span>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className={dashboradcss.donutFooter}>
-                                <span className={dashboradcss.presentText}>No of student present: {Attendance.fetchCount ?? 0}</span>
-                                <span className={dashboradcss.absentText}>No of student absent: {Attendance.leaveApproved ?? 0}</span>
                             </div>
                         </div>
 
@@ -573,13 +618,15 @@ export const Dashboard = () => {
 
                                     </Select>
                                 </FormControl>
-                                <Link to='/events' className={dashboradcss.viewAllLink}>View All <LuArrowRight /></Link>
+                                <Link to='/events' className={dashboradcss.viewAllLink} aria-label="View All" title="View All"><LuArrowRight /></Link>
 
                             </div>
 
                         </div>
                         <div className={dashboradcss.scrollEvents}>
-                            {eventList?.length > 0 ? (
+                            {eventListLoading ? (
+                                <Loader />
+                            ) : eventList?.length > 0 ? (
                                 eventList.map((item) => {
                                     const { day, month, year } = formatDate(item.date);
                                     return (
@@ -618,13 +665,27 @@ export const Dashboard = () => {
                         </div>
 
                     </div>
-                    <div className={`${dashboradcss.dashcard} ${dashboradcss.panelMd}`}>
+                    <div className={`${dashboradcss.dashcard} ${dashboradcss.panelFull}`}>
                         <div className={dashboradcss.panelHead}>
-                            <div><h4 className={dashboradcss.panelTitle}>Student List</h4></div>
-                            <Link to='/students' className={dashboradcss.viewAllLink}>View All <LuArrowRight /></Link>
+                            <div><h4 className={dashboradcss.panelTitle}>Not Checked In</h4></div>
+                            <div className={dashboradcss.toppersFilters}>
+                                <select
+                                    value={pageBatchId}
+                                    onChange={(e) => setPageBatchId(e.target.value)}
+                                    className={dashboradcss.filterSelect}
+                                >
+                                    <option value="">All Batches</option>
+                                    {pageBatches.map((b) => (
+                                        <option key={b._id} value={b._id}>
+                                            {b.batchName}
+                                        </option>
+                                    ))}
+                                </select>
+                                <Link to='/students' className={dashboradcss.viewAllLink} aria-label="View All" title="View All"><LuArrowRight /></Link>
+                            </div>
                         </div>
 
-                        <div className={`${dashboradcss.tableWrap} ${dashboradcss.scrollStudents}`}>
+                        <div className={dashboradcss.tableWrap}>
                             <table className={dashboradcss.table}>
                                 <thead>
                                     <tr >
@@ -633,34 +694,55 @@ export const Dashboard = () => {
                                         <th>Name</th>
                                         <th>Mobile</th>
                                         <th>Course</th>
-                                        <th>Batch</th>
-                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {studentList.map((item) => (
-                                        <tr key={item?._id}>
-                                            <td>
-                                                <img src={item?.profileURL} alt="Profile" className="rounded-full w-10 h-10" />                                           </td>
-                                            <td>{item?.studentId}</td>
-                                            <td style={{ textTransform: 'capitalize' }}>{item?.name}</td>
-                                            <td>{item?.mobileNo}</td>
-                                            <td>{item?.courseDetails?.courseName}</td>
-                                            <td>{item?.batchDetails?.batchName}</td>
-                                            <td className={item?.inStatus === 'ongoing' ? dashboradcss.statusOngoing : dashboradcss.statusDefault}>{item.inStatus}</td>
+                                    {notCheckedInLoading ? (
+                                        <tr>
+                                            <td colSpan="5"><Loader /></td>
                                         </tr>
-                                    ))}
+                                    ) : notCheckedInList?.length > 0 ? (
+                                        notCheckedInList.map((item) => (
+                                            <tr key={item._id}>
+                                                <td>
+                                                    <img src={item?.userDetails?.profileURL ?? item?.profileURL} alt="Profile" className="rounded-full w-10 h-10" />                                           </td>
+                                                <td>{item?.userDetails?.studentId ?? item?.studentId}</td>
+                                                <td style={{ textTransform: 'capitalize' }}>{item?.userDetails?.name ?? item?.name}</td>
+                                                <td>{item?.userDetails?.mobileNo ?? item?.mobileNo}</td>
+                                                <td>{item?.courseDetails?.courseName}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5">
+                                                <div className={dashboradcss.noData}>
+                                                    <img src={nodata} alt="" width={'120px'} height={'120px'} className='m-auto' />
+                                                    <p className={dashboradcss.noDataText}>No Data Found</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
 
 
                                 </tbody>
                             </table>
                         </div>
 
+                        {notCheckedInTotal > notCheckedInLimit && (
+                            <div className="flex justify-end mt-2">
+                                <Pagination
+                                    size="small"
+                                    count={Math.ceil(notCheckedInTotal / notCheckedInLimit)}
+                                    page={notCheckedInPage}
+                                    onChange={(e, value) => setNotCheckedInPage(value)}
+                                />
+                            </div>
+                        )}
 
                     </div>
-                    <div className="lg:col-span-2 md:col-span-2 col-span-1  ">
+                    <div className={dashboradcss.panelFull}>
 
-                        <div className={`${dashboradcss.dashcard} ${dashboradcss.panelAuto}`}>
+                        <div className={dashboradcss.dashcard}>
                             <div className={dashboradcss.panelHead}>
                                 <h4 className={dashboradcss.panelTitle}>Toppers</h4>
 
@@ -671,33 +753,33 @@ export const Dashboard = () => {
 
                                 <div className={dashboradcss.toppersFilters}>
                                     <select
-                                        value={courseId}
+                                        value={batchId}
                                         onChange={(e) => {
-                                            setCourseId(e.target.value);
-                                            setBatchId("");
+                                            setBatchId(e.target.value);
+                                            setCourseId("");
                                         }}
                                         className={dashboradcss.filterSelect}
                                     >
-                                        <option value="">All Courses</option>
-                                        {courses.map((c) => (
-                                            <option key={c._id} value={c._id}>
-                                                {c.courseName}
+                                        <option value="">All Batches</option>
+                                        {batches.map((b) => (
+                                            <option key={b._id} value={b._id}>
+                                                {b.batchName}
                                             </option>
                                         ))}
                                     </select>
 
 
                                     <select
-                                        value={batchId}
-                                        disabled={!courseId}
-                                        onChange={(e) => setBatchId(e.target.value)}
+                                        value={courseId}
+                                        disabled={!batchId}
+                                        onChange={(e) => setCourseId(e.target.value)}
                                         className={dashboradcss.filterSelect}
 
                                     >
-                                        <option value="">All Batches</option>
-                                        {batches.map((b) => (
-                                            <option key={b._id} value={b._id}>
-                                                {b.batchName}
+                                        <option value="">All Courses</option>
+                                        {filteredCourses.map((c) => (
+                                            <option key={c._id} value={c._id}>
+                                                {c.courseName}
                                             </option>
                                         ))}
                                     </select>
@@ -725,7 +807,9 @@ export const Dashboard = () => {
                                     {/* </FormControl> */}
                                 </div>
                             </div>
-                            {termToppers.length > 0 ? (
+                            {termToppersLoading ? (
+                                <Loader />
+                            ) : termToppers.length > 0 ? (
                                 termToppers.map((s, i) => (
                                     <div
                                         key={s._id}
@@ -756,9 +840,10 @@ export const Dashboard = () => {
                                     </div>
                                 ))
                             ) : (
-                                <p className={dashboradcss.noDataText} style={{ marginTop: '40px' }}>
-                                    No Data Found
-                                </p>
+                                <div className={dashboradcss.noData}>
+                                    <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
+                                    <p className={dashboradcss.noDataText}>No Data Found</p>
+                                </div>
                             )}
 
                         </div>

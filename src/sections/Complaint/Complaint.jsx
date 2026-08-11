@@ -5,6 +5,7 @@ import Loader from "../../component/loader/Loader";
 import Pagination from "@mui/material/Pagination";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { toast } from "react-toastify";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 
 const theme = createTheme({
   components: {
@@ -68,7 +69,10 @@ const Complaint = () => {
     setPage(value);
   };
 
+  const [updatingId, setUpdatingId] = useState(null);
+
   const handleStatus = async (id, status) => {
+    setUpdatingId(id);
     try {
       await updateComplaintStatus(id, status);
 
@@ -88,6 +92,8 @@ const Complaint = () => {
           closeButton: false,
         },
       );
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -137,15 +143,17 @@ const Complaint = () => {
                               <button
                                 className={styles.acceptBtn}
                                 onClick={() => handleStatus(item._id, "accepted")}
+                                disabled={updatingId === item._id}
                               >
-                                Accept
+                                {updatingId === item._id ? "..." : "Accept"}
                               </button>
 
                               <button
                                 className={styles.rejectBtn}
                                 onClick={() => handleStatus(item._id, "rejected")}
+                                disabled={updatingId === item._id}
                               >
-                                Reject
+                                {updatingId === item._id ? "..." : "Reject"}
                               </button>
                             </div>
                           ) : (
@@ -165,7 +173,8 @@ const Complaint = () => {
                   ) : (
                     <tr>
                       <td colSpan="5" className={styles.noData}>
-                        No Complaints Found
+                        <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                        <p className={styles.noDataText}>No Complaints Found</p>
                       </td>
                     </tr>
                   )}

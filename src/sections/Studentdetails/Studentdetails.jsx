@@ -1,5 +1,15 @@
 import { React, useEffect, useState } from "react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
+import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import SchoolIcon from "@mui/icons-material/School";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import StarIcon from "@mui/icons-material/Star";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import profile from "../../assets/dashboardimgs/profile.png";
 import Import from "../../assets/dashboardimgs/Import.png";
 import { Form, useParams } from "react-router-dom";
@@ -33,7 +43,7 @@ import dayjs from "dayjs";
 import { DatePicker } from "antd";
 import { set } from "date-fns";
 // import { use } from 'react';
-import { getSubjects } from "../../api/Serviceapi";
+import { getDailyTaskSubjects } from "../../api/Serviceapi";
 
 const Studentdetails = () => {
   const { id } = useParams();
@@ -76,24 +86,35 @@ const Studentdetails = () => {
 
 
   const fetchSubjects = async () => {
-    if (!user?.courseDetails?._id || !user?.batchDetails?._id || !sem) return;
+    if (!user?.courseDetails?._id || !sem) return;
 
     setSubjectsLoading(true);
     try {
-      const res = await getSubjects(
-        user.courseDetails._id,
-        user.batchDetails._id,
-        sem.toLowerCase() // API expects sem1, sem2
-      );
+      // Same subject list Task Settings uses to power task creation - course
+      // + semester scoped only (no per-batch subjects), so every batch of a
+      // course shares one list. "sem1"/"sem2" here -> "1"/"2" there.
+      const res = await getDailyTaskSubjects({
+        courseId: user.courseDetails._id,
+        semester: sem.toLowerCase().replace("sem", ""),
+      });
 
-      const subjectList = res?.data?.data?.[0]?.subjects || [];
+      // Normalize once - Task Settings subjects come back as {_id, name,
+      // totalMarks}, but the rest of this form (render labels, marks state,
+      // saved payload) all expect {subjectCode, subjectName}. The subject's
+      // own _id stands in for subjectCode, since Task Settings subjects
+      // don't have a separate short code like the old SUB001-style ones did.
+      const subjectList = (res?.data?.data || []).map((sub) => ({
+        subjectCode: sub._id,
+        subjectName: sub.name,
+        totalMarks: sub.totalMarks ?? 100,
+      }));
 
       setSubjects(subjectList);
 
-      // Prepare marks state for each subject
       const initialMarks = subjectList.map((sub) => ({
         subjectCode: sub.subjectCode,
         subjectName: sub.subjectName,
+        totalMarks: sub.totalMarks,
         mark: "",
         revaluationUrl: "",
         revaluationFileName: ""
@@ -108,6 +129,8 @@ const Studentdetails = () => {
     }
   };
 
+  const [revaluationUploadingIndex, setRevaluationUploadingIndex] = useState(null);
+
   const handleRevaluationUpload = async (index, e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -117,6 +140,7 @@ const Studentdetails = () => {
       return;
     }
 
+    setRevaluationUploadingIndex(index);
     try {
       const res = await uploadFile(file);
       const fileUrl = res?.data?.data?.imageURL;
@@ -130,6 +154,8 @@ const Studentdetails = () => {
     } catch (error) {
       console.error("Upload failed", error);
       toast.error("Upload failed");
+    } finally {
+      setRevaluationUploadingIndex(null);
     }
   };
 
@@ -153,10 +179,12 @@ const Studentdetails = () => {
     setAcademic(record.Academic || "");
     setSem(record.exam || "sem1");
 
-    // Convert API Marks → UI format
+    // Convert API Marks → UI format. totalMarks falls back to 100 for
+    // records saved before subjects carried their own total marks.
     const formattedMarks = (record.Marks || []).map((m) => ({
       subjectCode: m.subjectCode || "",
       subjectName: m.subjectName || "",
+      totalMarks: m.totalMarks ?? 100,
       mark: m.mark ?? "",
       revaluationUrl: m.revaluationUrl || "",
       revaluationFileName: m.revaluationUrl ? "Uploaded File" : ""
@@ -169,6 +197,7 @@ const Studentdetails = () => {
     const subjectList = formattedMarks.map((m) => ({
       subjectCode: m.subjectCode,
       subjectName: m.subjectName,
+      totalMarks: m.totalMarks,
     }));
     setSubjects(subjectList);
   };
@@ -194,12 +223,18 @@ const Studentdetails = () => {
     }
 
     for (let m of marks) {
+      const maxMarks = Number(m.totalMarks) || 100;
+
       if (m.mark === "") {
         return setFormError(`Enter mark for ${m.subjectName}`);
       }
 
       if (m.mark !== "AA" && (isNaN(m.mark) || Number(m.mark) < 0)) {
         return setFormError(`Invalid mark for ${m.subjectName}`);
+      }
+
+      if (m.mark !== "AA" && Number(m.mark) > maxMarks) {
+        return setFormError(`Mark for ${m.subjectName} cannot exceed ${maxMarks}`);
       }
     }
 
@@ -217,8 +252,12 @@ const Studentdetails = () => {
 
     const total = numericMarks.reduce((sum, m) => sum + m, 0);
 
-    const average = numericMarks.length
-      ? Number((total / numericMarks.length).toFixed(2))
+    // Weighted by each subject's own total marks, not a flat average -
+    // matches the live preview in the footer.
+    const maxTotal = marks.reduce((sum, m) => sum + (Number(m.totalMarks) || 100), 0);
+
+    const average = maxTotal
+      ? Number(((total / maxTotal) * 100).toFixed(2))
       : 0;
 
 
@@ -233,6 +272,7 @@ const Studentdetails = () => {
       Marks: marks.map((m) => ({
         subjectCode: m.subjectCode,
         subjectName: m.subjectName,
+        totalMarks: Number(m.totalMarks) || 100,
         mark: m.mark === "AA" ? "AA" : Number(m.mark),
         revaluationUrl: m.revaluationUrl || ""
       }))
@@ -286,8 +326,12 @@ const Studentdetails = () => {
 
   const totalMarks = numericMarksUI.reduce((sum, m) => sum + m, 0);
 
-  const avgMarks = numericMarksUI.length
-    ? (totalMarks / numericMarksUI.length).toFixed(2)
+  // Weighted by each subject's own total marks (not a flat count) - two
+  // subjects out of 100 and 50 shouldn't count equally toward the average.
+  const maxMarksSum = marks.reduce((sum, m) => sum + (Number(m.totalMarks) || 100), 0);
+
+  const avgMarks = maxMarksSum
+    ? ((totalMarks / maxMarksSum) * 100).toFixed(2)
     : 0;
 
 
@@ -386,13 +430,19 @@ const Studentdetails = () => {
     }
   };
 
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
   const onChange = async (checked) => {
     const newStatus = checked ? "active" : "inactive";
+    setStatusUpdating(true);
     try {
       await updatedetailsuser(newStatus, id);
       setStatus(checked);
     } catch (err) {
       console.error("Error updating status:", err);
+      toast.error(err?.response?.data?.message || "Failed to update status");
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
@@ -843,37 +893,36 @@ const Studentdetails = () => {
                           + Add Term / Sem Detail
                         </button>
                       </div>
-                      <div
+                      <button
                         onClick={() => setIsOpen(true)}
-                        className="text-transparent bg-clip-text bg-gradient-to-b from-[#144196] to-[#061530] flex items-center font-[500] px-[40px] p-2 cursor-pointer "
+                        className={styles.editBtn}
                       >
-                        <EditOutlinedIcon
-                          className="text-[#144196]"
-                          sx={{ fontSize: "14px", cursor: "pointer" }}
-                        />{" "}
+                        <EditOutlinedIcon sx={{ fontSize: "15px" }} />
                         Edit
-                      </div>
+                      </button>
                       <div>
                         <Switch
                           value={status}
                           onChange={onChange}
                           size="small"
+                          loading={statusUpdating}
+                          disabled={statusUpdating}
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 lg:grid-cols-7 md:grid-cols-3 sm:grid-cols-2 text-[14px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-4 gap-x-3 text-[14px] pt-3 mt-1 border-t border-[#f0f1f5]">
                     <div>
-                      <div className="text-[#6b7280]">ID</div>
+                      <div className="text-[#6b7280] text-[12px]">ID</div>
                       <p className="font-[500]">{user?.studentId}</p>
                     </div>
                     <div>
-                      <div className="text-[#6b7280]">Phone</div>
+                      <div className="text-[#6b7280] text-[12px]">Phone</div>
                       <p className="font-[500]">{user?.mobileNo}</p>
                     </div>
                     <div>
-                      <div className="text-[#6b7280]">E-Mail</div>
+                      <div className="text-[#6b7280] text-[12px]">E-Mail</div>
                       <p
                         title={user?.email}
                         className="font-[500] truncate overflow-hidden whitespace-nowrap w-[90%]"
@@ -882,23 +931,27 @@ const Studentdetails = () => {
                       </p>
                     </div>
                     <div>
-                      <div className="text-[#6b7280]">Course</div>
+                      <div className="text-[#6b7280] text-[12px]">Password</div>
+                      <p className="font-[500]">{user?.password}</p>
+                    </div>
+                    <div>
+                      <div className="text-[#6b7280] text-[12px]">Course</div>
                       <p className="font-[500]">
                         {user?.courseDetails?.courseName}
                       </p>
                     </div>
                     <div>
-                      <div className="text-[#6b7280]">Batch</div>
+                      <div className="text-[#6b7280] text-[12px]">Batch</div>
                       <p className="font-[500]">
                         {user?.batchDetails?.batchName}
                       </p>
                     </div>
                     <div>
-                      <div className="text-[#6b7280]">Blood</div>
+                      <div className="text-[#6b7280] text-[12px]">Blood</div>
                       <p className="font-[500]">{user?.blood}</p>
                     </div>
                     <div>
-                      <div className="text-[#6b7280]">D.O.B</div>
+                      <div className="text-[#6b7280] text-[12px]">D.O.B</div>
                       <p className="font-[500]">{user?.DOB?.split("T")[0]}</p>
                     </div>
                   </div>
@@ -976,7 +1029,10 @@ const Studentdetails = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-400">No Term / Sem Records</p>
+                <div className="flex flex-col items-center justify-center gap-2 py-10 bg-[#f8fafd] border border-dashed border-[#e5e7eb] rounded-[12px]">
+                  <MenuBookOutlinedIcon sx={{ fontSize: 28, color: "#c2c8d4" }} />
+                  <p className="text-sm text-gray-400">No Term / Sem Records</p>
+                </div>
               )}
             </div>
 
@@ -1009,31 +1065,34 @@ const Studentdetails = () => {
                   {/* <div className='text-white  bg-gradient-to-b from-[#144196] to-[#061530] text-[12px] px-[40px] p-2 rounded-lg'>Make Absent</div> */}
                 </div>
                 {totalcount && (
-                  <div className="grid grid-cols-2 lg:grid-cols-3 md:grid-cols-2 gap-2">
-                    <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5">
-                      <p className="text-[#d92d20] text-[11px]">
-                        No Of Days Absents this month
+                  <div className="grid grid-cols-2 lg:grid-cols-3 md:grid-cols-2 gap-3 mt-5">
+                    <div className="bg-[#fdecec] border border-[#fbdada] rounded-[12px] px-[18px] py-[14px]">
+                      <EventBusyOutlinedIcon sx={{ fontSize: 20, color: "#d92d20" }} />
+                      <p className="text-[#d92d20] text-[11px] mt-1">
+                        Absents this month
                       </p>
-                      <p className="text-[#d92d20] text-[28px] font-[600]">
+                      <p className="text-[#d92d20] text-[26px] font-[700]">
                         {totalcount?.total?.currentMonth || 0}
                       </p>
                     </div>
-                    <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5 ">
-                      <p className="text-[#d92d20] text-[12px]">
-                        No Of Days Absents last month
+                    <div className="bg-[#fdecec] border border-[#fbdada] rounded-[12px] px-[18px] py-[14px]">
+                      <EventBusyOutlinedIcon sx={{ fontSize: 20, color: "#d92d20" }} />
+                      <p className="text-[#d92d20] text-[11px] mt-1">
+                        Absents last month
                       </p>
-                      <p className="text-[#d92d20] text-[28px] font-[600]">
+                      <p className="text-[#d92d20] text-[26px] font-[700]">
                         {totalcount?.total?.prevMonth || 0}
                       </p>
                     </div>
-                    <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[10px] mt-5 ">
-                      <p className="text-[#d92d20] text-[12px]">
+                    <div className="bg-[#e9f7ef] border border-[#d3f0de] rounded-[12px] px-[18px] py-[14px]">
+                      <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: "#12805c" }} />
+                      <p className="text-[#12805c] text-[11px] mt-1">
                         Attendance Rate
                       </p>
-                      <p className="text-[#d92d20] text-[12px]">
+                      <p className="text-[#6b7280] text-[11px]">
                         Present Days : {Studentattendancerate?.presentDays || 0}
                       </p>
-                      <p className="text-[#d92d20] text-[28px] font-[600] ">
+                      <p className="text-[#12805c] text-[26px] font-[700]">
                         {Studentattendancerate?.attendanceRate || 0}
                       </p>
                     </div>
@@ -1123,27 +1182,31 @@ const Studentdetails = () => {
                 <div className="bg-white border border-[#eef0f5] px-[20px] py-[10px] rounded-[12px] ">
                   <h4 className="text-[16px] font-semibold text-[#123d84]">Fee Details</h4>
                   <div className="bg-[#f8fafd] border border-[#eef0f5] rounded-[12px] px-[20px] py-[15px] my-5">
-                    <div className="grid grid-cols-4 text-[13px] font-semibold text-[#123d84] border-b border-[#f0f1f5] pb-2">
+                    <div className="grid grid-cols-5 text-[13px] font-semibold text-[#123d84] border-b border-[#f0f1f5] pb-2">
                       <div>Semester</div>
                       <div className="text-center">Fee</div>
                       <div className="text-center">Paid</div>
+                      <div className="text-center">Discount</div>
                       <div className="text-center">Pending</div>
                     </div>
 
                     {feeDetails.map((item) => (
                       <div
                         key={item._id}
-                        className="grid grid-cols-4 text-[13px] py-3 border-b border-[#f0f1f5] items-center"
+                        className="grid grid-cols-5 text-[13px] py-3 border-b border-[#f0f1f5] items-center"
                       >
                         <div>Semester {item.noOfsem}</div>
                         <div className="text-center">₹{item.semFee}</div>
                         <div className="text-center">₹{item.paidAmount}</div>
+                        <div className="text-center text-[#12805c]">
+                          {item.discountCredited ? `₹${item.discountCredited}` : "-"}
+                        </div>
                         <div className="text-center">₹{item.pendingAmount}</div>
                       </div>
                     ))}
 
                     {/* Total */}
-                    <div className="grid grid-cols-4 text-[13px] font-semibold py-3 items-center">
+                    <div className="grid grid-cols-5 text-[13px] font-semibold py-3 items-center">
                       <div>Total</div>
 
                       <div className="text-center">
@@ -1155,6 +1218,14 @@ const Studentdetails = () => {
                         ₹
                         {feeDetails.reduce(
                           (sum, item) => sum + item.paidAmount,
+                          0,
+                        )}
+                      </div>
+
+                      <div className="text-center text-[#12805c]">
+                        ₹
+                        {feeDetails.reduce(
+                          (sum, item) => sum + (item.discountCredited || 0),
                           0,
                         )}
                       </div>
@@ -1336,144 +1407,238 @@ const Studentdetails = () => {
         isOpen={termModal}
         onRequestClose={() => setTermModal(false)}
         style={{
-          overlay: { backgroundColor: "rgba(21, 21, 21, 0.6)", zIndex: 1000 },
-          content: {
+          overlay: {
             position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "min(600px, 94vw)",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            background: "rgba(21, 21, 21, 0.6)",
+          },
+          content: {
+            position: "relative",
+            inset: "auto",
+            width: "100%",
+            maxWidth: "600px",
             maxHeight: "90vh",
             margin: 0,
             borderRadius: "12px",
-            padding: "24px",
-            overflow: "auto",
-            boxShadow: "0 20px 45px rgba(15, 27, 51, 0.25)",
+            padding: 0,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 12px 34px rgba(17, 24, 39, 0.24)",
             fontFamily: '"Poppins", sans-serif',
           },
         }}
       >
-        <h3 className="text-lg font-semibold mb-6 text-[#123d84]">
-          {editMode ? "Edit Term / Sem Detail" : "Add Term / Sem Detail"}
-        </h3>
+        {/* ================= Header (natural size, never shrinks) ================= */}
+        <div className="flex-shrink-0 flex items-center justify-between gap-4 px-5 py-5 border-b border-[#f0f1f5]">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#e8effc] text-[#123d84] flex-shrink-0">
+              <SchoolIcon sx={{ fontSize: 20 }} />
+            </span>
+            <h3 className="text-[17px] font-semibold text-[#111827]">
+              {editMode ? "Edit Term / Sem Detail" : "Add Term / Sem Detail"}
+            </h3>
+          </div>
 
-        {/* ================= Semester Dropdown ================= */}
-        <div className="mb-5">
-          <label className="text-sm font-medium block mb-1">Semester</label>
-
-          <select
-            value={sem}
-            onChange={(e) => handleSemesterChange(e)}
-            className="w-full border border-[#e5e7eb] rounded-[10px] p-2.5 bg-white focus:outline-none focus:border-[#123d84]"
-            disabled={editMode}
-            style={{ cursor: editMode ? "not-allowed" : "pointer" }}
-          >
-            {/* <option value="">Select Semester</option> */}
-            <option value="sem1">Semester 1</option>
-            <option value="sem2">Semester 2</option>
-          </select>
-        </div>
-
-        {/* ================= Term / Sem Dropdown ================= */}
-        <div className="mb-5">
-          <label className="text-sm font-medium block mb-1">Term / Sem</label>
-
-          <select
-            className="w-full border border-[#e5e7eb] rounded-[10px] p-2.5 bg-white focus:outline-none focus:border-[#123d84]"
-            value={Academic}
-            onChange={(e) => setAcademic(e.target.value)}
-            disabled={editMode || allAcademicsUsed}
-            style={{
-              cursor: editMode || allAcademicsUsed ? "not-allowed" : "pointer",
-              // backgroundColor: !editMode || allAcademicsUsed ? "#f3f4f6" : "white",
+          <button
+            type="button"
+            aria-label="Close"
+            className="flex items-center justify-center w-[30px] h-[30px] rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors"
+            onClick={() => {
+              setTermModal(false);
+              setEditMode(false);
+              setAcademic("");
+              setMarks([]);
+              setSubjects([]);
+              setFormError("");
+              setSem("sem1");
             }}
           >
-            <option value="">Select Term / Sem</option>
-
-            <option
-              value="Term1"
-              disabled={!editMode && usedAcademicsForSemester.includes("Term1")}
-            >
-              Term 1
-            </option>
-
-            <option
-              value="Term2"
-              disabled={!editMode && usedAcademicsForSemester.includes("Term2")}
-            >
-              Term 2
-            </option>
-
-            <option
-              value="Semester"
-              disabled={
-                !editMode && usedAcademicsForSemester.includes("Semester")
-              }
-            >
-              Semester
-            </option>
-          </select>
-
-          {/* Helper Messages */}
-          {!editMode && allAcademicsUsed && (
-            <p className="text-xs text-red-500 mt-1">
-              All Term / Semester records are already added for this semester.
-            </p>
-          )}
+            <CloseOutlinedIcon sx={{ fontSize: 20 }} />
+          </button>
         </div>
 
-        {/* ================= Marks Section (UNCHANGED) ================= */}
-        <div className="mb-5">
-          <label className="text-sm font-medium block mb-2">Marks</label>
+        {/* ================= Body =================
+            flex: 1 1 0% is safe here because the modal is centered as an
+            in-flow flex child of the overlay (align-items/justify-content),
+            not an absolutely/fixed-positioned box sized via shrink-to-fit -
+            so it sizes to content when there's room (few subjects -> no
+            scroll) and only compresses + scrolls once content exceeds
+            maxHeight (many subjects -> scrolls internally). */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5">
+          {/* ================= Semester (radio) ================= */}
+          <div className="mb-4">
+            <label className="text-[13px] font-medium text-[#374151] block mb-1.5">
+              Semester<span className="text-[#d92d20]"> *</span>
+            </label>
 
-          {subjectsLoading ? (
-            <p className="text-sm text-gray-500">Loading subjects...</p>
-          ) : subjects.length === 0 ? (
-            <p className="text-sm text-red-500">No subjects found</p>
-          ) : (
-            subjects.map((sub, index) => (
-              <div key={sub.subjectCode} className=" mb-4">
-                <div className="flex flex-wrap gap-3 items-center mb-2">
-                  <div className="w-1/10 text-sm font-medium">
-                    {sub.subjectCode}
-                  </div>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 px-3.5 py-2.5 border border-[#e5e7eb] rounded-[10px]">
+              {[
+                { value: "sem1", label: "Semester 1" },
+                { value: "sem2", label: "Semester 2" },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-1.5 text-[13.5px] text-[#1f2937] ${
+                    editMode ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="term-sem-semester"
+                    checked={sem === option.value}
+                    disabled={editMode}
+                    onChange={() => handleSemesterChange({ target: { value: option.value } })}
+                    className="accent-[#123d84] cursor-pointer"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </div>
 
-                  <div className="w-1/8 text-sm">{sub.subjectName}</div>
+          {/* ================= Term / Sem Dropdown ================= */}
+          <div className="mb-4">
+            <label className="text-[13px] font-medium text-[#374151] block mb-1.5">
+              Term / Sem<span className="text-[#d92d20]"> *</span>
+            </label>
 
-                  <div className="w-1/4">
-                    <input
-                      type="text"
-                      value={marks[index]?.mark ?? ""}
-                      onChange={(e) => {
-                        let value = e.target.value.toUpperCase();
+            <select
+              className="w-full border border-[#e5e7eb] rounded-[10px] py-[11px] px-3.5 text-sm text-[#1f2937] bg-white focus:outline-none focus:border-[#123d84] transition-colors"
+              value={Academic}
+              onChange={(e) => setAcademic(e.target.value)}
+              disabled={editMode || allAcademicsUsed}
+              style={{
+                cursor: editMode || allAcademicsUsed ? "not-allowed" : "pointer",
+                // backgroundColor: !editMode || allAcademicsUsed ? "#f3f4f6" : "white",
+              }}
+            >
+              <option value="">Select Term / Sem</option>
 
-                        if (value === "AA") {
-                          handleMarkChange(index, "AA");
-                          return;
-                        }
+              <option
+                value="Term1"
+                disabled={!editMode && usedAcademicsForSemester.includes("Term1")}
+              >
+                Term 1
+              </option>
 
-                        if (/^\d*$/.test(value)) {
-                          handleMarkChange(index, value);
-                          return;
-                        }
-                      }}
-                      className="border border-[#e5e7eb] p-2 rounded-[10px] w-full focus:outline-none focus:border-[#123d84]"
-                    />
-                  </div>
-                  <div className="w-1/2 ">
-                    {/* <label className="text-xs font-medium">
-                    Revaluation Paper (PDF)
-                  </label> */}
+              <option
+                value="Term2"
+                disabled={!editMode && usedAcademicsForSemester.includes("Term2")}
+              >
+                Term 2
+              </option>
+
+              <option
+                value="Semester"
+                disabled={
+                  !editMode && usedAcademicsForSemester.includes("Semester")
+                }
+              >
+                Semester
+              </option>
+            </select>
+
+            {/* Helper Messages */}
+            {!editMode && allAcademicsUsed && (
+              <p className="text-xs text-red-500 mt-1">
+                All Term / Semester records are already added for this semester.
+              </p>
+            )}
+          </div>
+
+          {/* ================= Marks Section ================= */}
+          <div className="mb-2">
+            <label className="text-[13px] font-medium text-[#374151] block mb-1.5">
+              Marks<span className="text-[#d92d20]"> *</span>
+            </label>
+
+            {subjectsLoading ? (
+              <p className="text-sm text-gray-500">Loading subjects...</p>
+            ) : subjects.length === 0 ? (
+              <p className="text-sm text-red-500">No subjects found</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="hidden sm:grid grid-cols-[24px_minmax(0,1fr)_108px_minmax(0,1fr)] gap-3 px-3 py-2.5 rounded-[10px] bg-[#eef2fb] text-[13px] font-semibold text-[#123d84]">
+                  <span></span>
+                  <span className="flex items-center gap-1.5">
+                    <MenuBookIcon sx={{ fontSize: 16 }} /> Subject
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <StarIcon sx={{ fontSize: 16 }} /> Marks
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <UploadFileOutlinedIcon sx={{ fontSize: 16 }} /> Revaluation (PDF)
+                  </span>
+                </div>
+
+                {subjects.map((sub, index) => (
+                  <div
+                    key={sub.subjectCode}
+                    className="grid grid-cols-[24px_minmax(0,1fr)_108px_minmax(0,1fr)] gap-3 items-center rounded-[10px] border border-[#e5e7eb] px-3 py-2.5"
+                  >
+                    <span className="text-sm font-medium text-[#6b7280]">
+                      {index + 1}.
+                    </span>
+
+                    <span
+                      className="text-sm font-medium text-[#111827] truncate"
+                      title={sub.subjectName}
+                    >
+                      {sub.subjectName}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={marks[index]?.mark ?? ""}
+                        title={`Out of ${sub.totalMarks ?? 100}`}
+                        onChange={(e) => {
+                          let value = e.target.value.toUpperCase();
+
+                          if (value === "AA") {
+                            handleMarkChange(index, "AA");
+                            return;
+                          }
+
+                          const maxMarks = Number(sub.totalMarks) || 100;
+
+                          // Reject any keystroke that would push the value past
+                          // this subject's total marks, instead of only
+                          // catching it at save time.
+                          if (/^\d*$/.test(value) && (value === "" || Number(value) <= maxMarks)) {
+                            handleMarkChange(index, value);
+                            return;
+                          }
+                        }}
+                        className="border border-[#e5e7eb] p-2 rounded-[10px] w-full min-w-0 text-sm text-[#1f2937] focus:outline-none focus:border-[#123d84] transition-colors"
+                      />
+                      <span className="text-xs text-[#9ca3af] flex-shrink-0">
+                        / {sub.totalMarks ?? 100}
+                      </span>
+                    </div>
 
                     {marks[index]?.revaluationUrl ? (
-                      <div className=" bg-gray-100 p-2 rounded mt-1">
-                        <span className="text-xs truncate">
-                          {marks[index].revaluationFileName}
+                      <div className="flex items-center justify-between gap-2 bg-gray-100 px-2.5 py-2 rounded-[10px] min-w-0">
+                        <span className="flex items-center gap-1.5 text-xs truncate">
+                          <DescriptionOutlinedIcon
+                            sx={{ fontSize: 16 }}
+                            className="text-[#123d84] flex-shrink-0"
+                          />
+                          <span className="truncate">
+                            {marks[index].revaluationFileName}
+                          </span>
                         </span>
 
                         <button
                           type="button"
-                          className="text-red-500 text-xs cursor-pointer ml-2"
+                          title="Remove file"
+                          className="text-red-500 cursor-pointer flex-shrink-0 flex items-center"
                           onClick={() => {
                             const updated = [...marks];
                             updated[index].revaluationUrl = "";
@@ -1481,68 +1646,90 @@ const Studentdetails = () => {
                             setMarks(updated);
                           }}
                         >
-                          Remove
+                          <CloseOutlinedIcon sx={{ fontSize: 16 }} />
                         </button>
                       </div>
+                    ) : revaluationUploadingIndex === index ? (
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></span>
+                        Uploading...
+                      </div>
                     ) : (
-                      <input
-                        type="file"
-                        accept="application/pdf"
-                        onChange={(e) => handleRevaluationUpload(index, e)}
-                        className="border py-3 px-2 rounded w-full  text-xs cursor-pointer"
-                      />
+                      <label
+                        htmlFor={`revaluation-upload-${sub.subjectCode}`}
+                        title="Upload revaluation PDF"
+                        className="flex items-center gap-1.5 border border-dashed border-[#c7cede] rounded-[10px] py-1.5 px-2.5 w-fit text-xs text-[#123d84] cursor-pointer hover:border-[#123d84] hover:bg-[#f4f7fd] transition-colors"
+                      >
+                        <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />
+                        Upload PDF
+                        <input
+                          id={`revaluation-upload-${sub.subjectCode}`}
+                          type="file"
+                          accept="application/pdf"
+                          onChange={(e) => handleRevaluationUpload(index, e)}
+                          disabled={revaluationUploadingIndex !== null}
+                          className="hidden"
+                        />
+                      </label>
                     )}
                   </div>
-                </div>
-
-                {/* Revaluation Upload */}
+                ))}
               </div>
-            ))
-          )}
-        </div>
-        {formError && <p className="text-red-500 text-sm mb-3">{formError}</p>}
-
-        <div className="mt-4 text-sm font-medium">
-          Total: {totalMarks} <br />
-          Average: {avgMarks}
-        </div>
-
-        {/* ================= Buttons ================= */}
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            className="px-4 py-2.5 border border-[#e5e7eb] rounded-[10px] text-[#374151] hover:border-[#123d84] hover:text-[#123d84] transition-colors"
-            onClick={() => {
-              setTermModal(false); // close modal
-              setEditMode(false); // exit edit mode
-              setAcademic(""); // reset academic
-              setMarks([]); // clear marks
-              setSubjects([]); // clear subjects
-              setFormError("");
-              setSem("sem1"); // clear validation error
-            }}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSavePerformance}
-            disabled={performanceLoading}
-            className={`px-5 py-2.5 rounded-[10px] text-white flex items-center justify-center gap-2
-    ${performanceLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-b from-[#144196] to-[#0b2456]"}
-  `}
-          >
-            {performanceLoading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                {editMode ? "Updating..." : "Saving..."}
-              </>
-            ) : editMode ? (
-              "Update"
-            ) : (
-              "Save"
             )}
-          </button>
+          </div>
+        </div>
+
+        {/* ================= Footer (natural size, never shrinks) ================= */}
+        <div className="flex-shrink-0 px-5 py-4 border-t border-[#f0f1f5]">
+          {formError && <p className="text-[#d92d20] text-xs mb-2.5">{formError}</p>}
+
+          <div className="flex items-center gap-3 mb-3 px-3.5 py-3 rounded-[10px] bg-[#f6f7fb]">
+            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#123d84] text-white flex-shrink-0">
+              <BarChartIcon sx={{ fontSize: 18 }} />
+            </span>
+            <div className="text-[13px] text-[#374151]">
+              Total: <span className="font-bold text-[#123d84]">{totalMarks} / {maxMarksSum}</span>
+              &nbsp;|&nbsp; Average: <span className="font-bold text-[#123d84]">{avgMarks}%</span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+                className="px-[22px] py-[11px] border border-[#e5e7eb] rounded-[10px] bg-white text-sm text-[#374151] hover:bg-[#f3f4f6] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={performanceLoading}
+                onClick={() => {
+                  setTermModal(false); // close modal
+                  setEditMode(false); // exit edit mode
+                  setAcademic(""); // reset academic
+                  setMarks([]); // clear marks
+                  setSubjects([]); // clear subjects
+                  setFormError("");
+                  setSem("sem1"); // clear validation error
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSavePerformance}
+                disabled={performanceLoading}
+                className={`px-[26px] py-[11px] rounded-[10px] text-sm font-medium text-white flex items-center justify-center gap-2 transition-opacity
+    ${performanceLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-b from-[#144196] to-[#0b2456] hover:opacity-90"}
+  `}
+              >
+                {performanceLoading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    {editMode ? "Updating..." : "Saving..."}
+                  </>
+                ) : editMode ? (
+                  "Update"
+                ) : (
+                  "Save"
+                )}
+              </button>
+          </div>
         </div>
       </Modal>
       <Modal

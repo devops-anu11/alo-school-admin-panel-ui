@@ -108,12 +108,12 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
   };
 
   return (
-    <div className="w-full">
-      <h2 className="text-xl sm:text-2xl font-semibold text-[#123d84] mb-5 sm:mb-6 pb-4 border-b border-[#f0f1f5]">
+    <div className="w-full h-full flex flex-col">
+      <h2 className="flex-shrink-0 text-xl sm:text-2xl font-semibold text-[#123d84] pb-4 border-b border-[#f0f1f5]">
         {isEdit ? "Update Subjects" : "Add Subjects"}
       </h2>
 
-      <div className="space-y-3 sm:space-y-4 max-h-[300px] sm:max-h-[350px] overflow-y-auto pr-1 sm:pr-2">
+      <div className="flex-1 min-h-0 overflow-y-auto pt-5 sm:pt-6 pr-1 sm:pr-2 space-y-3 sm:space-y-4">
         {subjects.map((sub, index) => (
           <div key={index} className="flex flex-col sm:flex-row gap-3 items-start">
             <div className="w-full sm:w-1/3">
@@ -160,17 +160,21 @@ const Subjectpopup = ({ closeModal, courseId, batchId, semester, editData }) => 
             )}
           </div>
         ))}
+
+        <button
+          onClick={addRow}
+          className="flex items-center gap-2 text-[#123d84] hover:text-[#0b2456] text-sm font-medium mt-1 transition-colors"
+        >
+          <PlusIcon className="w-4 h-4" /> Add Another Subject
+        </button>
       </div>
 
-      <button
-        onClick={addRow}
-        className="flex items-center gap-2 text-[#123d84] hover:text-[#0b2456] text-sm font-medium mt-4 transition-colors"
-      >
-        <PlusIcon className="w-4 h-4" /> Add Another Subject
-      </button>
-
-      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8 pt-4 border-t border-[#f0f1f5]">
-        <button onClick={closeModal} className="px-[22px] py-[11px] w-full sm:w-auto border border-[#e5e7eb] rounded-[10px] text-[#374151] hover:border-[#123d84] hover:text-[#123d84] transition-colors">
+      <div className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-0 pt-4 border-t border-[#f0f1f5]">
+        <button
+          onClick={closeModal}
+          disabled={loading}
+          className="px-[22px] py-[11px] w-full sm:w-auto border border-[#e5e7eb] rounded-[10px] text-[#374151] hover:border-[#123d84] hover:text-[#123d84] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
           Cancel
         </button>
         <button

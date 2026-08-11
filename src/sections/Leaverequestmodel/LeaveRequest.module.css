@@ -137,18 +137,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fdecec;
   color: #d92d20;
   font-size: 18px;
-  transition: all 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 .clear:hover {
-  background: #fdecec;
-  border-color: #fdecec;
+  color: #fff;
+  background: #d92d20;
 }
 
 .table_container {
@@ -210,6 +213,38 @@
 .green {
   color: #12805c;
   font-weight: 600;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profileName {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.profileMeta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.stackCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stackPrimary {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stackSecondary {
+  font-size: 12px;
+  color: #6b7280;
 }
 .header_container1 {
   display: flex;
@@ -297,23 +332,17 @@
 .leavereq {
   width: min(720px, 92vw);
   max-height: 90vh;
-  overflow-y: auto;
   background-color: white;
   display: flex;
   flex-direction: column;
   border-radius: 12px;
-
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.leavereq::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 
 .reqhead {
   width: 100%;
   align-self: stretch;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -327,6 +356,14 @@
 .reqhead p {
   margin: 0;
 }
+
+.reasonHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .closeIcon {
   font-size: 22px;
   cursor: pointer;
@@ -338,12 +375,21 @@
 }
 .div {
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 25px;
   align-self: center;
   display: flex;
   flex-direction: column;
   gap: 22px;
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.div::-webkit-scrollbar {
+  display: none;
 }
 .profile {
   font-size: 13px;
@@ -468,11 +514,13 @@
   border-color: #123d84;
 }
 .gridsss {
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 25px;
   border-top: 1px solid #f0f1f5;
+  background: #fff;
 }
 
 /* Reject Button - White with blue border and text */
@@ -511,6 +559,12 @@
 
 .acceptBtn:hover {
   filter: brightness(1.1);
+}
+
+.rejectBtn:disabled,
+.acceptBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

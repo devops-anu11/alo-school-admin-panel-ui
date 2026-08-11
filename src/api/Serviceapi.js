@@ -266,9 +266,9 @@ export const createFee = (formdata) => {
   return apiService.post(`/fee/create`, formdata);
 };
 
-export const calcfee = (courseId, batchId, semester, searchText) => {
+export const calcfee = (courseId, batchId, semester, searchText, studentStatus = "active") => {
   return apiService.get(
-    `/feeBalance/dasboard?courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}`,
+    `/feeBalance/dasboard?courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}`,
   );
 };
 
@@ -347,6 +347,15 @@ export const getNotification = () => {
 
 export const updateNotification = (id, read) => {
   return apiService.put(`/notification/${id}`, { isRead: read });
+};
+
+export const markAllNotificationsRead = (notificationType = "admin", category) => {
+  const categoryParam = category ? `&category=${category}` : "";
+  return apiService.put(`/notification/mark-all-read?notificationType=${notificationType}${categoryParam}`);
+};
+
+export const getNotificationCategoryCounts = (notificationType = "admin") => {
+  return apiService.get(`/notification/category-counts?notificationType=${notificationType}`);
 };
 
 // enquiry
@@ -659,4 +668,36 @@ export const updateTrainer = (id, payload) => {
 
 export const deleteTrainer = (id) => {
   return apiService.delete(`/admin/trainer/${id}`);
+};
+
+// Placement Management
+export const getPlacements = (
+  limit,
+  offset,
+  value = "",
+  status = "",
+  courseId = "",
+  batchId = "",
+) => {
+  return apiService.get(
+    `/placement?limit=${limit}&page=${offset}&value=${value}${status ? `&status=${status}` : ""}${courseId ? `&courseId=${courseId}` : ""}${batchId ? `&batchId=${batchId}` : ""}`,
+  );
+};
+
+export const addPlacement = (payload) => {
+  return apiService.post(`/placement`, payload);
+};
+
+export const updatePlacement = (id, payload) => {
+  return apiService.put(`/placement/${id}`, payload);
+};
+
+export const deletePlacement = (id) => {
+  return apiService.delete(`/placement/${id}`);
+};
+
+export const excelPlacements = (value = "", status = "", courseId = "", batchId = "") => {
+  return apiService.get(
+    `/placement/excel?value=${value}${status ? `&status=${status}` : ""}${courseId ? `&courseId=${courseId}` : ""}${batchId ? `&batchId=${batchId}` : ""}`,
+  );
 };

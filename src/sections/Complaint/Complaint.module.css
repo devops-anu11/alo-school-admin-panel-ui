@@ -130,6 +130,12 @@
   transition: opacity 0.2s ease, transform 0.15s ease;
 }
 
+.acceptBtn:disabled,
+.rejectBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .acceptBtn {
   background: #12805c;
 }
@@ -149,10 +155,15 @@
 /* ================= NO DATA ================= */
 
 .noData {
-  padding: 50px;
+  padding: 50px 20px;
   text-align: center;
-  font-size: 15px;
   color: #9ca3af;
+}
+
+.noDataText {
+  margin: 10px 0 0;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 /* ================= PAGINATION ================= */

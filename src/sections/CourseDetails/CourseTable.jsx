@@ -11,11 +11,11 @@ const CourseTable = ({ courses, loading, onCreateCourse, onEditCourse }) => {
   const openEdit = (course) => setFormState({ open: true, course });
   const closeForm = () => setFormState({ open: false, course: null });
 
-  const handleSubmit = (payload) => {
+  const handleSubmit = async (payload) => {
     if (formState.course) {
-      onEditCourse(formState.course.id, payload);
+      await onEditCourse(formState.course.id, payload);
     } else {
-      onCreateCourse(payload);
+      await onCreateCourse(payload);
     }
   };
 

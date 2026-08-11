@@ -3,8 +3,8 @@ import { Tabs } from 'antd';
 import { getEnquiry } from '../../../api/Serviceapi';
 import Pagination from '@mui/material/Pagination';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import nodata from '../../../assets/nodata.jpg'
 import Loader from '../../../component/loader/Loader';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import '../../../App.css'
 
 const theme = createTheme({
@@ -113,10 +113,11 @@ const Enquiry = () => {
                                                     ))
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan="10" className="text-center py-16 text-sm text-[#9ca3af] font-medium">
-                                                            <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
-                                                            <p>No Data Found</p>
-                                                        </td>                                            </tr>
+                                                        <td colSpan="10" className="text-center py-16">
+                                                            <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                                                            <p className="text-sm text-[#9ca3af] font-medium mt-2">No Data Found</p>
+                                                        </td>
+                                                    </tr>
                                                 )}
 
                                             </tbody>
@@ -169,7 +170,10 @@ const Enquiry = () => {
                                                     ))
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan="3" className="text-center py-10 text-sm text-[#9ca3af]">No records found</td>
+                                                        <td colSpan="3" className="text-center py-10">
+                                                            <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                                                            <p className="text-sm text-[#9ca3af] font-medium mt-2">No records found</p>
+                                                        </td>
                                                     </tr>
                                                 )}
 
@@ -230,7 +234,10 @@ const Enquiry = () => {
                                                     ))
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan="3" className="text-center py-10 text-sm text-[#9ca3af]">No records found</td>
+                                                        <td colSpan="3" className="text-center py-10">
+                                                            <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                                                            <p className="text-sm text-[#9ca3af] font-medium mt-2">No records found</p>
+                                                        </td>
                                                     </tr>
                                                 )}
 

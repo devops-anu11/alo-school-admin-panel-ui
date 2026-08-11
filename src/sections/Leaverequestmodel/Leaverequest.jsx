@@ -21,7 +21,7 @@ import Loader from '../../component/loader/Loader';
 import { useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-solid-svg-icons";
-import { IoIosCloseCircle } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from 'react-toastify';
 import { FaEye } from "react-icons/fa";
 
@@ -60,7 +60,10 @@ const LeaveRequest = () => {
   const [totallist, settotal] = useState(0);
   const [totalpages, setpage] = useState(0);
   const [offset, setoffset] = useState(1);
-  const [status, setStatus] = useState('')
+  // Defaults to "Created" (pending) so the page opens on requests awaiting
+  // action rather than the full history; "Clear filters" still resets this
+  // to '' (all statuses) since that's an explicit user choice.
+  const [status, setStatus] = useState('Created')
   const [update, setUpdate] = useState(false)
   const [data, setData] = useState([])
   const [updatestatus, setUpdatestatus] = useState('')
@@ -76,12 +79,6 @@ const LeaveRequest = () => {
   // Calculate visible range
   const startIndex = (offset - 1) * limit + 1;
   const endIndex = Math.min(offset * limit, totallist);
-
-  // useEffect(() => {
-  //   const today = new Date();
-  //   const formattedDate = today.toISOString().split("T")[0]; // YYYY-MM-DD
-  //   setDate(formattedDate);
-  // }, []);
 
   useEffect(() => {
     const totalPages = Math.ceil(totallist / limit);
@@ -193,18 +190,14 @@ const LeaveRequest = () => {
 
   // Batch drives the filter now — a batch's own `courses` array supplies
   // the course dropdown's options, so no separate per-batch fetch is needed.
+  // Defaults to "All" batches - unlike other pages, this one doesn't
+  // pre-select the primary batch, since leave requests should be visible
+  // across every batch by default.
   let fetchBatches = async () => {
     try {
       const res = await getCourseBatch();
       const list = Array.isArray(res?.data?.data) ? res.data.data : [];
       setBatches(list);
-
-      // Default the filter to the primary batch on first load only — don't
-      // override a batch selection coming from the URL.
-      if (!batchId && !batchIds) {
-        const primary = list.find((b) => b.isPrimary);
-        if (primary) setBatchId(primary._id);
-      }
     } catch (error) {
       console.error("error", error.response?.data || error);
     }
@@ -588,7 +581,7 @@ const [leaveReson,setLeaveReason]= useState('')
               <div>
                 {(status?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim() || leaveType?.toString().trim() || searchText || date) && (
                   <button className={styles.clear} onClick={handlefilterSearch}>
-                    <IoIosCloseCircle />
+                    <IoClose />
                   </button>
                 )}
 
@@ -602,20 +595,17 @@ const [leaveReson,setLeaveReason]= useState('')
           <div className={styles.table_container}>
             <table className={styles.table}>
               <tr className={styles.tr}>
-                <th>Name</th>
-                <th>ID No</th>
-                <th>Mobile</th>
-                <th>Leave Type</th>
-
-                <th>Duration</th>
-                <th>From</th>
-                <th>To</th>
+                <th>Profile Info</th>
+                <th>Batch &amp; Course</th>
+                <th>Leave Type &amp; Duration</th>
+                <th>From &amp; To</th>
+                <th>Submitted Date</th>
                 <th>Reason</th>
                 <th>Status</th>
               </tr>
               {loading ?
                 <tr>
-                  <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold border-0">
+                  <td colSpan="7" className="text-center py-20 text-lg text-gray-500 font-semibold border-0">
                     <Loader />
                   </td>
                 </tr>
@@ -624,26 +614,45 @@ const [leaveReson,setLeaveReason]= useState('')
                     Array.isArray(list) && list.length > 0 ?
                       list.map((item) => (
                         <tr key={item._id} className={styles.trtd}>
-                          <td style={{ textTransform: 'capitalize' }}>{item?.userDetails?.name}</td>
-                          <td>{item?.userDetails?.studentId}</td>
-                          <td>{item?.userDetails?.mobileNo}</td>
-                          <td style={{ textTransform: 'capitalize' }}>{item?.leaveType}</td>
-
-                          {item.isPermission || item?.isEarlyPermission ?
-                            <td>{formatTimehours(item?.permissionTime)}</td> :
-                            <td>{item?.noOfDays} {item?.noOfDays > 1 ? 'days' : 'day'}</td>
-
-                          }
-                          {item.isPermission || item?.isEarlyPermission ?
-                            <td>{formatTime(item?.startTime)}</td>
-                            :
-                            <td>{item?.fromDate?.split("T")[0]}</td>
-                          }
-                          {item.isPermission || item?.isEarlyPermission ?
-                            <td>{formatTime(item?.endTime)}</td>
-                            :
-                            <td>{item?.toDate?.split("T")[0]}</td>
-                          }
+                          <td style={{ textTransform: 'capitalize' }}>
+                            <div className={styles.profileInfo}>
+                              <span className={styles.profileName}>{item?.userDetails?.name}</span>
+                              <span className={styles.profileMeta}>{item?.userDetails?.studentId}</span>
+                              <span className={styles.profileMeta} style={{ textTransform: 'none' }}>{item?.userDetails?.mobileNo}</span>
+                            </div>
+                          </td>
+                          <td style={{ textTransform: 'capitalize' }}>
+                            <div className={styles.stackCell}>
+                              <span className={styles.stackPrimary}>{item?.batchDetails?.batchName || '-'}</span>
+                              <span className={styles.stackSecondary}>{item?.courseDetails?.courseName || '-'}</span>
+                            </div>
+                          </td>
+                          <td style={{ textTransform: 'capitalize' }}>
+                            <div className={styles.stackCell}>
+                              <span className={styles.stackPrimary}>{item?.leaveType}</span>
+                              <span className={styles.stackSecondary} style={{ textTransform: 'none' }}>
+                                {item.isPermission || item?.isEarlyPermission
+                                  ? formatTimehours(item?.permissionTime)
+                                  : `${item?.noOfDays} ${item?.noOfDays > 1 ? 'days' : 'day'}`}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className={styles.stackCell} style={{ textTransform: 'none' }}>
+                              <span className={styles.stackPrimary}>
+                                {item.isPermission || item?.isEarlyPermission
+                                  ? formatTime(item?.startTime)
+                                  : item?.fromDate?.split("T")[0]}
+                              </span>
+                              <span className={styles.stackSecondary}>
+                                {'→ '}
+                                {item.isPermission || item?.isEarlyPermission
+                                  ? formatTime(item?.endTime)
+                                  : item?.toDate?.split("T")[0]}
+                              </span>
+                            </div>
+                          </td>
+                          <td>{item?.createdAt?.split("T")[0]}</td>
                           <td onClick={() => handleReasonModel(item._id)} style={{cursor:'pointer'}}><FaEye />
 </td>
 
@@ -660,7 +669,7 @@ const [leaveReson,setLeaveReason]= useState('')
                       ))
                       :
                       <tr >
-                        <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
+                        <td colSpan="7" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
                           <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
                           <p className="text-center ">No Data Found</p>
                         </td>
@@ -811,10 +820,10 @@ const [leaveReson,setLeaveReason]= useState('')
 
                 </div>
               </div>
-              <div className={styles.gridsss}>
-                <button className={styles.rejectBtn} onClick={() => handleUpdateClick(data?._id, 'Rejected', adminId, reason)}>  Reject</button>
-                <button className={styles.acceptBtn} onClick={() => handleUpdateClick(data?._id, 'Approved', adminId, reason)}>Accept</button>
-              </div>
+            </div>
+            <div className={styles.gridsss}>
+              <button className={styles.rejectBtn} onClick={() => handleUpdateClick(data?._id, 'Rejected', adminId, reason)} disabled={idloading}>{idloading ? "Rejecting..." : "Reject"}</button>
+              <button className={styles.acceptBtn} onClick={() => handleUpdateClick(data?._id, 'Approved', adminId, reason)} disabled={idloading}>{idloading ? "Accepting..." : "Accept"}</button>
             </div>
           </div>
         </div>
@@ -843,6 +852,7 @@ const [leaveReson,setLeaveReason]= useState('')
             borderRadius: '12px',
             width: 'min(500px, 92vw)',
             height: 'max-content',
+            maxHeight: '90vh',
             overflow: 'auto',
             boxShadow: '0 12px 32px rgba(15, 27, 51, 0.25)',
             border: 'none',
@@ -850,8 +860,11 @@ const [leaveReson,setLeaveReason]= useState('')
           },
         }}
       >
-        <p className='font-[600] text-[18px] text-center' style={{ color: '#123d84' }}>Reason</p>
-        <p className='my-[24px] text-center text-[#374151]' style={{textTransform:'capitalize'}}>{leaveReson}</p>
+        <div className={styles.reasonHeader}>
+          <p className='font-[600] text-[18px]' style={{ color: '#123d84', margin: 0 }}>Reason</p>
+          <MdClose className={styles.closeIcon} onClick={() => { setReasonModel(false), setLeaveReason('') }} />
+        </div>
+        <p className='mt-[18px] text-center text-[#374151]' style={{textTransform:'capitalize'}}>{leaveReson}</p>
       </Modal>
     </>
   )

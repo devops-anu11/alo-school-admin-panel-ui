@@ -10,18 +10,18 @@ import {
 } from "../../api/Serviceapi";
 import Loader from "../../component/loader/Loader";
 import { toast } from "react-toastify";
-import { FiArrowLeft, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiX, FiBookOpen, FiUsers } from "react-icons/fi";
 import dayjs from "dayjs";
 
 // Course-level drill-down: subjects as tabs, and for the active subject, a
 // single table of every roster student with their submission status.
 const TaskCourseDetail = () => {
   const { courseId } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const batchId = searchParams.get("batchId") || "";
-  const date = searchParams.get("date") || dayjs().format("YYYY-MM-DD");
+  const date = searchParams.get("date") || "";
 
   const [courseName, setCourseName] = useState("");
   const [roster, setRoster] = useState([]);
@@ -32,12 +32,39 @@ const TaskCourseDetail = () => {
   const [viewingStudent, setViewingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkSaving, setBulkSaving] = useState(false);
+  // "all" | "submitted" | "notSubmitted" - scoped to whichever subject tab
+  // is active, reset whenever the subject changes.
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     if (!courseId) return;
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, batchId, date]);
+
+  // Default to today only once, on first load - if the user later clears
+  // the filter it should stay cleared (all dates), not snap back to today.
+  useEffect(() => {
+    if (!searchParams.get("date")) {
+      const next = new URLSearchParams(searchParams);
+      next.set("date", dayjs().format("YYYY-MM-DD"));
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDateChange = (event) => {
+    const next = new URLSearchParams(searchParams);
+    if (event.target.value) next.set("date", event.target.value);
+    else next.delete("date");
+    setSearchParams(next);
+  };
+
+  const clearDateFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("date");
+    setSearchParams(next);
+  };
 
   const fetchData = async () => {
     try {
@@ -108,12 +135,20 @@ const TaskCourseDetail = () => {
     return rows.sort((a, b) => (a.student.name || "").localeCompare(b.student.name || ""));
   }, [activeGroup]);
 
-  // Selection only makes sense scoped to the subject currently on screen.
+  // Selection and the status filter only make sense scoped to the subject
+  // currently on screen.
   useEffect(() => {
     setSelectedIds(new Set());
+    setStatusFilter("all");
   }, [activeSubjectId]);
 
-  const selectableRows = activeRows.filter((row) => row.tasks.length > 0);
+  const filteredRows = useMemo(() => {
+    if (statusFilter === "submitted") return activeRows.filter((row) => row.tasks.length > 0);
+    if (statusFilter === "notSubmitted") return activeRows.filter((row) => row.tasks.length === 0);
+    return activeRows;
+  }, [activeRows, statusFilter]);
+
+  const selectableRows = filteredRows.filter((row) => row.tasks.length > 0);
   const allSelected = selectableRows.length > 0 && selectableRows.every((row) => selectedIds.has(row.student._id));
 
   const toggleRow = (studentId) =>
@@ -163,7 +198,8 @@ const TaskCourseDetail = () => {
         <div>
           <h2 className={styles.heading}>{courseName}</h2>
           <p className={styles.subheading}>
-            Subject-wise task summary · {dayjs(date).format("DD MMM YYYY")} · {roster.length} student
+            Subject-wise task summary · {date ? dayjs(date).format("DD MMM YYYY") : "All Dates"} ·{" "}
+            {roster.length} student
             {roster.length === 1 ? "" : "s"}
           </p>
         </div>
@@ -173,7 +209,12 @@ const TaskCourseDetail = () => {
         <Loader />
       ) : subjectGroups.length === 0 ? (
         <div className={styles.emptyCard}>
-          <p className={styles.noData}>No subjects assigned to this course yet.</p>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>
+              <FiBookOpen />
+            </span>
+            <p className={styles.emptyTitle}>No subjects assigned to this course yet</p>
+          </div>
         </div>
       ) : (
         <>
@@ -190,6 +231,57 @@ const TaskCourseDetail = () => {
                 </span>
               </button>
             ))}
+          </div>
+
+          <div className={styles.filterBar}>
+            <div className={styles.statusFilters}>
+              {[
+                { key: "all", label: "All", count: activeRows.length },
+                {
+                  key: "submitted",
+                  label: "Submitted",
+                  count: activeGroup?.submitted.length || 0,
+                },
+                {
+                  key: "notSubmitted",
+                  label: "Not Submitted",
+                  count: activeGroup?.notSubmitted.length || 0,
+                },
+              ].map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`${styles.statusFilterBtn} ${
+                    statusFilter === option.key ? styles.statusFilterBtnActive : ""
+                  }`}
+                  onClick={() => setStatusFilter(option.key)}
+                >
+                  {option.label} <span className={styles.statusFilterCount}>{option.count}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.dateFilterWrap}>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={date}
+                max={dayjs().format("YYYY-MM-DD")}
+                onChange={handleDateChange}
+                aria-label="Filter by date"
+              />
+              {date && (
+                <button
+                  type="button"
+                  className={styles.dateClearBtn}
+                  onClick={clearDateFilter}
+                  aria-label="Clear date filter"
+                  title="Clear date filter (show all dates)"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
           </div>
 
           {selectedIds.size > 0 && (
@@ -223,8 +315,8 @@ const TaskCourseDetail = () => {
                 </thead>
 
                 <tbody>
-                  {activeRows.length > 0 ? (
-                    activeRows.map(({ student, tasks }) => (
+                  {filteredRows.length > 0 ? (
+                    filteredRows.map(({ student, tasks }) => (
                       <tr key={student._id}>
                         <td className={styles.checkboxCell}>
                           {tasks.length > 0 && (
@@ -264,7 +356,12 @@ const TaskCourseDetail = () => {
                   ) : (
                     <tr>
                       <td colSpan={5} className={styles.noData}>
-                        No students found for this course.
+                        <div className={styles.emptyState}>
+                          <span className={styles.emptyIcon}>
+                            <FiUsers />
+                          </span>
+                          <p className={styles.emptyTitle}>No students found for this course</p>
+                        </div>
                       </td>
                     </tr>
                   )}

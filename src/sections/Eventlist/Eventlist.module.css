@@ -37,18 +37,25 @@
 .popyes {
   color: white;
   background: linear-gradient(to bottom, #144196, #0b2456);
-  width: 90px;
-  padding: 10px 0px;
+  min-width: 90px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: none;
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
   transition: opacity 0.2s ease;
 }
 
 .popyes:hover, .button button:hover {
   opacity: 0.9;
+}
+
+.popyes:disabled,
+.popno:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .popno {

@@ -23,7 +23,7 @@ import Modal from 'react-modal';
 import styles from './Studentlist.module.css'
 import nodata from '../../assets/nodata.jpg'
 import Loader from '../../component/loader/Loader';
-import { IoIosCloseCircle } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { MdOutlineFileDownload } from "react-icons/md";
@@ -470,7 +470,7 @@ const Studentlist = () => {
               <div>
                 {(activestatus?.toString().trim() || status || courseId?.toString().trim() || batchId?.toString().trim()) && (
                   <button className={styles.clear} onClick={handlefilterSearch} title="Clear filters">
-                    <IoIosCloseCircle />
+                    <IoClose />
                   </button>
                 )}
 
@@ -478,25 +478,20 @@ const Studentlist = () => {
               <div className={styles.addBtnWrap}>
                 <button onClick={() => setIsOpen(true)} className={styles.primaryBtn}><PlusIcon className='w-4 h-4' />Add Student</button>
               </div>
+              <div className={styles.addBtnWrap}>
+                <button className={styles.exportBtn} onClick={getExcel}>Export<MdOutlineFileDownload />
+                </button>
+              </div>
 
             </div>
           </div>
 
-          <div className={styles.exportRow}>
-            <button className={styles.exportBtn} onClick={getExcel}>Export<MdOutlineFileDownload />
-            </button>
-          </div>
           <div className={styles.tableCard}>
             <div className={styles.tableScroll}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Profile</th>
-                    <th>ID No</th>
-                    <th>Name</th>
-                    <th>Mobile</th>
-                    <th>Mail</th>
-                    <th>Password</th>
+                    <th>Profile Info</th>
                     <th>Course</th>
                     <th>Batch</th>
                     <th>Active</th>
@@ -507,7 +502,7 @@ const Studentlist = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="11" className="text-center py-20 text-lg text-gray-500 font-semibold">
+                      <td colSpan="7" className="text-center py-20 text-lg text-gray-500 font-semibold">
                         <Loader />
                       </td>
                     </tr>
@@ -515,21 +510,23 @@ const Studentlist = () => {
                     users.map((user) => (
                       <tr key={user._id}>
                         <td>
-                          <img
-                            src={user.profileURL || profile}
-                            alt="Profile"
-                            className={styles.avatar}
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = profile;
-                            }}
-                          />
+                          <div className={styles.profileInfo}>
+                            <img
+                              src={user.profileURL || profile}
+                              alt="Profile"
+                              className={styles.avatar}
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = profile;
+                              }}
+                            />
+                            <div>
+                              <p className={styles.cellPrimary} style={{ margin: 0 }}>{user.name}</p>
+                              <p className={styles.profileMeta}>{user.studentId}</p>
+                              <p className={styles.profileMeta}>{user.mobileNo}</p>
+                            </div>
+                          </div>
                         </td>
-                        <td>{user.studentId}</td>
-                        <td className={styles.cellPrimary}>{user.name}</td>
-                        <td>{user.mobileNo}</td>
-                        <td>{user.email}</td>
-                        <td>{user.password}</td>
                         <td>{user?.courseDetails?.courseName}</td>
                         <td>{user?.batchDetails?.batchName || '-'}</td>
                         <td>
@@ -572,7 +569,7 @@ const Studentlist = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="11" className={styles.emptyState}>
+                      <td colSpan="7" className={styles.emptyState}>
                         <img src={nodata} alt="" width="160" height="160" className="m-auto" />
                         <p>No Data Found</p>
                       </td>

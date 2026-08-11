@@ -20,13 +20,40 @@
   width: 560px;
   max-width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   animation: slideUp 0.3s ease-out;
   box-shadow: 0 20px 40px rgba(15, 27, 51, 0.25);
   border: 1px solid #eef0f5;
   margin: auto;
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
+}
+
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.scrollArea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollArea::-webkit-scrollbar-thumb {
+  background: #d7dce6;
+  border-radius: 999px;
+}
+
+.scrollArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.footer {
+  flex-shrink: 0;
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid #f0f1f5;
 }
 
 @keyframes slideUp {
@@ -41,28 +68,36 @@
 }
 
 .header {
+  flex-shrink: 0;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  position: relative;
+  gap: 12px;
   padding: 0 0 16px;
   margin-bottom: 16px;
   border-bottom: 1px solid #f0f1f5;
 }
 
 .close_icon {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 18px;
   color: #6b7280;
-  transition: color 0.2s ease;
+  background: #f6f7fb;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .close_icon:hover {
   color: #123d84;
+  background: #e8eefc;
 }
 
 .form {
@@ -153,10 +188,16 @@
   opacity: 0.9;
 }
 
+.submit_btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .header h2 {
   font-size: 18px;
   font-weight: 600;
   color: #123d84;
+  margin: 0;
 }
 
 /* ================= RESPONSIVE ================= */

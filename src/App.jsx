@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PrivateRoute from './api/PrivateRoute';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Dashborad from './sections/Dashborad/Dashborad';
 import Login from './sections/Login/Login';
 import Studentdetails from './sections/Studentdetails/Studentdetails';
@@ -32,6 +32,7 @@ import TaskSettings from './sections/Task/TaskSettings';
 import TaskCourseDetail from './sections/Task/TaskCourseDetail';
 import BatchList from './sections/Batch/BatchList';
 import BatchDetailsPage from './sections/Batch/BatchDetails';
+import PlacementList from './sections/Placement/PlacementList';
 import {
   addBatch,
   addCourse,
@@ -89,9 +90,12 @@ const normalizeBatch = (b) => ({
   sem1PayDate: toDateInputValue(b.sem1FeeDate),
   sem2PayDate: toDateInputValue(b.sem2FeeDate),
   studentsCount: b.studentCount ?? 0,
+  activeStudentsCount: b.activeStudentCount ?? 0,
+  inactiveStudentsCount: b.inactiveStudentCount ?? 0,
 });
 
 function App() {
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
@@ -136,12 +140,15 @@ function App() {
   };
 
   useEffect(() => {
-    // These need an auth token - fetching before login (e.g. while sitting
-    // on /login) just 401s and surfaces error toasts for no reason.
-    if (!isAuthenticated) return;
+    // isAuthenticated only reflects a token's *presence* in localStorage
+    // (see the mount check above), not whether it's actually valid for this
+    // session - a stale token can leave it true while still sitting on
+    // /login. Skip the fetch there so a dead/stale token doesn't surface
+    // error toasts on the login screen.
+    if (!isAuthenticated || location.pathname === '/login') return;
     fetchCourses();
     fetchBatches();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, location.pathname]);
 
   const handleCreateCourse = async (course) => {
     try {
@@ -150,6 +157,7 @@ function App() {
       toast.success('Course created successfully');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to create course');
+      throw err;
     }
   };
 
@@ -164,6 +172,7 @@ function App() {
       toast.success('Course updated successfully');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to update course');
+      throw err;
     }
   };
 
@@ -304,6 +313,10 @@ function App() {
           <Route path="/application" element={<Header />}>
             <Route index element={<Application />} />
             <Route path="details/:id" element={<Details />} />
+          </Route>
+
+          <Route path="/placement" element={<Header />}>
+            <Route index element={<PlacementList />} />
           </Route>
 
           <Route

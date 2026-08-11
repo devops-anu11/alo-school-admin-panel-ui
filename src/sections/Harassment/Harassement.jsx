@@ -5,6 +5,7 @@ import Loader from "../../component/loader/Loader";
 import Pagination from "@mui/material/Pagination";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "react-toastify";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 
 const theme = createTheme({
   components: {
@@ -71,7 +72,19 @@ const Harassement = () => {
     setPage(value);
   };
 
+  const [markingReadId, setMarkingReadId] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(new Set());
+
+  const toggleExpanded = (id) =>
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   const handleMarkAsRead = async (id) => {
+    setMarkingReadId(id);
     try {
       await markHarassmentAsRead(id);
 
@@ -88,6 +101,8 @@ const Harassement = () => {
         autoClose: 1000,
         closeButton: false,
       });
+    } finally {
+      setMarkingReadId(null);
     }
   };
 
@@ -128,7 +143,22 @@ const Harassement = () => {
                         <td>{item.studentId?.email}</td>
 
                         <td>
-                          <div className={styles.message}>{item.message}</div>
+                          <div
+                            className={`${styles.message} ${
+                              expandedIds.has(item._id) ? styles.messageExpanded : ""
+                            }`}
+                          >
+                            {item.message}
+                          </div>
+                          {item.message && item.message.length > 120 && (
+                            <button
+                              type="button"
+                              className={styles.readMoreBtn}
+                              onClick={() => toggleExpanded(item._id)}
+                            >
+                              {expandedIds.has(item._id) ? "Show less" : "Read more"}
+                            </button>
+                          )}
                         </td>
 
                         <td>
@@ -138,8 +168,9 @@ const Harassement = () => {
                             <button
                               className={styles.readBtn}
                               onClick={() => handleMarkAsRead(item._id)}
+                              disabled={markingReadId === item._id}
                             >
-                              Mark as Read
+                              {markingReadId === item._id ? "Marking..." : "Mark as Read"}
                             </button>
                           )}
                         </td>
@@ -148,7 +179,8 @@ const Harassement = () => {
                   ) : (
                     <tr>
                       <td colSpan="5" className={styles.noData}>
-                        No Harassment Reports Found
+                        <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                        <p className={styles.noDataText}>No Harassment Reports Found</p>
                       </td>
                     </tr>
                   )}

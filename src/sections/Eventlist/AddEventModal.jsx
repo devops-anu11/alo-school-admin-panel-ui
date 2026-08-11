@@ -98,8 +98,9 @@ const AddEventModal = ({ closeModal, onevent }) => {
       <div className={styles.modal_content}>
         <div className={styles.header}>
           <h2>Add Event</h2>
-          <span className={styles.close_icon} onClick={closeModal}><AiOutlineClose /></span>
+          <span className={styles.close_icon} onClick={() => !loading && closeModal()}><AiOutlineClose /></span>
         </div>
+        <div className={styles.scrollArea}>
         <form className={styles.form}>
           <div className={styles.row}>
 
@@ -174,9 +175,11 @@ const AddEventModal = ({ closeModal, onevent }) => {
               <p className={styles.error}>{errors.time}</p>
             </div>
           </div>
-
-          <button type="submit" onClick={handleSubmit} className={styles.submit_btn}>{loading ? 'Creating...' : 'Create'}</button>
         </form>
+        </div>
+        <div className={styles.footer}>
+          <button type="submit" onClick={handleSubmit} className={styles.submit_btn} disabled={loading}>{loading ? 'Creating...' : 'Create'}</button>
+        </div>
       </div>
     </div>
   );

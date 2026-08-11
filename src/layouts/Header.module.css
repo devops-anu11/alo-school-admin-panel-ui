@@ -364,12 +364,19 @@
   width: 400px;
   background-color: white;
   height: 400px;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-  overflow: auto;
-  cursor: pointer;
-  padding: 10px 10px;
-   pointer-events: auto; 
+  box-shadow: rgba(15, 27, 51, 0.25) 0px 12px 32px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+   pointer-events: auto;
+}
+
+.notification_scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 10px;
 }
 
 .notification_read {
@@ -385,23 +392,109 @@
   background: linear-gradient(to bottom, #ef4444, #b91c1c);
   border: 2px solid #fff;
   border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.dot::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: notificationPing 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes notificationPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.notification_icon.hasUnread svg {
+  transform-origin: top center;
+  animation: bellRing 3.2s ease-in-out infinite;
+}
+
+@keyframes bellRing {
+  0%, 6%, 100% {
+    transform: rotate(0deg);
+  }
+  1%, 3%, 5% {
+    transform: rotate(-12deg);
+  }
+  2%, 4% {
+    transform: rotate(12deg);
+  }
+}
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  background: linear-gradient(to bottom, #ef4444, #b91c1c);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 999px;
+}
+
+/* On the full-width Leave Management row (unlike the shrink-to-fit
+   Students & Academics label group), auto-margin actually has room to push
+   the badge flush to the right edge instead of sitting right after the text. */
+.countBadgeRight {
+  margin-left: auto;
 }
 .notification_box{
   padding: 10px;
   border-bottom: 1px solid rgba(215, 215, 215, 0.345);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.notification_box:hover {
+  background: #f6f7fb;
 }
 .notification_title{
-  /* padding-left: 20px; */
-  font-size: 19px;
- 
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
 }
 .notification_header{
- /* border-bottom:1px solid rgba(215, 215, 215, 0.696); */
-  padding:10px 10px 15px 10px;
+  flex-shrink: 0;
+  padding: 18px 20px;
+  border-bottom: 1px solid #f0f1f5;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.notification_close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6b7280;
+  background: #f6f7fb;
+  font-size: 18px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+.notification_close:hover {
+  color: #123d84;
+  background: #e8eefc;
 }
 @media screen and (max-width: 768px) {
   .aloschool {

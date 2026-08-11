@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./TaskManagement.module.css";
-import { getCourseBatch, getDailyTaskSubjects, getGroupedTasksByStudent, getUser } from "../../api/Serviceapi";
+import { getCourseBatch, getGroupedTasksByStudent, getUser } from "../../api/Serviceapi";
 import Loader from "../../component/loader/Loader";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -15,11 +15,9 @@ const TaskManagement = () => {
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
   const [courseOptions, setCourseOptions] = useState([]);
-  const [subjects, setSubjects] = useState([]);
 
   const [batchId, setBatchId] = useState("");
   const [courseId, setCourseId] = useState("");
-  const [subjectId, setSubjectId] = useState("");
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
 
   const [roster, setRoster] = useState([]);
@@ -30,18 +28,8 @@ const TaskManagement = () => {
   // ---- batches (batch-first filter, defaults to the primary batch) ----
   useEffect(() => {
     fetchBatches();
-    fetchSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const fetchSubjects = async () => {
-    try {
-      const res = await getDailyTaskSubjects();
-      setSubjects(Array.isArray(res?.data?.data) ? res.data.data : []);
-    } catch (error) {
-      console.error("error", error.response?.data || error);
-    }
-  };
 
   const fetchBatches = async () => {
     setBatchesLoading(true);
@@ -81,7 +69,7 @@ const TaskManagement = () => {
     if (!batchId) return;
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [batchId, courseId, subjectId, date]);
+  }, [batchId, courseId, date]);
 
   const fetchData = async () => {
     try {
@@ -92,7 +80,6 @@ const TaskManagement = () => {
         getGroupedTasksByStudent({
           batchId,
           ...(courseId && { courseId }),
-          ...(subjectId && { subjectId }),
           ...(date && { date }),
         }),
       ]);
@@ -172,10 +159,7 @@ const TaskManagement = () => {
       <div className={styles.pageHeader}>
         <div>
           <h2 className={styles.heading}>Task Management</h2>
-          <p className={styles.subheading}>
-            Who submitted their daily task, by course.
-            {subjectId && ` Filtered to ${subjects.find((s) => s._id === subjectId)?.name || "a subject"}.`}
-          </p>
+          <p className={styles.subheading}>Who submitted their daily task, by course.</p>
         </div>
 
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -218,12 +202,6 @@ const TaskManagement = () => {
           courseOptions.map((c) => ({ value: c.courseId, label: c.courseName })),
           !batchId,
         )}
-        {renderSelect(
-          subjectId,
-          setSubjectId,
-          "All Subjects",
-          subjects.map((s) => ({ value: s._id, label: s.name })),
-        )}
       </div>
 
       <div className={styles.statsRow}>
@@ -265,11 +243,21 @@ const TaskManagement = () => {
         <Loader />
       ) : !batchId ? (
         <div className={styles.tableCard}>
-          <p className={styles.noData}>No batches available.</p>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>
+              <LuUsers />
+            </span>
+            <p className={styles.emptyTitle}>No batches available</p>
+          </div>
         </div>
       ) : courseSummaries.length === 0 ? (
         <div className={styles.tableCard}>
-          <p className={styles.noData}>No students found for this batch.</p>
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon}>
+              <LuFileText />
+            </span>
+            <p className={styles.emptyTitle}>No students found for this batch</p>
+          </div>
         </div>
       ) : (
         <div className={styles.tableCard}>

@@ -1,8 +1,8 @@
 import React, { use, useEffect, useState } from 'react'
 import { getApplication } from '../../api/Serviceapi';
-import nodata from '../../assets/nodata.jpg'
 import Loader from '../../component/loader/Loader';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -114,9 +114,9 @@ const Application = () => {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="10" className="text-center py-16 text-sm text-[#9ca3af] font-medium">
-                                                <img src={nodata} alt="" width={'160px'} height={'160px'} className='m-auto' />
-                                                <p>No Data Found</p>
+                                            <td colSpan="10" className="text-center py-16">
+                                                <InboxOutlinedIcon sx={{ fontSize: 32, color: "#c2c8d4" }} />
+                                                <p className="text-sm text-[#9ca3af] font-medium mt-2">No Data Found</p>
                                             </td>
                                         </tr>
                                     )}

@@ -245,7 +245,7 @@ const AddEvent = () => {
       {/* Delete Confirmation Modal */}
       <Dialog
         open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
+        onClose={() => !overlayLoading && setDeleteModalOpen(false)}
         maxWidth="xs"
         fullWidth
       >
@@ -254,9 +254,9 @@ const AddEvent = () => {
           <Typography>Are you sure you want to delete "{eventToDelete?.name}"?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDelete}>
-            Delete
+          <Button onClick={() => setDeleteModalOpen(false)} disabled={overlayLoading}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={overlayLoading}>
+            {overlayLoading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

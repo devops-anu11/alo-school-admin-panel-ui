@@ -19,10 +19,13 @@ import nodata from '../../assets/nodata.jpg'
 import Loader from "../../component/loader/Loader";
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
-import { IoIosCloseCircle } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
 
 
 const theme = createTheme({
@@ -70,10 +73,9 @@ const Attandance = () => {
   const [courseId, setCourseId] = useState('');
   const [batchId, setBatchId] = useState('');
   const [status, setStatus] = useState(() => localStorage.getItem('att_status') || 'false');
-  const [date, setDate] = useState(() => {
-    const saved = localStorage.getItem('att_date');
-    return saved ? dayjs(saved).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD');
-  });
+  // Always defaults to today - never restored from localStorage, so a
+  // stale saved date can't leave the filter pointed at an old day.
+  const [date, setDate] = useState(() => dayjs().format('YYYY-MM-DD'));
   const [searchText, setSearchText] = useState(() => localStorage.getItem('att_searchText') || '');
 
 
@@ -121,9 +123,8 @@ const Attandance = () => {
 
   useEffect(() => {
     localStorage.setItem('att_status', status);
-    localStorage.setItem('att_date', date ? dayjs(date).format('YYYY-MM-DD') : '');
     localStorage.setItem('att_searchText', searchText);
-  }, [status, date, searchText]);
+  }, [status, searchText]);
 
 
   const handleBatchChange = (event) => {
@@ -252,7 +253,6 @@ const Attandance = () => {
     setSearchText('');
 
     localStorage.removeItem('att_status');
-    localStorage.removeItem('att_date');
     localStorage.removeItem('att_searchText');
   };
 
@@ -500,18 +500,17 @@ const Attandance = () => {
             <div>
               {(status?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim() || date || searchText) && (
                 <button className={styles.clear} onClick={handlefilterSearch}>
-                  <IoIosCloseCircle />
+                  <IoClose />
                 </button>
               )}
 
 
             </div>
+            <button className={styles.exportBtn} onClick={getExcel}>
+              Export<MdOutlineFileDownload />
+            </button>
           </div>
         </div>
-      </div>
-      <div className='flex justify-end mt-3 mb-1 w-full'>
-        <button className='bg-gradient-to-b from-[#144196] to-[#0b2456] text-white px-[18px] py-[10px] rounded-[10px] flex items-center gap-2 cursor-pointer text-sm font-medium shadow-sm hover:brightness-110 transition' onClick={getExcel}>Export<MdOutlineFileDownload />
-        </button>
       </div>
       {rateLoading ?
         <div className={styles.attendancemiddle}>
@@ -520,12 +519,12 @@ const Attandance = () => {
             <Skeleton variant="text" width={80} height={40} />
           </div>
 
-          <div className={styles.attendancemiddlediv}>
+          <div className={`${styles.attendancemiddlediv} ${styles.statGreen}`}>
             <Skeleton variant="text" width={160} height={20} />
             <Skeleton variant="text" width={100} height={40} />
           </div>
 
-          <div className={styles.attendancemiddlediv}>
+          <div className={`${styles.attendancemiddlediv} ${styles.statRed}`}>
             <div className={styles.attendancemiddlediv1}>
               <div>
                 <Skeleton variant="text" width={120} height={20} />
@@ -540,16 +539,19 @@ const Attandance = () => {
         rate &&
         <div className={styles.attendancemiddle}>
           <div className={styles.attendancemiddlediv}>
+            <GroupsOutlinedIcon sx={{ fontSize: 20, color: '#123d84' }} />
             <p>Total No of Students</p>
             <p>{rate.studentCount}</p>
           </div>
-          <div className={styles.attendancemiddlediv}>
+          <div className={`${styles.attendancemiddlediv} ${styles.statGreen}`}>
+            <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#12805c' }} />
             <p>Today Attendance Rate</p>
             <p>{rate.attendanceRate}</p>
           </div>
-          <div className={styles.attendancemiddlediv}>
+          <div className={`${styles.attendancemiddlediv} ${styles.statRed}`}>
             <div className={styles.attendancemiddlediv1}>
               <div>
+                <EventBusyOutlinedIcon sx={{ fontSize: 20, color: '#d92d20' }} />
                 <p>Leave Requests</p>
                 <p>{rate.leaveRequestCount}</p>
               </div>

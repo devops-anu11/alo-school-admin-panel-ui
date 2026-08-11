@@ -255,6 +255,7 @@ const CreateBatchModal = ({
           </button>
         </div>
 
+        <div className={styles.scrollArea}>
         <div className={styles.formWrapper}>
           <div className={styles.rowSingle}>
             <div className={styles.formGroup}>
@@ -377,32 +378,33 @@ const CreateBatchModal = ({
               )}
             </div>
           </div>
-          <div className={styles.modalFooter}>
+        </div>
+        </div>
+        <div className={styles.modalFooter}>
+          <button
+            type="button"
+            className={styles.cancelBtn}
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          {isLoading ? (
+            <button type="button" className={styles.submitBtn} disabled>
+              {batchData ? "Updating...." : "Creating..."}
+            </button>
+          ) : (
             <button
               type="button"
-              className={styles.cancelBtn}
-              onClick={() => {
-                onClose();
-                resetForm();
-              }}
-              disabled={isLoading}
+              className={styles.submitBtn}
+              onClick={handleSubmit}
             >
-              Cancel
+              {batchData ? "Update" : "Create"}
             </button>
-            {isLoading ? (
-              <button type="button" className={styles.submitBtn} disabled>
-                {batchData ? "Updating...." : "Creating..."}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={styles.submitBtn}
-                onClick={handleSubmit}
-              >
-                {batchData ? "Update" : "Create"}
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
