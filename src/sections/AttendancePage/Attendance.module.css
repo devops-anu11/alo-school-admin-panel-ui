@@ -42,7 +42,13 @@
   justify-content: flex-start;
   align-items: center;
   width: 100%;
+  box-sizing: border-box;
   gap: 12px;
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
 }
 
 .exportBtn {
@@ -155,7 +161,7 @@
 .attendancemiddle {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 16px;
   margin: 22px 0;
 }
@@ -204,6 +210,15 @@
 .statRed p:nth-of-type(1),
 .statRed p:nth-of-type(2) {
   color: #d92d20;
+}
+
+.statAmber {
+  background: #fff8e6;
+  border-color: #fbe8bf;
+}
+.statAmber p:nth-of-type(1),
+.statAmber p:nth-of-type(2) {
+  color: #b45309;
 }
 .attendancemiddlediv1 {
   display: flex;
@@ -318,13 +333,24 @@
   border-bottom: none;
 }
 
-.table tr td:nth-child(6),
-.table tr td:nth-child(7),
-.table tr td:nth-child(8) {
-  color: #12805c;
+/* Not-checked-in students are surfaced first (see attendanceDal's "all"
+   branch); the In-Time cell gets a pill badge instead of highlighting the
+   whole row. */
+.notCheckedInBadge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fde4c8;
+  color: #b45309;
+  font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
 }
-.table tr td:last-child {
+
+.table tr td:nth-child(4),
+.table tr td:nth-child(5),
+.table tr td:nth-child(6),
+.table tr td:nth-child(7) {
   color: #12805c;
   font-weight: 500;
 }

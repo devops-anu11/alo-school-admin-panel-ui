@@ -191,39 +191,60 @@ const Header = ({ setLoginUser }) => {
     };
   }, [notification]);
 
-  let updatenotification = async (id) => {
+  // Which sidebar section a notification belongs to routes it after read;
+  // keep in sync with the markSectionRead calls below.
+  const categoryRoutes = {
+    leave: '/attendence/leaverequest',
+    complaint: '/complaint',
+    harassment: '/harassment',
+    'enquiry-aloschool': '/enquiry/aloschool',
+    'enquiry-littlesteps': '/enquiry/littlesteps',
+  };
+
+  let updatenotification = async (item) => {
     try {
-      const res = await updateNotification(id, true);
+      await updateNotification(item?._id, true);
+      navigate(categoryRoutes[item?.category] || categoryRoutes.leave);
+      setNotification(false);
       notificationget();
-      navigate('/attendence/leaverequest'),
-        setNotification(false)
+      // The bell list only marks the one clicked notification read, but the
+      // sidebar badge (categoryCounts) is separate state - refresh it too so
+      // clicking a notification also clears its section's unread count.
+      fetchCategoryCounts();
     } catch (error) {
       console.error('Error updating notifications:', error);
     }
   };
 
-  // Opening a sidebar section with its own unread badge (Leave Management,
-  // Complaint, Harassment, either Enquiry type) is treated as "seen" - clear
-  // that section's count immediately (optimistic) and mark its notifications
-  // read on the server, scoped to just that category so opening one section
-  // doesn't clear the others' badges too.
-  const markSectionRead = async (path, category) => {
-    navigate(path);
-    setCategoryCounts((prev) => ({ ...prev, [category]: 0 }));
-    try {
-      await markAllNotificationsRead('admin', category);
-      notificationget();
-      fetchCategoryCounts();
-    } catch (error) {
-      console.error('Error marking notifications as read:', error);
-    }
-  };
+  // Landing on a sidebar section's route is treated as "seen" for that
+  // section's badge - clear it immediately (optimistic) and mark its
+  // notifications read on the server, scoped to just that category so
+  // visiting one section doesn't clear the others' badges too. This is
+  // keyed off the route itself (not a specific onClick) so it clears
+  // regardless of how the user got there - the sidebar link, the
+  // Attendance page's "Leave Requests" card arrow, a bell notification
+  // click, a direct URL, browser back/forward, etc.
+  useEffect(() => {
+    const category = Object.keys(categoryRoutes).find(
+      (key) => categoryRoutes[key] === location.pathname
+    );
+    if (!category || userRole === 'sub-admin') return;
+    if (!categoryCounts[category]) return; // already 0, nothing to clear
 
-  const handleLeaveManagementClick = () => markSectionRead('/attendence/leaverequest', 'leave');
-  const handleComplaintClick = () => markSectionRead('/complaint', 'complaint');
-  const handleHarassmentClick = () => markSectionRead('/harassment', 'harassment');
-  const handleEnquiryAloSchoolClick = () => markSectionRead('/enquiry/aloschool', 'enquiry-aloschool');
-  const handleEnquiryLittleStepsClick = () => markSectionRead('/enquiry/littlesteps', 'enquiry-littlesteps');
+    setCategoryCounts((prev) => ({ ...prev, [category]: 0 }));
+    markAllNotificationsRead('admin', category)
+      .then(() => {
+        notificationget();
+        fetchCategoryCounts();
+      })
+      .catch((error) => console.error('Error marking notifications as read:', error));
+  }, [location.pathname]);
+
+  const handleLeaveManagementClick = () => navigate('/attendence/leaverequest');
+  const handleComplaintClick = () => navigate('/complaint');
+  const handleHarassmentClick = () => navigate('/harassment');
+  const handleEnquiryAloSchoolClick = () => navigate('/enquiry/aloschool');
+  const handleEnquiryLittleStepsClick = () => navigate('/enquiry/littlesteps');
 
 
   const formatDate = (dateString) => {
@@ -795,7 +816,7 @@ const Header = ({ setLoginUser }) => {
                     key={item?._id || index}
                     className={styles.notification_box}
                     onClick={() => {
-                      updatenotification(item?._id);
+                      updatenotification(item);
                     }}
                   >
                     <div className="flex items-center gap-3">

@@ -17,7 +17,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import { getAttendance, getAttendancerate, getCourse, getCourseBatch, getDashboardAttendencerate, getDashboardEvents, getDashboardLeave, getTodayrate, studentCount } from '../../api/Serviceapi'
+import { getAttendance, getAttendancerate, getCourseBatch, getDashboardAttendencerate, getDashboardEvents, getDashboardLeave, getTodayrate, studentCount } from '../../api/Serviceapi'
 import {
     getDashboardTermToppers,
     getDashboardSemesterToppers,
@@ -68,21 +68,7 @@ export const Dashboard = () => {
     const [semester, setSemester] = useState("sem1");
     const [courseId, setCourseId] = useState("");
     const [batchId, setBatchId] = useState("");
-    const [courses, setCourses] = useState([]);
     const [batches, setBatches] = useState([]);
-    const fetchCourses = async () => {
-        try {
-            const res = await getCourse(100, 0);
-            setCourses(res?.data?.data?.data || []);
-        } catch (err) {
-            console.error("Course fetch error", err);
-        }
-    };
-    useEffect(() => {
-        fetchCourses();
-        // fetchPerformance();
-        // fetchUsers();
-    }, []);
 
     // All batches load up front so the Batch filter is usable immediately;
     // the Course filter is the dependent one, scoped down to whichever
@@ -100,11 +86,11 @@ export const Dashboard = () => {
     }, []);
 
     const selectedBatch = batches.find((b) => b._id === batchId);
-    const filteredCourses = batchId
-        ? courses.filter((c) =>
-              selectedBatch?.courses?.some((bc) => bc.courseId === c._id),
-          )
-        : courses;
+    // Each batch's own `courses` array already carries {courseId,
+    // courseName} - use it directly instead of cross-referencing a
+    // separately-fetched full course list (the previous approach matched
+    // batch.courses[].courseId against course._id, which never lined up).
+    const filteredCourses = selectedBatch?.courses || [];
 
     useEffect(() => {
         getTermToppers();
@@ -420,7 +406,7 @@ export const Dashboard = () => {
                                             border: 'none'
                                         }}
                                     >
-                                        <MenuItem value="">All</MenuItem>
+                                        <MenuItem value="">All Status</MenuItem>
 
                                         <MenuItem value="Approved">Approved</MenuItem>
                                         <MenuItem value="Rejected">Rejected</MenuItem>
@@ -610,7 +596,7 @@ export const Dashboard = () => {
                                             border: 'none'
                                         }}
                                     >
-                                        <MenuItem value="">All</MenuItem>
+                                        <MenuItem value="">All Events</MenuItem>
 
                                         <MenuItem value="upcoming">Upcoming</MenuItem>
                                         <MenuItem value="ongoing">Ongoing</MenuItem>
@@ -778,7 +764,7 @@ export const Dashboard = () => {
                                     >
                                         <option value="">All Courses</option>
                                         {filteredCourses.map((c) => (
-                                            <option key={c._id} value={c._id}>
+                                            <option key={c.courseId} value={c.courseId}>
                                                 {c.courseName}
                                             </option>
                                         ))}

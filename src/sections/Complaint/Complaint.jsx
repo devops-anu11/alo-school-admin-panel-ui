@@ -71,6 +71,22 @@ const Complaint = () => {
 
   const [updatingId, setUpdatingId] = useState(null);
 
+  // Message text is clamped to 2 lines by default (see .message in the
+  // CSS module); toggling a row's id in this set lets its full text show.
+  const [expandedIds, setExpandedIds] = useState(new Set());
+  const toggleExpanded = (id) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  // Rough heuristic for whether 2 clamped lines would actually truncate
+  // this message - avoids showing "Show more" on short messages that never
+  // overflow in the first place.
+  const isLongMessage = (message) => (message?.length || 0) > 100;
+
   const handleStatus = async (id, status) => {
     setUpdatingId(id);
     try {
@@ -134,7 +150,20 @@ const Complaint = () => {
                         <td>{item.summary}</td>
 
                         <td>
-                          <div className={styles.message}>{item.message}</div>
+                          <div
+                            className={`${styles.message} ${expandedIds.has(item._id) ? styles.messageExpanded : ""}`}
+                          >
+                            {item.message}
+                          </div>
+                          {isLongMessage(item.message) && (
+                            <button
+                              type="button"
+                              className={styles.showMoreBtn}
+                              onClick={() => toggleExpanded(item._id)}
+                            >
+                              {expandedIds.has(item._id) ? "Show less" : "Show more"}
+                            </button>
+                          )}
                         </td>
 
                         <td>

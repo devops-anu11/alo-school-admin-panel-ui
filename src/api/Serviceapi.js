@@ -287,7 +287,10 @@ export const emailFee = (userId) => {
 };
 
 export const updateFeeEmail = (id) => {
-  return apiService.put(`/feeBalance/${id}`, { mailStatus: "Sent" });
+  return apiService.put(`/feeBalance/${id}`, {
+    mailStatus: "Sent",
+    mailSentAt: new Date().toISOString(),
+  });
 };
 
 export const getPaymentHistory = (userId) => {
@@ -479,10 +482,13 @@ export const getPerformance = (
   semester,
   value,
   academic,
+  studentStatus,
 ) => {
-  return apiService.get(
-    `/performance?limit=${limit}&page=${offset}&courseId=${courseId}&batchId=${batchId}&exam=${semester}&Academic=${academic}&value=${value}`,
-  );
+  let url = `/performance?limit=${limit}&page=${offset}&courseId=${courseId}&batchId=${batchId}&exam=${semester}&Academic=${academic}&value=${value}`;
+  if (studentStatus) {
+    url += `&studentStatus=${studentStatus}`;
+  }
+  return apiService.get(url);
 };
 
 export const getSubjects = (courseId, batchId, semester) => {

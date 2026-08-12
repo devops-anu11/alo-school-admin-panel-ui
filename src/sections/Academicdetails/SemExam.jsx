@@ -38,6 +38,7 @@ const Sem = () => {
   const [batchId, setBatchId] = useState("");
   const [semester, setSemester] = useState("");
   const [academic, setAcademic] = useState("");
+  const [studentStatus, setStudentStatus] = useState("active");
   const [viewModal, setViewModal] = useState(false);
   const [viewRecord, setViewRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -143,6 +144,7 @@ const Sem = () => {
     setSearch('');
     setSemester('');
     setAcademic('');
+    setStudentStatus('active');
 
   };
 
@@ -154,7 +156,7 @@ const Sem = () => {
 
   useEffect(() => {
     fetchPerformance();
-  }, [search, courseId, batchId, semester, offset, academic]);
+  }, [search, courseId, batchId, semester, offset, academic, studentStatus]);
 
   const fetchUsers = async (value = "", cId = "", bId = "") => {
     try {
@@ -168,7 +170,7 @@ const Sem = () => {
   const fetchPerformance = async () => {
     setLoading(true);
     try {
-      const res = await getPerformance(limit, offset - 1, courseId, batchId, semester, search, academic);
+      const res = await getPerformance(limit, offset - 1, courseId, batchId, semester, search, academic, studentStatus);
       const apiData = res?.data?.data?.data || [];
       settotal(res?.data?.data?.totalCount);
       setPerformance(res?.data?.data?.data || []);
@@ -377,7 +379,7 @@ const Sem = () => {
               setoffset(1);
             }}
           >
-            <option value="">All</option>
+            <option value="">All Terms</option>
             {/* {semesterOptions.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -386,6 +388,18 @@ const Sem = () => {
             <option value="Term1">Term 1</option>
             <option value="Term2">Term 2</option>
             <option value="Semester">Semester</option>
+          </select>
+
+          <select
+            value={studentStatus}
+            onChange={(e) => {
+              setStudentStatus(e.target.value);
+              setoffset(1);
+            }}
+          >
+            <option value="active">Active Students</option>
+            <option value="inactive">Inactive Students</option>
+            <option value="all">All Students</option>
           </select>
 
           <input

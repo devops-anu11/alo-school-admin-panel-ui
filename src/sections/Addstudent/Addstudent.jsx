@@ -591,11 +591,14 @@ const Addstudent = ({ closeModal, onStudentAdded }) => {
 
                                         <select onChange={handleBatchName} className={styles.select_field} value={Formdata.student_batch} id="batch" name="batch">
                                             <option value="" >Select a batch</option>
-                                            {batches.map((b) => (
-                                                <option value={b._id} key={b._id}>
-                                                    {b.batchName}
-                                                </option>
-                                            ))}
+                                            {batches
+                                                // Inactive batches aren't accepting new students - don't offer them here.
+                                                .filter((b) => b.isActive !== false)
+                                                .map((b) => (
+                                                    <option value={b._id} key={b._id}>
+                                                        {b.batchName}
+                                                    </option>
+                                                ))}
                                         </select>
 
                                         <FaChevronDown className={styles.selectIcon} />

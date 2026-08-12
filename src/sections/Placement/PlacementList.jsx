@@ -622,7 +622,7 @@ const PlacementList = () => {
             )}
           </div>
 
-          <div className={listStyles.addBtnWrap}>
+          <div>
             <button type="button" className={listStyles.exportBtn} onClick={getExcel}>
               Export
               <MdOutlineFileDownload />

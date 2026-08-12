@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./Attendance.module.css";
 import { FaArrowRight } from "react-icons/fa";
 import InputAdornment from '@mui/material/InputAdornment';
@@ -26,6 +26,8 @@ import "react-toastify/dist/ReactToastify.css";
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 
 
 const theme = createTheme({
@@ -72,6 +74,8 @@ const Attandance = () => {
   // as the default on every fresh visit, not whatever was last picked.
   const [courseId, setCourseId] = useState('');
   const [batchId, setBatchId] = useState('');
+  // See fetchBatches' finally block for why the list/rate fetches wait on this.
+  const [batchesLoaded, setBatchesLoaded] = useState(false);
   const [status, setStatus] = useState(() => localStorage.getItem('att_status') || 'false');
   // Always defaults to today - never restored from localStorage, so a
   // stale saved date can't leave the filter pointed at an old day.
@@ -164,6 +168,13 @@ const Attandance = () => {
       }
     } catch (error) {
       console.error("error", error.response?.data || error);
+    } finally {
+      // Gate the list/rate fetches on this instead of firing on mount with
+      // batchId still '' — that fired an unfiltered request racing the
+      // later batchId-filtered one, and whichever resolved last won,
+      // sometimes leaving the table showing every batch while the stat
+      // cards (which raced independently) showed the correct batch's count.
+      setBatchesLoaded(true);
     }
   };
 
@@ -185,19 +196,28 @@ const Attandance = () => {
 
 
   useEffect(() => {
-    if (!date) return;
+    if (!date || !batchesLoaded) return;
     getAttendanceList()
-  }, [offset, searchText, courseId, batchId, date, status])
+  }, [offset, searchText, courseId, batchId, date, status, batchesLoaded])
+  // Filters can change faster than a request resolves (e.g. switching
+  // batches while the previous batch's fetch is still in flight). Without
+  // this, whichever response lands last wins the state update - even if
+  // it's the stale one - showing the wrong batch's students. This token
+  // makes only the most recently *issued* request's response get applied.
+  const listRequestRef = useRef(0);
   let getAttendanceList = async () => {
+    const requestId = ++listRequestRef.current;
     setLoading(true);
     try {
       let res = await getAttendance(limit, offset - 1, searchText, courseId, batchId, date, status)
-      console.log('l', date)
+      if (requestId !== listRequestRef.current) return;
       setList(res.data?.data?.data)
       settotal(res.data?.data?.totalCount)
     } catch (err) {
       console.log(err)
-    } finally { setLoading(false) };
+    } finally {
+      if (requestId === listRequestRef.current) setLoading(false);
+    }
   }
 
   const handleClearSearch = () => {
@@ -206,21 +226,27 @@ const Attandance = () => {
     setoffset(1);
   };
   useEffect(() => {
-    if (!date) return;
+    if (!date || !batchesLoaded) return;
 
     getattendancerate(date, courseId, batchId)
-  }, [date, courseId, batchId])
+  }, [date, courseId, batchId, batchesLoaded])
 
   const [rateLoading, setRateLoading] = useState(false)
+  // Same stale-response race as getAttendanceList, for the stat cards.
+  const rateRequestRef = useRef(0);
   let getattendancerate = async () => {
+    const requestId = ++rateRequestRef.current;
     setRateLoading(true)
     try {
       let res = await getAttendancerate(date, courseId, batchId)
+      if (requestId !== rateRequestRef.current) return;
       console.log(res.data?.data, 'j')
       setRate(res.data?.data)
     } catch (err) {
       console.log(err)
-    } finally { setRateLoading(false) };
+    } finally {
+      if (requestId === rateRequestRef.current) setRateLoading(false);
+    }
   }
 
   const formatTime = (dateString) => {
@@ -331,6 +357,7 @@ const Attandance = () => {
                     border: 'none'
                   }}
                 >
+                  <MenuItem value={"all"}>All Status</MenuItem>
                   <MenuItem value={false}>Present</MenuItem>
                   <MenuItem value={true}>Absent</MenuItem>
                   <MenuItem value={"noLeave"}>Not Checked In</MenuItem>
@@ -366,7 +393,7 @@ const Attandance = () => {
                     border: 'none'
                   }}
                 >
-                  <MenuItem value="">All</MenuItem>
+                  <MenuItem value="">All Batches</MenuItem>
                   {batches.map((item, index) => (
                     <MenuItem value={item._id} key={index}>
                       {item.batchName}
@@ -404,7 +431,7 @@ const Attandance = () => {
                   }}
                   disabled={!batchId}
                 >
-                  <MenuItem value="">All</MenuItem>
+                  <MenuItem value="">All Courses</MenuItem>
                   {courseOptions.map((item, index) => {
                     return (
                       <MenuItem value={item.courseId} key={index}>{item.courseName}</MenuItem>
@@ -427,6 +454,7 @@ const Attandance = () => {
                       setDate("");
                     }
                   }}
+                  maxDate={dayjs()}
                   format="DD/MM/YYYY"
                   slotProps={{
                     textField: {
@@ -525,6 +553,16 @@ const Attandance = () => {
           </div>
 
           <div className={`${styles.attendancemiddlediv} ${styles.statRed}`}>
+            <Skeleton variant="text" width={100} height={20} />
+            <Skeleton variant="text" width={60} height={40} />
+          </div>
+
+          <div className={`${styles.attendancemiddlediv} ${styles.statAmber}`}>
+            <Skeleton variant="text" width={130} height={20} />
+            <Skeleton variant="text" width={60} height={40} />
+          </div>
+
+          <div className={`${styles.attendancemiddlediv} ${styles.statRed}`}>
             <div className={styles.attendancemiddlediv1}>
               <div>
                 <Skeleton variant="text" width={120} height={20} />
@@ -547,6 +585,16 @@ const Attandance = () => {
             <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#12805c' }} />
             <p>Today Attendance Rate</p>
             <p>{rate.attendanceRate}</p>
+          </div>
+          <div className={`${styles.attendancemiddlediv} ${styles.statRed}`}>
+            <PersonOffOutlinedIcon sx={{ fontSize: 20, color: '#d92d20' }} />
+            <p>Absent</p>
+            <p>{rate.absentCount}</p>
+          </div>
+          <div className={`${styles.attendancemiddlediv} ${styles.statAmber}`}>
+            <AccessTimeOutlinedIcon sx={{ fontSize: 20, color: '#b45309' }} />
+            <p>Not Checked In</p>
+            <p>{rate.notCheckedInCount}</p>
           </div>
           <div className={`${styles.attendancemiddlediv} ${styles.statRed}`}>
             <div className={styles.attendancemiddlediv1}>
@@ -573,20 +621,19 @@ const Attandance = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>ID No</th>
-              <th>Mobile</th>
+              <th>Profile Info</th>
               <th>Course</th>
               <th>Date</th>
               <th>Break In</th>
               <th>Break Out</th>
               <th>In-Time</th>
-              <th colspan="2">Out Time</th>
+              <th>Out Time</th>
+              <th>Remarks</th>
             </tr>
           </thead>
           {loading ?
             <tr>
-              <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold" style={{ border: "none" }}>
+              <td colSpan="8" className="text-center py-20 text-lg text-gray-500 font-semibold" style={{ border: "none" }}>
                 <Loader />
               </td>
             </tr>
@@ -597,21 +644,11 @@ const Attandance = () => {
 
 
                   <tr key={item._id}>
-                    {item.userDetails?.name ?
-                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.userDetails?.name}</td>
-                      :
-                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.name}</td>
-                    }
-                    {item.userDetails?.studentId ?
-                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.userDetails?.studentId}</td>
-                      :
-                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.studentId}</td>
-                    }
-                    {item.userDetails?.mobileNo ?
-                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.userDetails?.mobileNo}</td>
-                      :
-                      <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.mobileNo}</td>
-                    }
+                    <td style={{ color: item?.onLeave && "#d92d20" }}>
+                      <div style={{ textTransform: "capitalize" }}>{item.userDetails?.name || item.name}</div>
+                      <div style={{ fontSize: 12, color: item?.onLeave ? "#d92d20" : "#6b7280" }}>{item.userDetails?.studentId || item.studentId}</div>
+                      <div style={{ fontSize: 12, color: item?.onLeave ? "#d92d20" : "#6b7280" }}>{item.userDetails?.mobileNo || item.mobileNo}</div>
+                    </td>
                     <td style={{ color: item?.onLeave && "#d92d20" }}>{item.courseDetails?.courseName}</td>
                     {item.date ?
                       <td style={{ color: item?.onLeave && "#d92d20", textTransform: "capitalize" }}>{item.date?.split("T")[0]}</td>
@@ -621,17 +658,18 @@ const Attandance = () => {
                     }
                     <td style={{ color: item?.onLeave && "#d92d20" }}>{item.breakTime?.length > 0 ? item?.breakTime[0] ? formatTime(item?.breakTime[0]) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p> : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
                     <td style={{ color: item?.onLeave && "#d92d20" }}>{item.breakTime?.length > 0 ? item?.breakTime[1] ? formatTime(item?.breakTime[1]) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p> : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
-                    <td>{item?.onLeave ? <p style={{ color: "#d92d20" }}>Leave</p> : item.inTime ? formatTime(item?.inTime) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
+                    <td>{item?.onLeave ? <p style={{ color: "#d92d20" }}>Leave</p> : item?.notCheckedIn ? <span className={styles.notCheckedInBadge}>Not Checked In</span> : item.inTime ? formatTime(item?.inTime) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>}</td>
                     <td >
                       {item?.onLeave ? '' : item.outTime ? formatTime(item?.outTime) : <p style={{ background: "none", WebkitBackgroundClip: "initial", WebkitTextFillColor: "initial" }}>--:--</p>
                       }
                     </td>
+                    <td style={{ color: item?.onLeave && "#d92d20" }}>{item.remarks || '-'}</td>
                   </tr>
                 ))
 
                 :
                 <tr >
-                  <td colSpan="10" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
+                  <td colSpan="8" className="text-center py-20 text-lg text-gray-500 font-semibold " style={{ border: "none" }}>
                     <img src={nodata} alt="" width={'200px'} height={'200px'} className='m-auto' />
                     <p className="text-center text-gray-500">No Data Found</p>
                   </td>

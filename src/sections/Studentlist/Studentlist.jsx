@@ -1,4 +1,4 @@
-import { React, useState, useEffect } from 'react'
+import { React, useState, useEffect, useRef } from 'react'
 import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -66,6 +66,8 @@ const Studentlist = () => {
   // as the default on every fresh visit, not whatever was last picked.
   const [courseId, setCourseId] = useState('');
   const [batchId, setBatchId] = useState('');
+  // See fetchBatches' finally block for why the list fetch waits on this.
+  const [batchesLoaded, setBatchesLoaded] = useState(false);
   const [searchText, setSearchText] = useState(() => localStorage.getItem('searchText') || '');
 
   // Calculate visible range
@@ -128,6 +130,12 @@ const Studentlist = () => {
       }
     } catch (error) {
       console.error("error", error.response?.data || error);
+    } finally {
+      // Gate the list fetch on this instead of firing on mount with
+      // batchId still '' — that fired an unfiltered request racing the
+      // later batchId-filtered one, and whichever resolved last won,
+      // sometimes leaving the table showing every batch's students.
+      setBatchesLoaded(true);
     }
   };
   // const [searchText, setSearchText] = useState('');
@@ -157,23 +165,36 @@ const Studentlist = () => {
 
 
   useEffect(() => {
+    if (!batchesLoaded) return;
     getuserlist()
     // getBatchname()
-  }, [offset, searchText, courseId, status, batchId, activestatus]);
+  }, [offset, searchText, courseId, status, batchId, activestatus, batchesLoaded]);
 
 
 
   const [loading, setLoading] = useState(true);
+  const [activeCount, setActiveCount] = useState(0);
+  const [inactiveCount, setInactiveCount] = useState(0);
 
+  // Filters can change faster than a request resolves (e.g. switching
+  // batches while the previous batch's fetch is still in flight). Without
+  // this, whichever response lands last wins the state update - even if
+  // it's the stale one - showing the wrong batch's students. This token
+  // makes only the most recently *issued* request's response get applied.
+  const listRequestRef = useRef(0);
   let getuserlist = async () => {
+    const requestId = ++listRequestRef.current;
     setLoading(true); // start loading
     await getUser(limit, offset - 1, searchText, courseId, status, batchId, activestatus)
       .then((res) => {
+        if (requestId !== listRequestRef.current) return;
         setUser(res?.data?.data?.data);
         settotal(res?.data?.data?.totalCount);
+        setActiveCount(res?.data?.data?.activeCount || 0);
+        setInactiveCount(res?.data?.data?.inactiveCount || 0);
       })
       .catch((err) => console.error('Error fetching user:', err))
-      .finally(() => setLoading(false)); // stop loading
+      .finally(() => { if (requestId === listRequestRef.current) setLoading(false); }); // stop loading
   };
 
 
@@ -274,7 +295,14 @@ const Studentlist = () => {
         <div className={styles.container} >
           <div className={styles.pageHeader}>
             <h4 className={styles.heading}>Student Management</h4>
-            <div className={styles.filterBar}>
+            <div className={styles.headerActions}>
+              <button onClick={() => setIsOpen(true)} className={styles.primaryBtn}><PlusIcon className='w-4 h-4' />Add Student</button>
+              <button className={styles.exportBtn} onClick={getExcel}>Export<MdOutlineFileDownload />
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.filterBar}>
 
               <div>
                 <FormControl
@@ -303,7 +331,7 @@ const Studentlist = () => {
                     }}
                   >
 
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Status</MenuItem>
                     <MenuItem value="active">Active</MenuItem>
                     <MenuItem value="inactive">Inactive</MenuItem>
 
@@ -337,7 +365,7 @@ const Studentlist = () => {
                       border: 'none'
                     }}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Course Status</MenuItem>
                     <MenuItem value="completed">Completed</MenuItem>
                     <MenuItem value="ongoing">Ongoing</MenuItem>
                     <MenuItem value="placed">Placed</MenuItem>
@@ -379,7 +407,7 @@ const Studentlist = () => {
                       border: 'none'
                     }}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Batches</MenuItem>
                     {batches.map((item, index) => {
                       return (
                         <MenuItem value={item._id} key={index}>{item.batchName}</MenuItem>
@@ -419,7 +447,7 @@ const Studentlist = () => {
                     }}
                     disabled={!batchId}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Courses</MenuItem>
                     {courseOptions.map((item, index) => {
                       return (
                         <MenuItem value={item.courseId} key={index}>{item.courseName}</MenuItem>
@@ -475,14 +503,24 @@ const Studentlist = () => {
                 )}
 
               </div>
-              <div className={styles.addBtnWrap}>
-                <button onClick={() => setIsOpen(true)} className={styles.primaryBtn}><PlusIcon className='w-4 h-4' />Add Student</button>
-              </div>
-              <div className={styles.addBtnWrap}>
-                <button className={styles.exportBtn} onClick={getExcel}>Export<MdOutlineFileDownload />
-                </button>
-              </div>
 
+          </div>
+
+          <div className={styles.statsRow}>
+            <div className={styles.statCard}>
+              <p>Total Students</p>
+              {/* Active + inactive always adds up to the total matching every
+                  other filter, since status only ever has those two values -
+                  see the enum on userModel.status. */}
+              <p>{activeCount + inactiveCount}</p>
+            </div>
+            <div className={`${styles.statCard} ${styles.statGreen}`}>
+              <p>Active Students</p>
+              <p>{activeCount}</p>
+            </div>
+            <div className={`${styles.statCard} ${styles.statRed}`}>
+              <p>Inactive Students</p>
+              <p>{inactiveCount}</p>
             </div>
           </div>
 

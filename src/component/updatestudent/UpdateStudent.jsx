@@ -463,7 +463,8 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                     <h2 className={styles.title}>Update Student</h2>
                     <span className={styles.close_icon} onClick={closeModal}><AiOutlineClose /></span>
                 </div>
-                <p style={{ color: 'red', fontSize: '12px', marginTop: '1rem' }}>Note: File size should be less than 500KB*</p>
+                <div className={styles.scrollArea}>
+                <p className={styles.notice}>Note: File size should be less than 500KB*</p>
 
                 {fetching ? (
                     <div style={{ padding: '40px 0' }}><Loader /></div>
@@ -756,22 +757,21 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                                 </div>
                             </div>
                         </div>
-
-                        <div className={styles.submit_button}>
-                            <input
-                                type="submit"
-                                value={loading ? "Updating..." : "Update Student"}
-                                style={{ cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}
-                                className={styles.submit}
-                                onClick={handleSubmit}
-                                disabled={loading}
-                            />
-                        </div>
-                        <p style={{ color: "red", fontSize: "12px", marginTop: "10px" }}>{mes}</p>
-
                     </div>
                 </form>
                 )}
+                </div>
+                <div className={styles.footer}>
+                    {mes && <p className={styles.footerError}>{mes}</p>}
+                    <button
+                        type="button"
+                        className={styles.submit}
+                        onClick={handleSubmit}
+                        disabled={loading || fetching}
+                    >
+                        {loading ? "Updating..." : "Update Student"}
+                    </button>
+                </div>
             </div>
         </>
 

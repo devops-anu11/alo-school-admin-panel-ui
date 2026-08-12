@@ -17,6 +17,13 @@ const emptyForm = { amount: "", date: "", mode: "Cash" };
 const formatAmount = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
+// mailStatus alone would block "Remind" forever once sent once - only treat
+// it as already-requested if it was sent today, so it's allowed again daily.
+const isReminderSentToday = (row) => {
+  if (row.mailStatus !== "Sent" || !row.mailSentAt) return false;
+  return new Date(row.mailSentAt).toDateString() === new Date().toDateString();
+};
+
 const initials = (name = "") =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?";
 
@@ -329,6 +336,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                   <th>Semester</th>
                   <th>Sem Fee</th>
                   <th>Paid</th>
+                  <th>Discount</th>
                   <th>Pending</th>
                   <th>Payment Date</th>
                   <th>Action</th>
@@ -342,6 +350,9 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                         <td><span className={styles.semBadge}>{row.noOfsem}</span></td>
                         <td>{formatAmount(row.semFee)}</td>
                         <td>{formatAmount(row.paidAmount)}</td>
+                        <td className={styles.paidText}>
+                          {row.discountCredited ? formatAmount(row.discountCredited) : "-"}
+                        </td>
                         <td>
                           {row.pendingAmount === 0 ? (
                             <span className={styles.pill}>Paid</span>
@@ -359,23 +370,24 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                                 <span
                                   className={styles.requestLink}
                                   style={{
-                                    color: row.mailStatus === "Sent" ? "#144196" : "#d92d20",
-                                    cursor: row.mailStatus === "Sent" ? "not-allowed" : "pointer",
+                                    color: isReminderSentToday(row) ? "#144196" : "#d92d20",
+                                    cursor: isReminderSentToday(row) ? "not-allowed" : "pointer",
                                   }}
                                   onClick={() => {
-                                    if (row.mailStatus === "Sent") return;
+                                    if (isReminderSentToday(row)) return;
                                     onRequestFee(row._id);
                                   }}
                                 >
-                                  {row.mailStatus === "Sent" ? "Requested" : "Remind"}
+                                  {isReminderSentToday(row) ? "Requested" : "Remind"}
                                 </span>
                                 <button
                                   type="button"
-                                  className={styles.editBtn}
-                                  title="Record a payment"
+                                  className={styles.editIconBtn}
+                                  aria-label="Record a payment"
+                                  title="Add Payment"
                                   onClick={() => startEdit(row)}
                                 >
-                                  <FaEdit /> Add Payment
+                                  <FaEdit />
                                 </button>
                               </>
                             )}
@@ -384,7 +396,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                       </tr>
                       {editingId === row._id && (
                         <tr className={styles.editRow}>
-                          <td colSpan="6">
+                          <td colSpan="7">
                             <div className={styles.editForm}>
                               <div className={styles.editField}>
                                 <label>Amount Paid</label>
@@ -399,6 +411,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                                 <label>Payment Date</label>
                                 <input
                                   type="date"
+                                  max={new Date().toLocaleDateString("en-CA")}
                                   value={form.date}
                                   onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                                 />
@@ -433,7 +446,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className={styles.noData}>No semester records found</td>
+                    <td colSpan="7" className={styles.noData}>No semester records found</td>
                   </tr>
                 )}
               </tbody>

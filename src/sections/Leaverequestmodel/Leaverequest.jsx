@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import styles from "./LeaveRequest.module.css";
 import { BiSearchAlt } from "react-icons/bi";
 import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
@@ -52,7 +53,20 @@ const theme = createTheme({
 const LeaveRequest = () => {
   const useQuery = () => new URLSearchParams(useLocation().search);
 
-  const [searchText, setSearchText] = useState('');
+  const query = useQuery();
+
+  const dates = query.get("date");
+  const courseIds = query.get("courseId");
+  const batchIds = query.get("batchId");
+  const searchTexts = query.get("search");
+
+  // batchId/searchText are seeded straight from the URL on first render
+  // (instead of via a follow-up effect) so the very first fetch already
+  // uses them. Seeding via an effect meant an initial unfiltered fetch
+  // fired before the URL value landed, and if that slower unfiltered
+  // response resolved after the filtered one, it clobbered the filtered
+  // list with results from every batch.
+  const [searchText, setSearchText] = useState(() => searchTexts || '');
   const [date, setDate] = useState('')
   const [open, setOpen] = useState(false)
   const [list, setList] = useState([])
@@ -72,7 +86,7 @@ const LeaveRequest = () => {
   const [reason, setReason] = useState('')
   const [batches, setBatches] = useState([])
   const [courseOptions, setCourseOptions] = useState([])
-  const [batchId, setBatchId] = useState('')
+  const [batchId, setBatchId] = useState(() => batchIds || '')
   const [courseId, setCourseId] = useState('')
   const [leaveType, setLeaveType] = useState('')
 
@@ -95,19 +109,14 @@ const LeaveRequest = () => {
     }
   };
 
-  const query = useQuery();
-
-  const dates = query.get("date");
-  const courseIds = query.get("courseId");
-  const batchIds = query.get("batchId");
-  const searchTexts = query.get("search");
-
   // useEffect(() => {
   //   if (dates) setDate(dates);
   // }, [dates]);
 
   // courseId is applied once the selected batch's course options are known
   // (see the batchId/batches effect below) — it depends on batchId now.
+  // Kept as a fallback for URL changes after mount (the initial value is
+  // already seeded above, so this is a no-op on first render).
   useEffect(() => {
     if (batchIds) setBatchId(batchIds);
   }, [batchIds]);
@@ -233,13 +242,17 @@ const LeaveRequest = () => {
   //   return true;
   // };
 
-  const [idloading, setIdlloading] = useState(false)
+  // Which status is currently being submitted ('Rejected' | 'Approved' |
+  // null) - not a plain boolean, so only the button that was actually
+  // clicked shows its loading label instead of both at once.
+  const [loadingStatus, setLoadingStatus] = useState(null)
+  const idloading = loadingStatus !== null
 
   const handleUpdateClick = async (id, status, adminId, reason) => {
     // if (!validation()) {
     //   return;
     // }
-    setIdlloading(true)
+    setLoadingStatus(status)
     try {
       let res = await updateLeaveRequest(id, status, adminId, reason)
       setUpdatestatus(status)
@@ -257,7 +270,7 @@ const LeaveRequest = () => {
       console.log(err)
       toast.error(err?.response?.data?.message)
     } finally {
-      setIdlloading(false)
+      setLoadingStatus(null)
     }
   }
   const formatTime = (dateString) => {
@@ -322,7 +335,14 @@ const [leaveReson,setLeaveReason]= useState('')
 
   return (
     <>
-      <ToastContainer />
+      {/* Portaled straight to <body>, sibling to react-modal's own portal -
+          Header's .aloschool wrapper is position:fixed, which (per spec)
+          creates a stacking context for everything inside it. A container
+          rendered in the normal component tree gets trapped in that
+          context, so no z-index on it can ever out-rank a react-modal
+          dialog (which portals to document.body and paints later/on top
+          regardless). Portaling here is what actually escapes that. */}
+      {createPortal(<ToastContainer />, document.body)}
       <div className={styles.container}>
         <div className={styles.attendance_container}>
           <div className={styles.header_container}>
@@ -363,7 +383,7 @@ const [leaveReson,setLeaveReason]= useState('')
                       border: 'none',
                     }}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Leave Types</MenuItem>
                     <MenuItem value="Casual">Casual</MenuItem>
                     <MenuItem value="Sick">Sick</MenuItem>
                     <MenuItem value="permission">Permission</MenuItem>
@@ -405,7 +425,7 @@ const [leaveReson,setLeaveReason]= useState('')
                       border: 'none'
                     }}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Batches</MenuItem>
                     {batches.map((item, index) => (
                       <MenuItem value={item._id} key={index}>
                         {item.batchName}
@@ -444,7 +464,7 @@ const [leaveReson,setLeaveReason]= useState('')
                     }}
                     disabled={!batchId}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Courses</MenuItem>
                     {courseOptions.map((item, index) => {
                       return (
                         <MenuItem value={item.courseId} key={index}>{item.courseName}</MenuItem>
@@ -485,7 +505,7 @@ const [leaveReson,setLeaveReason]= useState('')
                           border: 'none',
                         }}
                       >
-                        <MenuItem value="">All</MenuItem>
+                        <MenuItem value="">All Status</MenuItem>
                         <MenuItem value="Created">Created</MenuItem>
                         <MenuItem value="Approved">Approved</MenuItem>
                         <MenuItem value="Rejected">Rejected</MenuItem>
@@ -822,8 +842,8 @@ const [leaveReson,setLeaveReason]= useState('')
               </div>
             </div>
             <div className={styles.gridsss}>
-              <button className={styles.rejectBtn} onClick={() => handleUpdateClick(data?._id, 'Rejected', adminId, reason)} disabled={idloading}>{idloading ? "Rejecting..." : "Reject"}</button>
-              <button className={styles.acceptBtn} onClick={() => handleUpdateClick(data?._id, 'Approved', adminId, reason)} disabled={idloading}>{idloading ? "Accepting..." : "Accept"}</button>
+              <button className={styles.rejectBtn} onClick={() => handleUpdateClick(data?._id, 'Rejected', adminId, reason)} disabled={idloading}>{loadingStatus === 'Rejected' ? "Rejecting..." : "Reject"}</button>
+              <button className={styles.acceptBtn} onClick={() => handleUpdateClick(data?._id, 'Approved', adminId, reason)} disabled={idloading}>{loadingStatus === 'Approved' ? "Accepting..." : "Accept"}</button>
             </div>
           </div>
         </div>

@@ -190,11 +190,11 @@ const TaskCourseDetail = () => {
 
   return (
     <div className={styles.container}>
-      <button type="button" className={styles.back} onClick={() => navigate(-1)}>
-        <FiArrowLeft /> Back
-      </button>
-
       <div className={styles.pageHeader}>
+        <button type="button" className={styles.back} onClick={() => navigate(-1)}>
+          <FiArrowLeft /> Back
+        </button>
+
         <div>
           <h2 className={styles.heading}>{courseName}</h2>
           <p className={styles.subheading}>

@@ -16,9 +16,9 @@
 .content {
   background: white;
   border-radius: 12px;
-  width: 72%;
-  max-width: 860px;
-  max-height: 88vh;
+  width: 82%;
+  max-width: 1020px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
@@ -161,7 +161,8 @@
   border-color: #144196;
 }
 
-/* ---------- body: single scroll region for the whole modal ---------- */
+/* ---------- body: single scroll region for the whole modal - the
+   pinned header above stays fixed in place while this part scrolls ---------- */
 
 .scrollBody {
   padding: 20px 28px 26px;
@@ -214,6 +215,7 @@
   background-color: #F6F7FB;
   color: #4b5563;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .table td {
@@ -224,13 +226,22 @@
   text-overflow: ellipsis;
 }
 
-/* Semester Breakdown: Semester / Sem Fee / Paid / Pending / Payment Date / Action */
-.semTable th:nth-child(1), .semTable td:nth-child(1) { width: 12%; }
-.semTable th:nth-child(2), .semTable td:nth-child(2) { width: 16%; }
-.semTable th:nth-child(3), .semTable td:nth-child(3) { width: 16%; }
-.semTable th:nth-child(4), .semTable td:nth-child(4) { width: 16%; }
-.semTable th:nth-child(5), .semTable td:nth-child(5) { width: 16%; }
-.semTable th:nth-child(6), .semTable td:nth-child(6) { width: 24%; }
+/* Semester Breakdown: Semester / Sem Fee / Paid / Discount / Pending / Payment Date / Action */
+.semTable th:nth-child(1), .semTable td:nth-child(1) { width: 10%; }
+.semTable th:nth-child(2), .semTable td:nth-child(2) { width: 14%; }
+.semTable th:nth-child(3), .semTable td:nth-child(3) { width: 14%; }
+.semTable th:nth-child(4), .semTable td:nth-child(4) { width: 14%; }
+.semTable th:nth-child(5), .semTable td:nth-child(5) { width: 14%; }
+.semTable th:nth-child(6), .semTable td:nth-child(6) { width: 16%; }
+.semTable th:nth-child(7), .semTable td:nth-child(7) { width: 18%; }
+
+/* Action column holds a link + an icon button, not plain text - the shared
+   ellipsis/nowrap/hidden rule above was clipping it against the edge. */
+.semTable td:nth-child(6) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
 
 /* Payment History: Date / Sem / Amount / Mode / Collected By */
 .historyTable th:nth-child(1), .historyTable td:nth-child(1) { width: 20%; }
@@ -319,6 +330,25 @@
   background: #F0F4FF;
 }
 
+.editIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: white;
+  border: 1px solid #144196;
+  color: #144196;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.editIconBtn:hover {
+  background: #F0F4FF;
+}
+
 .editRow td {
   border-top: none;
   padding: 0 14px 14px;
@@ -343,6 +373,8 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  flex: 1 1 0;
+  min-width: 160px;
 }
 
 .editField label {
@@ -357,7 +389,8 @@
   border-radius: 7px;
   border: 1px solid #d7dbe3;
   font-size: 14px;
-  min-width: 130px;
+  width: 100%;
+  box-sizing: border-box;
   background: white;
 }
 

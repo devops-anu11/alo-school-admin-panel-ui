@@ -35,34 +35,12 @@
   opacity: 0.6;
 }
 
-.absent {
-  border: 1px solid #d92d20;
-  color: #d92d20;
-  background-color: #fdecec;
-  padding: 0px 16px;
-  height: 38px;
-  border-radius: 10px;
-  outline: none;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.absent:hover {
-  background-color: #d92d20;
-  color: #fff;
-}
-
-.editBtn {
+.absent,
+.editBtn,
+.addTermBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #123d84;
-  color: #123d84;
-  background-color: #e8eefc;
   padding: 0 16px;
   height: 38px;
   border-radius: 10px;
@@ -71,13 +49,73 @@
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s ease;
   white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.absent {
+  border: 1px solid #d92d20;
+  color: #d92d20;
+  background-color: #fdecec;
+}
+
+.absent:hover {
+  background-color: #d92d20;
+  color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(217, 45, 32, 0.55);
+  transform: translateY(-1px);
+}
+
+.editBtn {
+  border: 1px solid #123d84;
+  color: #123d84;
+  background-color: #e8eefc;
 }
 
 .editBtn:hover {
   background-color: #123d84;
   color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(18, 61, 132, 0.55);
+  transform: translateY(-1px);
+}
+
+.addTermBtn {
+  border: none;
+  color: #fff;
+  background: linear-gradient(to bottom, #144196, #0b2456);
+}
+
+.addTermBtn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 14px -6px rgba(18, 61, 132, 0.65);
+  transform: translateY(-1px);
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px 0 14px;
+  border-radius: 10px;
+  background-color: #f8fafd;
+  border: 1px solid #eef0f5;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.statusPillLabelActive {
+  color: #12805c;
+}
+
+.statusPillLabelInactive {
+  color: #6b7280;
 }
 
 .textarea {
@@ -114,8 +152,12 @@
     font-size: 17px;
   }
 
-  .absent {
-    padding: 0 12px;
+  .absent,
+  .editBtn,
+  .addTermBtn,
+  .statusPill {
+    padding-left: 12px;
+    padding-right: 12px;
     font-size: 12px;
   }
 }

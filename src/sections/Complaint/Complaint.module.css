@@ -234,3 +234,28 @@
     font-size: 12px;
   }
 }
+
+.showMoreBtn {
+  display: block;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #144196;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.showMoreBtn:hover {
+  text-decoration: underline;
+}
+
+/* Declared last so it wins over both the base .message clamp and the
+   480px media query's -webkit-line-clamp:3 override above, regardless of
+   viewport width - equal-specificity ties resolve by source order. */
+.messageExpanded {
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
+}

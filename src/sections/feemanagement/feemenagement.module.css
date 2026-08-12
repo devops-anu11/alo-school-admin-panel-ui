@@ -40,9 +40,15 @@
 .feeform {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #eef0f5;
+  border-radius: 12px;
+  padding: 14px 16px;
 }
 .formselect1,
 .formselect2,

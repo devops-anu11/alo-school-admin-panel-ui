@@ -685,7 +685,7 @@ const FeeHome = () => {
                       border: 'none'
                     }}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Batches</MenuItem>
                     {batches.map((item, index) => {
                       return (
                         <MenuItem value={item._id} key={index}>{item.batchName}</MenuItem>
@@ -726,7 +726,7 @@ const FeeHome = () => {
                     }}
                     disabled={!batchId}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Courses</MenuItem>
                     {Array.isArray(courseOptions) &&
                       courseOptions.map((item, index) => (
                         <MenuItem value={item.courseId} key={index}>
@@ -767,7 +767,7 @@ const FeeHome = () => {
 
                     }}
                   >
-                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="">All Semesters</MenuItem>
                     <MenuItem value="1">Semester 1</MenuItem>
 
                     <MenuItem value="2">Semester 2</MenuItem>
@@ -847,7 +847,7 @@ const FeeHome = () => {
                 Update Fee
               </button>
             </div> */}
-             <div className='flex justify-end mt-4'>
+             <div className='flex justify-end ml-auto'>
           <button className='bg-gradient-to-b from-[#144196] to-[#0b2456] text-white px-5 py-2.5 rounded-[10px] text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 transition' onClick={getExcel}>Export<MdOutlineFileDownload />
           </button>
         </div>
@@ -1220,6 +1220,7 @@ const FeeHome = () => {
                               <label className={styles.updatefeeinputlabel}>Payment Date <sup style={{ color: "red" }}>*</sup></label>
                               <input
                                 type="date"
+                                max={new Date().toLocaleDateString("en-CA")}
                                 value={formData.paymentDate || ""}
                                 onChange={(e) => {
                                   const value = e.target.value;

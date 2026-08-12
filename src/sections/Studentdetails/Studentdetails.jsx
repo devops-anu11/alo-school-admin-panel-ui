@@ -1,5 +1,6 @@
 import { React, useEffect, useState } from "react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
 import TrendingUpOutlinedIcon from "@mui/icons-material/TrendingUpOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
@@ -662,6 +663,10 @@ const Studentdetails = () => {
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
                     <div>
+                      <div className="text-[#6b7280]">Register Number</div>
+                      <Skeleton variant="text" width={80} height={40} />
+                    </div>
+                    <div>
                       <div className="text-[#6b7280]">Phone</div>
                       <Skeleton variant="text" width={80} height={40} />
                     </div>
@@ -864,35 +869,27 @@ const Studentdetails = () => {
                       )}
                     </h2>
                     <div className="flex items-center gap-3 pb-[10px] flex-wrap">
-                      <div>
-                        <button
-                          className={` ${styles.absent}`}
-                          onClick={() => setAbsentModel(true)}
-                        >
-                          Make Absent
-                        </button>
-                      </div>
-                      <div>
-                        <button
-                          className="bg-gradient-to-b from-[#144196] to-[#0b2456]
-    text-white font-medium
-    text-[11px] sm:text-[12px] md:text-[13px]
-    px-3 sm:px-4 md:px-5
-    py-1.5 sm:py-2
-    rounded-[10px]
-    whitespace-nowrap"
-                          onClick={() => {
-                            setTimeout(fetchSubjects, 0); // ensure modal + user loaded
+                      <button
+                        className={styles.absent}
+                        onClick={() => setAbsentModel(true)}
+                      >
+                        <EventBusyOutlinedIcon sx={{ fontSize: "15px" }} />
+                        Make Absent
+                      </button>
+                      <button
+                        className={styles.addTermBtn}
+                        onClick={() => {
+                          setTimeout(fetchSubjects, 0); // ensure modal + user loaded
 
-                            setEditMode(false);
-                            setAcademic("");
-                            // setSem("");
-                            setTermModal(true);
-                          }}
-                        >
-                          + Add Term / Sem Detail
-                        </button>
-                      </div>
+                          setEditMode(false);
+                          setAcademic("");
+                          // setSem("");
+                          setTermModal(true);
+                        }}
+                      >
+                        <AddOutlinedIcon sx={{ fontSize: "16px" }} />
+                        Add Term / Sem Detail
+                      </button>
                       <button
                         onClick={() => setIsOpen(true)}
                         className={styles.editBtn}
@@ -900,7 +897,16 @@ const Studentdetails = () => {
                         <EditOutlinedIcon sx={{ fontSize: "15px" }} />
                         Edit
                       </button>
-                      <div>
+                      <div className={styles.statusPill}>
+                        <span
+                          className={
+                            status
+                              ? styles.statusPillLabelActive
+                              : styles.statusPillLabelInactive
+                          }
+                        >
+                          {status ? "Active" : "Inactive"}
+                        </span>
                         <Switch
                           value={status}
                           onChange={onChange}
@@ -916,6 +922,10 @@ const Studentdetails = () => {
                     <div>
                       <div className="text-[#6b7280] text-[12px]">ID</div>
                       <p className="font-[500]">{user?.studentId}</p>
+                    </div>
+                    <div>
+                      <div className="text-[#6b7280] text-[12px]">Register Number</div>
+                      <p className="font-[500]">{user?.ID || "-"}</p>
                     </div>
                     <div>
                       <div className="text-[#6b7280] text-[12px]">Phone</div>
