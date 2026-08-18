@@ -580,7 +580,7 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                                             <option value="completed">Completed</option>
                                             <option value="ongoing">Ongoing</option>
                                             <option value="placed">Placed</option>
-                                            {/* <option value="dropout">Dropout</option> */}
+                                            <option value="dropout">Dropout</option>
 
 
                                         </select>

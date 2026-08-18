@@ -291,7 +291,7 @@ const Studentlist = () => {
 
       />
 
-      <div style={{ paddingBottom: '60px' }}>
+      <div>
         <div className={styles.container} >
           <div className={styles.pageHeader}>
             <h4 className={styles.heading}>Student Management</h4>
@@ -369,7 +369,7 @@ const Studentlist = () => {
                     <MenuItem value="completed">Completed</MenuItem>
                     <MenuItem value="ongoing">Ongoing</MenuItem>
                     <MenuItem value="placed">Placed</MenuItem>
-                    {/* <MenuItem value="dropout">Dropout</MenuItem> */}
+                    <MenuItem value="dropout">Dropout</MenuItem>
 
                     {/* {course.map((item, index) => {
                     return (

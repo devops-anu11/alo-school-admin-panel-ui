@@ -444,6 +444,8 @@ const Studentdetails = () => {
       toast.error(err?.response?.data?.message || "Failed to update status");
     } finally {
       setStatusUpdating(false);
+      getUserById(id); // Refresh user data after status change
+       fetchPerformance(); // Refresh performance data if loading
     }
   };
 

@@ -369,7 +369,7 @@ const PlacementList = () => {
             <p className={styles.statValue}>{overallTotal}</p>
             <p className={styles.statLabel}>Total Students</p>
             <Link to="/students" className={styles.statLink}>
-              View all students <ArrowRightIcon width={12} height={12} />
+              {/* View all students <ArrowRightIcon width={12} height={12} /> */}
             </Link>
           </div>
         </div>
