@@ -54,21 +54,19 @@ const Studentlist = () => {
   const [limit, setlimit] = useState(10);
   const [totaluser, settotal] = useState(0);
   const [totalpages, setpage] = useState(0);
-  const [offset, setoffset] = useState(1);
+  const [offset, setoffset] = useState(() => Number(sessionStorage.getItem('studentPage')) || 1);
   const navigate = useNavigate()
   const [users, setUser] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [batches, setBatches] = useState([])
   const [courseOptions, setCourseOptions] = useState([])
-  const [activestatus, setActiveStatus] = useState(() => localStorage.getItem('activestatus') || '');
-  const [status, setStatus] = useState(() => localStorage.getItem('status') || '');
-  // Not persisted (unlike the fields above) — the primary batch should win
-  // as the default on every fresh visit, not whatever was last picked.
-  const [courseId, setCourseId] = useState('');
-  const [batchId, setBatchId] = useState('');
+  const [activestatus, setActiveStatus] = useState(() => sessionStorage.getItem('studentActiveStatus') || '');
+  const [status, setStatus] = useState(() => sessionStorage.getItem('studentStatus') || '');
+  const [courseId, setCourseId] = useState(() => sessionStorage.getItem('studentCourseId') || '');
+  const [batchId, setBatchId] = useState(() => sessionStorage.getItem('studentBatchId') || '');
   // See fetchBatches' finally block for why the list fetch waits on this.
   const [batchesLoaded, setBatchesLoaded] = useState(false);
-  const [searchText, setSearchText] = useState(() => localStorage.getItem('searchText') || '');
+  const [searchText, setSearchText] = useState(() => sessionStorage.getItem('studentSearchText') || '');
 
   // Calculate visible range
   const startIndex = (offset - 1) * limit + 1;
@@ -79,6 +77,7 @@ const Studentlist = () => {
     setBatchId(event.target.value);
     setCourseId("");
     setoffset(1);
+    sessionStorage.removeItem('studentCourseId');
   };
   const handlecourseChange = (event) => {
     setCourseId(event.target.value);
@@ -93,10 +92,19 @@ const Studentlist = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
 
  useEffect(() => {
-  localStorage.setItem('activestatus', activestatus);
-  localStorage.setItem('status', status);
-  localStorage.setItem('searchText', searchText);
-}, [activestatus, status, searchText]);
+  const persistedValues = {
+    studentActiveStatus: activestatus,
+    studentStatus: status,
+    studentCourseId: courseId,
+    studentBatchId: batchId,
+    studentSearchText: searchText,
+  };
+  Object.entries(persistedValues).forEach(([key, value]) => {
+    if (value) sessionStorage.setItem(key, value);
+    else sessionStorage.removeItem(key);
+  });
+  sessionStorage.setItem('studentPage', String(offset));
+}, [activestatus, status, courseId, batchId, searchText, offset]);
 
   const handlefilterSearch = () => {
     setActiveStatus('');
@@ -105,9 +113,13 @@ const Studentlist = () => {
     setBatchId('');
     setSearchText('');
     setCourseOptions([]);
-    localStorage.removeItem('activestatus');
-    localStorage.removeItem('status');
-    localStorage.removeItem('searchText');
+    setoffset(1);
+    sessionStorage.removeItem('studentActiveStatus');
+    sessionStorage.removeItem('studentStatus');
+    sessionStorage.removeItem('studentCourseId');
+    sessionStorage.removeItem('studentBatchId');
+    sessionStorage.removeItem('studentSearchText');
+    sessionStorage.removeItem('studentPage');
   };
 
   useEffect(() => {
@@ -122,12 +134,10 @@ const Studentlist = () => {
       const list = Array.isArray(res?.data?.data) ? res.data.data : [];
       setBatches(list);
 
-      // Default the filter to the primary batch on first load only — don't
-      // override a batch already restored from localStorage.
-      if (!batchId) {
-        const primary = list.find((b) => b.isPrimary);
-        if (primary) setBatchId(primary._id);
-      }
+      // Keep a restored batch only when it still exists; otherwise use the primary batch.
+      const restoredBatch = list.find((batch) => batch._id === batchId);
+      const primary = list.find((batch) => batch.isPrimary);
+      if (!restoredBatch && primary) setBatchId(primary._id);
     } catch (error) {
       console.error("error", error.response?.data || error);
     } finally {
@@ -275,6 +285,10 @@ const Studentlist = () => {
       return;
     }
     const selectedBatch = batches.find((b) => b._id === batchId);
+    if (!selectedBatch) {
+      setCourseOptions([]);
+      return;
+    }
     const options = selectedBatch?.courses || [];
     setCourseOptions(options);
     if (courseId && !options.some((c) => c.courseId === courseId)) {

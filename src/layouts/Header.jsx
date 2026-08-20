@@ -114,6 +114,12 @@ const Header = ({ setLoginUser }) => {
     localStorage.removeItem('courseId');
     localStorage.removeItem('batchId');
     localStorage.removeItem('searchText');
+    sessionStorage.removeItem('studentActiveStatus');
+    sessionStorage.removeItem('studentStatus');
+    sessionStorage.removeItem('studentCourseId');
+    sessionStorage.removeItem('studentBatchId');
+    sessionStorage.removeItem('studentSearchText');
+    sessionStorage.removeItem('studentPage');
     navigate('/login');
     setLoginUser(false);
   };
