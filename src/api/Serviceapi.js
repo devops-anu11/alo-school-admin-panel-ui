@@ -256,9 +256,11 @@ export const getFee = (
   batchId,
   semester,
   searchtext,
+  studentStatus = "active",
+  discounted = "",
 ) => {
   return apiService.get(
-    `/feeBalance?limit=${limit}&offset=${offset}&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchtext}`,
+    `/feeBalance?limit=${limit}&offset=${offset}&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchtext}&studentStatus=${studentStatus}&discounted=${discounted}`,
   );
 };
 
@@ -266,9 +268,9 @@ export const createFee = (formdata) => {
   return apiService.post(`/fee/create`, formdata);
 };
 
-export const calcfee = (courseId, batchId, semester, searchText, studentStatus = "active") => {
+export const calcfee = (courseId, batchId, semester, searchText, studentStatus = "active", inStatus = "", discounted = "") => {
   return apiService.get(
-    `/feeBalance/dasboard?courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}`,
+    `/feeBalance/dasboard?courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}&inStatus=${inStatus}&discounted=${discounted}`,
   );
 };
 
@@ -394,9 +396,9 @@ export const excelStudents = (
   );
 };
 
-export const excelfee = (courseId, batchId, semester, searchText) => {
+export const excelfee = (courseId, batchId, semester, searchText, studentStatus = "active", discounted = "") => {
   return apiService.get(
-    `/feeBalance/excel?&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}`,
+    `/feeBalance/excel?&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}&discounted=${discounted}`,
   );
 };
 

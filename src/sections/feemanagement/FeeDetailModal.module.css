@@ -330,6 +330,17 @@
   background: #F0F4FF;
 }
 
+.editBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  border-color: #9ca3af;
+  color: #6b7280;
+}
+
+.editBtn:disabled:hover {
+  background: white;
+}
+
 .editIconBtn {
   display: inline-flex;
   align-items: center;

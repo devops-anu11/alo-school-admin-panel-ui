@@ -17,6 +17,8 @@ const emptyForm = { amount: "", date: "", mode: "Cash" };
 const formatAmount = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
+const isSemesterTwo = (row) => String(row?.noOfsem) === "2";
+
 // mailStatus alone would block "Remind" forever once sent once - only treat
 // it as already-requested if it was sent today, so it's allowed again daily.
 const isReminderSentToday = (row) => {
@@ -143,11 +145,13 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
   const totalFees = rows.reduce((sum, r) => sum + (r.semFee || 0), 0);
   const paidAmount = rows.reduce((sum, r) => sum + (r.paidAmount || 0), 0);
   const pendingAmount = rows.reduce((sum, r) => sum + (r.pendingAmount || 0), 0);
-  // A discount never touches semFee or paidAmount - it's credited straight
-  // off the pending balance instead, so the most it can ever be is whatever's
-  // currently pending plus however much of the existing discount is already
-  // counted toward that pending.
-  const maxDiscount = pendingAmount + discountAmount;
+  const sem2Row = rows.find(isSemesterTwo);
+  const hasSem2 = Boolean(sem2Row);
+  // Discount is Sem 2 only, so the cap is Sem 2 fee minus cash paid
+  // (existing Sem 2 discount credit is already inside that remaining).
+  const maxDiscount = sem2Row
+    ? Math.max(0, (sem2Row.semFee || 0) - (sem2Row.paidAmount || 0))
+    : 0;
 
   const applyDiscountToRows = (updatedRows) => {
     if (!Array.isArray(updatedRows)) return;
@@ -177,9 +181,19 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
       toast.error("Enter a valid discount amount");
       return;
     }
-    if (amount > maxDiscount) {
-      toast.error(`Discount cannot exceed the pending balance of ${formatAmount(maxDiscount)}`);
-      return;
+    if (amount > 0) {
+      if (!hasSem2) {
+        toast.error("Semester 2 is not available for this student. Discount can only be applied to Semester 2.");
+        return;
+      }
+      if (maxDiscount <= 0) {
+        toast.error("Cannot apply a discount because Semester 2 fees are already fully paid.");
+        return;
+      }
+      if (amount > maxDiscount) {
+        toast.error(`Discount cannot exceed the Semester 2 pending balance of ${formatAmount(maxDiscount)}`);
+        return;
+      }
     }
 
     setDiscountSaving(true);
@@ -272,12 +286,13 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                   onChange={(e) => setDiscountForm(e.target.value)}
                   autoFocus
                 />
-                <button className={styles.editBtn} onClick={saveDiscount} disabled={discountSaving}>
+                <button className={styles.editBtn} onClick={saveDiscount} disabled={discountSaving || !hasSem2}>
                   {discountSaving ? "Saving..." : "Save"}
                 </button>
                 <button className={styles.requestLink} style={{ color: "#6b7280" }} onClick={cancelEditDiscount}>
                   Cancel
                 </button>
+                <span className={styles.discountSticker}>Applied to Semester 2 pending only</span>
               </>
             ) : discountAmount > 0 ? (
               confirmingRemoveDiscount ? (
@@ -304,9 +319,14 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                 <>
                   <span className={styles.discountLabel}>
                     Discount applied: <strong>{formatAmount(discountAmount)}</strong>
-                    <span className={styles.discountSticker}> (deducted from pending balance)</span>
+                    <span className={styles.discountSticker}> (deducted from Semester 2 pending)</span>
                   </span>
-                  <button className={styles.editBtn} onClick={startEditDiscount}>
+                  <button
+                    className={styles.editBtn}
+                    onClick={startEditDiscount}
+                    disabled={!hasSem2}
+                    title={!hasSem2 ? "Discount can only be applied when Semester 2 is available" : undefined}
+                  >
                     <FaEdit /> Edit
                   </button>
                   <button
@@ -319,9 +339,17 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                 </>
               )
             ) : (
-              <button className={styles.editBtn} onClick={startEditDiscount}>
+              <button
+                className={styles.editBtn}
+                onClick={startEditDiscount}
+                disabled={!hasSem2}
+                title={!hasSem2 ? "Discount can only be applied when Semester 2 is available" : undefined}
+              >
                 + Add Discount
               </button>
+            )}
+            {!hasSem2 && discountAmount === 0 && !editingDiscount && (
+              <span className={styles.discountSticker}>Semester 2 is not available for this student</span>
             )}
           </div>
         </div>

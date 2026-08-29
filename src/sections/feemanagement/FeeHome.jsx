@@ -84,6 +84,8 @@ const FeeHome = () => {
   const [offset, setoffset] = useState(1);
   const [list, setList] = useState([])
   const [semester, setSemester] = useState('')
+  const [studentStatus, setStudentStatus] = useState('active')
+  const [discounted, setDiscounted] = useState('')
   // const [updatesemester, setUpdateSemester] = useState('')
   // const [payment, setPayment] = useState('')
 
@@ -121,6 +123,18 @@ const FeeHome = () => {
     setoffset(1);
     setList([])
 
+  };
+
+  const handleStudentStatusChange = (event) => {
+    setStudentStatus(event.target.value);
+    setoffset(1);
+    setList([]);
+  };
+
+  const handleDiscountedChange = (event) => {
+    setDiscounted(event.target.value);
+    setoffset(1);
+    setList([]);
   };
 
   const handleupdatesemChange = (event) => {
@@ -195,13 +209,13 @@ const FeeHome = () => {
 
   useEffect(() => {
     getfeelist()
-  }, [offset, courseId, batchId, semester, searchText]);
+  }, [offset, courseId, batchId, semester, searchText, studentStatus, discounted]);
 
   const [loading, setLoading] = useState(false);
   let getfeelist = async () => {
     setLoading(true);
     try {
-      const res = await getFee(limit, offset - 1, courseId, batchId, semester, searchText)
+      const res = await getFee(limit, offset - 1, courseId, batchId, semester, searchText, studentStatus, discounted)
       console.log(res?.data?.data, 'feelist')
       setList(res?.data?.data?.data)
       settotal(res?.data?.data?.totalCount)
@@ -513,13 +527,13 @@ const FeeHome = () => {
 
   useEffect(() => {
     calculation()
-  }, [courseId, batchId, semester, searchText])
+  }, [courseId, batchId, semester, searchText, studentStatus, discounted])
 
   const [calloading, setCallodading] = useState(false)
   let calculation = async () => {
     setCallodading(true)
     try {
-      let res = await calcfee(courseId, batchId, semester, searchText)
+      let res = await calcfee(courseId, batchId, semester, searchText, studentStatus, "", discounted)
       setCalc(res.data?.data?.data?.[0] || [])
       console.log('hjjj', res.data?.data)
     } catch (error) {
@@ -603,6 +617,8 @@ const FeeHome = () => {
     setSemester('');
     setCourseId('');
     setBatchId('');
+    setStudentStatus('active');
+    setDiscounted('');
     setCourseOptions([]);
   }
 
@@ -612,7 +628,7 @@ const FeeHome = () => {
 
    let getExcel = async () => {
     try {
-      let res = await excelfee(courseId, batchId, semester,searchText);
+      let res = await excelfee(courseId, batchId, semester, searchText, studentStatus, discounted);
       console.log("Axios response:", res);
   
       // The Base64 string is here
@@ -778,6 +794,99 @@ const FeeHome = () => {
                 </FormControl>
               </div>
             </div>
+            <div className={styles.formselect4}>
+              <div className={styles.selectWrapper}>
+                <FormControl
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    minWidth: '100%',
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
+                  }}
+                >
+                  <Select
+                    value={studentStatus}
+                    onChange={handleStudentStatusChange}
+                    displayEmpty
+                    IconComponent={KeyboardArrowDownIcon}
+                    sx={{
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        border: 'none',
+                      },
+                      fontSize: '14px',
+                      padding: '4px 10px',
+                      height: '36px',
+                      border: 'none',
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          '& .MuiMenuItem-root.Mui-selected': {
+                            backgroundColor: '#2274D4',
+                            color: '#fff',
+                          },
+                          '& .MuiMenuItem-root.Mui-selected:hover': {
+                            backgroundColor: '#1b63b8',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value="">All Status</MenuItem>
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+            </div>
+            <div className={styles.formselect5}>
+              <div className={styles.selectWrapper}>
+                <FormControl
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    minWidth: '100%',
+                    backgroundColor: '#fff',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb'
+                  }}
+                >
+                  <Select
+                    value={discounted}
+                    onChange={handleDiscountedChange}
+                    displayEmpty
+                    IconComponent={KeyboardArrowDownIcon}
+                    sx={{
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        border: 'none',
+                      },
+                      fontSize: '14px',
+                      padding: '4px 10px',
+                      height: '36px',
+                      border: 'none',
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          '& .MuiMenuItem-root.Mui-selected': {
+                            backgroundColor: '#2274D4',
+                            color: '#fff',
+                          },
+                          '& .MuiMenuItem-root.Mui-selected:hover': {
+                            backgroundColor: '#1b63b8',
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value="">All Students</MenuItem>
+                    <MenuItem value="true">Discounted</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+            </div>
             <div >
               <div style={{ width: '190px' }}>
                 <TextField
@@ -825,7 +934,7 @@ const FeeHome = () => {
 
             </div>
             <div>
-              {(semester?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim()) && (
+              {(semester?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim() || (studentStatus && studentStatus !== 'active') || discounted?.toString().trim()) && (
                 <button className={styles.clear} onClick={handlefilterSearch}>
                   <IoClose />
                 </button>
@@ -872,6 +981,10 @@ const FeeHome = () => {
               <Skeleton variant="text" width={120} height={20} />
               <Skeleton variant="text" width={80} height={40} />
             </div>
+            <div className={`${styles.feeamt} ${styles.feeamtDiscount}`}>
+              <Skeleton variant="text" width={120} height={20} />
+              <Skeleton variant="text" width={80} height={40} />
+            </div>
           </div>
           :
           calc && (
@@ -906,6 +1019,15 @@ const FeeHome = () => {
                 </div>
                 <div className={styles.feeamtamount}>
                   <p className={styles.amtValue}>{calc?.totalAdmissionFee || 0}</p>
+                </div>
+              </div>
+              <div className={`${styles.feeamt} ${styles.feeamtDiscount}`}>
+                <div className={styles.feeamthead}>
+                  <p className={styles.amtText}>Total Discount</p>
+                  <span className={styles.discountBadge}>- Off</span>
+                </div>
+                <div className={styles.feeamtamount}>
+                  <p className={styles.amtValue}>{calc?.totalDiscount || 0}</p>
                 </div>
               </div>
             </div>
