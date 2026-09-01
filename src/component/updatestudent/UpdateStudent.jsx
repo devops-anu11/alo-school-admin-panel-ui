@@ -256,18 +256,27 @@ const UpdateStudent = ({ closeModal, id, onSuccess }) => {
                         : ""
                 };
                 const res = await updateUser(payload, id);
+                if (!res?.data?.status) {
+                    const message = res?.data?.message || "Failed to update student";
+                    toast.error(message);
+                    if (/email is already/i.test(message)) {
+                        closeModal();
+                    }
+                    return;
+                }
 
                 setErrors({})
                 toast.success("Student updated successfully!");
                 closeModal()
-                // setUser(res?.data);
                 if (onSuccess) onSuccess();
 
 
             } catch (err) {
-                console.log(err.response?.data.message)
-
-                // toast.error(err?.response?.data?.message)
+                const message = err?.response?.data?.message || "Failed to update student";
+                toast.error(message);
+                if (/email is already/i.test(message)) {
+                    closeModal();
+                }
 
             } finally {
                 setLoading(false)

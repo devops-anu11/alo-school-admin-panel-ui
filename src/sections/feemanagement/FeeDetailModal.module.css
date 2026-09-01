@@ -117,6 +117,41 @@
   color: #111827;
 }
 
+.pendingValueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.pendingValueRow .summaryValue {
+  margin: 0;
+}
+
+.summaryRemindBtn {
+  flex-shrink: 0;
+  background: #d92d20;
+  border: none;
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.summaryRemindBtn:hover {
+  background: #b42318;
+}
+
+.summaryRemindBtn:disabled {
+  background: #144196;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
 .paidText {
   color: #12805c;
 }
@@ -455,6 +490,48 @@
   align-items: center;
   gap: 8px;
   text-transform: capitalize;
+}
+
+.collectorName {
+  flex: 1;
+  min-width: 0;
+}
+
+.receiptSentBadge {
+  flex-shrink: 0;
+  background: #ecfdf3;
+  color: #12805c;
+  border: 1px solid #abefc6;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.receiptMailBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  background: white;
+  border: 1px solid #144196;
+  color: #144196;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.receiptMailBtn:hover {
+  background: #F0F4FF;
+}
+
+.receiptMailBtn:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .collectorAvatar {

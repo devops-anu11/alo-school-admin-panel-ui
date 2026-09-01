@@ -458,7 +458,8 @@ const FeeHome = () => {
         updatedBy: localStorage.getItem("userId"),
       };
 
-      await updateBalanceFee(semRow._id, balancePayload);
+      const savedRes = await updateBalanceFee(semRow._id, balancePayload);
+      const paymentLogId = savedRes?.data?.data?.paymentLogId;
 
       // 2️⃣ Best-effort receipt/invoice email + legacy fee log entry.
       // Failure here should not roll back the fee balance update above.
@@ -474,6 +475,7 @@ const FeeHome = () => {
           userId: student._id,
           studentId: student.studentId,
           paymentDate: formData.paymentDate,
+          paymentLogId,
         };
         await createFee(feePayload);
       } catch (receiptErr) {

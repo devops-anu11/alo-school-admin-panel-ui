@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./FeeDetailModal.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
-import { FaEdit, FaRegClock } from "react-icons/fa";
+import { FaEdit, FaRegClock, FaEnvelope } from "react-icons/fa";
 import { toast } from "react-toastify";
 import {
   createFee,
@@ -10,6 +10,7 @@ import {
   updateBalanceFee,
   setStudentDiscount,
   removeStudentDiscount,
+  sendFeeReceiptMail,
 } from "../../api/Serviceapi";
 
 const emptyForm = { amount: "", date: "", mode: "Cash" };
@@ -41,6 +42,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
   const [discountForm, setDiscountForm] = useState("");
   const [discountSaving, setDiscountSaving] = useState(false);
   const [confirmingRemoveDiscount, setConfirmingRemoveDiscount] = useState(false);
+  const [sendingReceiptId, setSendingReceiptId] = useState(null);
 
   const studentUserId = student?.userDetails?._id || student?._id;
 
@@ -108,7 +110,8 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
         updatedBy: localStorage.getItem("userId"),
       };
 
-      await updateBalanceFee(row._id, balancePayload);
+      const savedRes = await updateBalanceFee(row._id, balancePayload);
+      const paymentLogId = savedRes?.data?.data?.paymentLogId;
 
       // Best-effort receipt/invoice email — failure here should not roll
       // back the fee balance update above.
@@ -124,6 +127,7 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
           userId: studentUserId,
           studentId: student.userDetails?.studentId,
           paymentDate: form.date,
+          paymentLogId,
         });
       } catch (receiptErr) {
         console.error("Receipt email failed, fee balance was still updated:", receiptErr);
@@ -145,6 +149,9 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
   const totalFees = rows.reduce((sum, r) => sum + (r.semFee || 0), 0);
   const paidAmount = rows.reduce((sum, r) => sum + (r.paidAmount || 0), 0);
   const pendingAmount = rows.reduce((sum, r) => sum + (r.pendingAmount || 0), 0);
+  const pendingRows = rows.filter((r) => Number(r.pendingAmount) > 0);
+  const remindRow = pendingRows[0];
+  const reminderSentToday = pendingRows.some(isReminderSentToday);
   const sem2Row = rows.find(isSemesterTwo);
   const hasSem2 = Boolean(sem2Row);
   // Discount is Sem 2 only, so the cap is Sem 2 fee minus cash paid
@@ -230,6 +237,29 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
     }
   };
 
+  const sendReceiptForPayment = async (payment) => {
+    if (!payment?._id || sendingReceiptId) return;
+    if (payment.type === "deleted" || !(Number(payment.paidAmount) > 0)) {
+      toast.error("Cannot send a receipt for this payment");
+      return;
+    }
+    setSendingReceiptId(payment._id);
+    try {
+      await sendFeeReceiptMail(payment._id);
+      setHistory((prev) =>
+        prev.map((h) =>
+          h._id === payment._id ? { ...h, receiptMailStatus: "Sent", receiptMailSentAt: new Date().toISOString() } : h,
+        ),
+      );
+      toast.success("Receipt email sent");
+    } catch (err) {
+      console.error("Failed to send receipt email:", err);
+      toast.error(err?.response?.data?.message || "Failed to send receipt email");
+    } finally {
+      setSendingReceiptId(null);
+    }
+  };
+
   return (
     <div className={styles.overlay} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={styles.content}>
@@ -265,9 +295,25 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
             </div>
             <div className={styles.summaryItem}>
               <p className={styles.summaryLabel}>Pending Fees</p>
-              <p className={`${styles.summaryValue} ${pendingAmount === 0 ? styles.paidText : styles.pendingText}`}>
-                {formatAmount(pendingAmount)}
-              </p>
+              <div className={styles.pendingValueRow}>
+                <p className={`${styles.summaryValue} ${pendingAmount === 0 ? styles.paidText : styles.pendingText}`}>
+                  {formatAmount(pendingAmount)}
+                </p>
+                {pendingAmount > 0 && remindRow && (
+                  <button
+                    type="button"
+                    className={styles.summaryRemindBtn}
+                    disabled={reminderSentToday}
+                    title={reminderSentToday ? "Reminder already sent today" : "Send pending fee reminder"}
+                    onClick={() => {
+                      if (reminderSentToday) return;
+                      onRequestFee(remindRow._id);
+                    }}
+                  >
+                    {reminderSentToday ? "Requested" : "Remind"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -394,30 +440,15 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                             {row.pendingAmount === 0 ? (
                               <span className={styles.completed}>Completed</span>
                             ) : (
-                              <>
-                                <span
-                                  className={styles.requestLink}
-                                  style={{
-                                    color: isReminderSentToday(row) ? "#144196" : "#d92d20",
-                                    cursor: isReminderSentToday(row) ? "not-allowed" : "pointer",
-                                  }}
-                                  onClick={() => {
-                                    if (isReminderSentToday(row)) return;
-                                    onRequestFee(row._id);
-                                  }}
-                                >
-                                  {isReminderSentToday(row) ? "Requested" : "Remind"}
-                                </span>
-                                <button
-                                  type="button"
-                                  className={styles.editIconBtn}
-                                  aria-label="Record a payment"
-                                  title="Add Payment"
-                                  onClick={() => startEdit(row)}
-                                >
-                                  <FaEdit />
-                                </button>
-                              </>
+                              <button
+                                type="button"
+                                className={styles.editIconBtn}
+                                aria-label="Record a payment"
+                                title="Add Payment"
+                                onClick={() => startEdit(row)}
+                              >
+                                <FaEdit />
+                              </button>
                             )}
                           </div>
                         </td>
@@ -509,7 +540,24 @@ const FeeDetailModal = ({ open, student, onClose, onRequestFee, onPaymentSaved }
                       <td>
                         <div className={styles.collector}>
                           <span className={styles.collectorAvatar}>{initials(h.collectedBy?.name)}</span>
-                          {h.collectedBy?.name || "-"}
+                          <span className={styles.collectorName}>{h.collectedBy?.name || "-"}</span>
+                          {h.receiptMailStatus === "Sent" && (
+                            <span className={styles.receiptSentBadge} title={h.receiptMailSentAt ? `Notified ${new Date(h.receiptMailSentAt).toLocaleString("en-IN")}` : "Receipt emailed"}>
+                              Notified
+                            </span>
+                          )}
+                          {h.type !== "deleted" && Number(h.paidAmount) > 0 && (
+                            <button
+                              type="button"
+                              className={styles.receiptMailBtn}
+                              aria-label="Send fee receipt email"
+                              title="Send fee receipt email"
+                              disabled={sendingReceiptId === h._id}
+                              onClick={() => sendReceiptForPayment(h)}
+                            >
+                              <FaEnvelope />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

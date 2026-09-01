@@ -299,6 +299,10 @@ export const getPaymentHistory = (userId) => {
   return apiService.get(`/paymentLog/user/${userId}`);
 };
 
+export const sendFeeReceiptMail = (paymentLogId) => {
+  return apiService.post(`/fee/receipt-mail`, { paymentLogId });
+};
+
 // Student discount - add/edit share the same PUT (whatever amount is sent
 // becomes the new total discount); remove is a DELETE that zeroes it.
 export const setStudentDiscount = (userId, discountAmount) => {
