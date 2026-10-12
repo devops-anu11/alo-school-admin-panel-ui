@@ -10,7 +10,6 @@ const MAX_POSTER_BYTES = 5 * 1024 * 1024;
 
 const EMPTY_FORM = {
   title: "",
-  badge: "",
   description: "",
   posterUrl: "",
   date: "",
@@ -47,7 +46,6 @@ const WorkshopModal = ({ open, onClose, onSave, workshopData }) => {
     if (workshopData) {
       setForm({
         title: workshopData.title || "",
-        badge: workshopData.badge || "",
         description: workshopData.description || "",
         posterUrl: workshopData.posterUrl || "",
         date: workshopData.date ? String(workshopData.date).split("T")[0] : "",
@@ -159,7 +157,6 @@ const WorkshopModal = ({ open, onClose, onSave, workshopData }) => {
       await onSave({
         ...(workshopData ? { id: workshopData._id } : {}),
         title: form.title.trim(),
-        badge: form.badge.trim(),
         description: form.description.trim(),
         posterUrl: form.posterUrl,
         date: form.date,
@@ -196,10 +193,7 @@ const WorkshopModal = ({ open, onClose, onSave, workshopData }) => {
   return (
     <Modal open={open} title={workshopData ? "Edit Workshop" : "Add Workshop"} onClose={onClose} width={680} closeOnOverlayClick={false}>
       <form className={formStyles.form} onSubmit={handleSubmit} noValidate>
-        <div className={formStyles.grid}>
-          {field("title", "Workshop Title", { type: "text", placeholder: "e.g. Packaging Design", maxLength: 120 })}
-          {field("badge", "Badge", { type: "text", placeholder: "e.g. 1-Day Hands-on Workshop", maxLength: 60 }, false)}
-        </div>
+        {field("title", "Workshop Title", { type: "text", placeholder: "e.g. Packaging Design", maxLength: 120 })}
 
         <div className={formStyles.group}>
           <label htmlFor="description">Description</label>
