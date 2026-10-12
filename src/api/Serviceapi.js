@@ -374,6 +374,42 @@ export const getEnquiry = (limit, offset, enroll) => {
     `/aloEnroll?limit=${limit}&page=${offset}&enrollType=${enroll}`,
   );
 };
+// sign-ups from the website's workshop page; status is "paid" | "pending" | "failed" ("" = all)
+export const getWorkshopRegistrations = (limit, offset, status = "", workshopId = "") => {
+  return apiService.get(`/workshop/registrations`, {
+    limit,
+    page: offset,
+    ...(status ? { status } : {}),
+    ...(workshopId ? { workshopId } : {}),
+  });
+};
+
+// workshop management (date / time / fee shown on the website's /workshop page)
+// Razorpay payments of one workshop, read live from Razorpay.
+// filters: { status, method, search, from, to } ("YYYY-MM-DD" dates), refresh skips the 1-minute cache
+export const getWorkshopTransactions = (workshopId, limit, offset, filters = {}, refresh = false) => {
+  const params = { limit, page: offset, ...(refresh ? { refresh: true } : {}) };
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params[key] = value;
+  });
+  return apiService.get(`/workshop/${workshopId}/transactions`, params);
+};
+
+export const getWorkshops = (limit, offset) => {
+  return apiService.get(`/workshop?limit=${limit}&page=${offset}`);
+};
+
+export const addWorkshop = (payload) => {
+  return apiService.post(`/workshop`, payload);
+};
+
+export const updateWorkshop = (id, payload) => {
+  return apiService.put(`/workshop/${id}`, payload);
+};
+
+export const deleteWorkshop = (id) => {
+  return apiService.delete(`/workshop/${id}`);
+};
 export const getLittleStepsEnquiry = (limit, page) => {
   return enquiryapi.get(`/littlestep-enquiry?limit=${limit}&page=${page}`);
 };

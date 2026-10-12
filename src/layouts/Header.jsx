@@ -17,6 +17,7 @@ import { FaRegCommentDots } from "react-icons/fa";
 import { MdTaskAlt } from "react-icons/md";
 import { MdOutlineTaskAlt } from "react-icons/md";
 import { MdWork, MdOutlineWork } from "react-icons/md";
+import { RiPresentationFill, RiPresentationLine } from "react-icons/ri";
 import { GoBell } from "react-icons/go";
 import user_image from '../assets/user.png'
 import { IoMdPerson } from "react-icons/io";
@@ -670,6 +671,21 @@ const Header = ({ setLoginUser }) => {
                           />
                         )}
                         Placement Management
+                      </button>
+                    </div>
+                    <div className={styles.settings}>
+                      <button
+                        className={`${styles.settings_button} ${location.pathname.startsWith("/workshop") ? styles.navactive : ""}`}
+                        onClick={() => navigate("/workshop")}
+                      >
+                        {location.pathname.startsWith("/workshop") ? (
+                          <RiPresentationFill className={styles.filled_settings_icon} />
+                        ) : (
+                          <RiPresentationLine
+                            className={styles.outline_settings_icon}
+                          />
+                        )}
+                        Workshop
                       </button>
                     </div>
 

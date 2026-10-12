@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import styles from './Modal.module.css'
 import { CloseIcon } from '../icons/Icons'
 
-const Modal = ({ open, title, onClose, children, width = 620 }) => {
+// closeOnOverlayClick={false} keeps long forms open when the dark overlay is clicked by mistake
+const Modal = ({ open, title, onClose, children, width = 620, closeOnOverlayClick = true }) => {
   useEffect(() => {
     if (!open) return
     const onKey = (e) => {
@@ -22,7 +23,7 @@ const Modal = ({ open, title, onClose, children, width = 620 }) => {
     <div
       className={styles.overlay}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose?.()
+        if (closeOnOverlayClick && e.target === e.currentTarget) onClose?.()
       }}
     >
       <div

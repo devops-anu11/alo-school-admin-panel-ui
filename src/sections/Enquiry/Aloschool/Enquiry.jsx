@@ -90,6 +90,7 @@ const Enquiry = () => {
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Name</th>
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Phone Number</th>
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
+                                                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Date</th>
                                             </tr>
                                         </thead>
                                         {loader ?
@@ -109,6 +110,7 @@ const Enquiry = () => {
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.name || "-"}</td>
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">+{item?.phoneNumber || "-"}</td>
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.email || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : "-"}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
@@ -205,6 +207,7 @@ const Enquiry = () => {
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">First Name</th>
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Email</th>
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Phone Number</th>
+                                                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Date</th>
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left">Subject</th>
                                                 <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left w-[40%]">Message</th>
 
@@ -226,6 +229,7 @@ const Enquiry = () => {
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.firstName} {item.lastName}</td>
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.email || "-"}</td>
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">+{item?.phoneNumber || "-"}</td>
+                                                            <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : "-"}</td>
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]">{item?.subject || "-"}</td>
                                                             <td className="px-4 py-3.5 text-sm text-[#374151]"><p className=' w-[100%] break-all'>{item?.message || "-"}</p></td>
 

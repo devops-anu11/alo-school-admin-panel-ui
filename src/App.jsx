@@ -33,6 +33,7 @@ import TaskCourseDetail from './sections/Task/TaskCourseDetail';
 import BatchList from './sections/Batch/BatchList';
 import BatchDetailsPage from './sections/Batch/BatchDetails';
 import PlacementList from './sections/Placement/PlacementList';
+import Workshop from './sections/Workshop/Workshop';
 import {
   addBatch,
   addCourse,
@@ -317,6 +318,10 @@ function App() {
 
           <Route path="/placement" element={<Header />}>
             <Route index element={<PlacementList />} />
+          </Route>
+
+          <Route path="/workshop" element={<Header />}>
+            <Route index element={<Workshop />} />
           </Route>
 
           <Route
