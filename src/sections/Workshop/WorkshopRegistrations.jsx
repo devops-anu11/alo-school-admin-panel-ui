@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { getWorkshopRegistrations } from '../../api/Serviceapi';
-import Pagination from '@mui/material/Pagination';
-import { ThemeProvider } from '@mui/material/styles';
 import { Mail, Phone, MapPin, Users, CalendarDays } from 'lucide-react';
 import Loader from '../../component/loader/Loader';
+import WorkshopPagination from './WorkshopPagination';
 import {
-    paginationTheme,
     formatDate as formatWorkshopDate,
     formatDateOnly,
     formatClock,
@@ -15,10 +13,10 @@ import {
 } from './workshopUtils';
 
 const STATUS_FILTERS = [
+    { key: '', label: 'All' },
     { key: 'paid', label: 'Paid' },
     { key: 'pending', label: 'Pending' },
     { key: 'failed', label: 'Failed' },
-    { key: '', label: 'All' },
 ];
 
 const STATUS_BADGE = {
@@ -41,11 +39,10 @@ const WorkshopRegistrations = () => {
     const [offset, setoffset] = useState(1);
     const [registrations, setRegistrations] = useState([])
     const [loader, setloader] = useState(false)
-    const [status, setStatus] = useState('paid');
+    const [status, setStatus] = useState('');
+    const [statusCounts, setStatusCounts] = useState({});
     const [workshopId, setWorkshopId] = useState('');
     const { workshops } = useWorkshopOptions();
-
-    const totalpages = Math.ceil(totaluser / limit);
 
     const getregistrations = async () => {
         setloader(true)
@@ -53,11 +50,13 @@ const WorkshopRegistrations = () => {
             let res = await getWorkshopRegistrations(limit, offset - 1, status, workshopId)
             setRegistrations(res?.data?.data?.data || [])
             settotal(res?.data?.data?.totalCount || 0)
+            setStatusCounts(res?.data?.data?.statusCounts || {})
         }
         catch (err) {
             console.log(err)
             setRegistrations([])
             settotal(0)
+            setStatusCounts({})
         } finally {
             setloader(false)
         }
@@ -102,16 +101,23 @@ const WorkshopRegistrations = () => {
                     </select>
 
                     <div className='inline-flex p-1 bg-white border border-[#e6e9f2] rounded-lg self-start'>
-                        {STATUS_FILTERS.map(({ key, label }) => (
-                            <button
-                                key={label}
-                                type='button'
-                                onClick={() => changeFilter(setStatus)(key)}
-                                className={`px-3 py-1 text-xs font-semibold rounded-md cursor-pointer transition-colors ${status === key ? 'bg-[#123d84] text-white' : 'text-[#4b5563] hover:text-[#123d84]'}`}
-                            >
-                                {label}
-                            </button>
-                        ))}
+                        {STATUS_FILTERS.map(({ key, label }) => {
+                            const active = status === key;
+                            const count = statusCounts[key || 'all'];
+                            return (
+                                <button
+                                    key={label}
+                                    type='button'
+                                    onClick={() => changeFilter(setStatus)(key)}
+                                    className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-md cursor-pointer transition-colors ${active ? 'bg-[#123d84] text-white' : 'text-[#4b5563] hover:text-[#123d84]'}`}
+                                >
+                                    {label}
+                                    {typeof count === 'number' && (
+                                        <span className={`ml-1.5 px-1.5 rounded-full text-[10px] leading-4 ${active ? 'bg-white/20 text-white' : 'bg-[#f2f4f7] text-[#4b5563]'}`}>{count}</span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -224,19 +230,9 @@ const WorkshopRegistrations = () => {
                     </table>
                 </div>
             </div>
-            {totalpages > 1 &&
-                <ThemeProvider theme={paginationTheme}>
-                    <div className="flex justify-end mt-4">
-                        <Pagination
-                            count={totalpages}
-                            page={offset}
-                            onChange={handlePageChange}
-                            showFirstButton
-                            showLastButton
-                        />
-                    </div>
-                </ThemeProvider>
-            }
+            <div className="mt-4">
+                <WorkshopPagination page={offset} limit={limit} total={totaluser} onChange={handlePageChange} label="registrations" />
+            </div>
         </>
     )
 }

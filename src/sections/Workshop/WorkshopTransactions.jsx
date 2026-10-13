@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify';
-import Pagination from '@mui/material/Pagination';
-import { ThemeProvider } from '@mui/material/styles';
 import {
     CreditCard,
     IndianRupee,
@@ -18,8 +16,8 @@ import {
 } from 'lucide-react';
 import { getWorkshopTransactions } from '../../api/Serviceapi';
 import Loader from '../../component/loader/Loader';
+import WorkshopPagination from './WorkshopPagination';
 import {
-    paginationTheme,
     formatDate as formatWorkshopDate,
     formatDateOnly,
     formatClock,
@@ -80,7 +78,6 @@ const WorkshopTransactions = () => {
 
     const transactions = result?.data || [];
     const summary = result?.summary;
-    const totalPages = Math.ceil((result?.totalCount || 0) / limit);
 
     // the live workshop first, else the newest
     useEffect(() => {
@@ -364,11 +361,7 @@ const WorkshopTransactions = () => {
                 <p className='text-xs text-[#9ca3af]'>
                     {result?.range && `Live from Razorpay · payments between ${formatDateOnly(result.range.from)} and ${formatDateOnly(result.range.to)}`}
                 </p>
-                {totalPages > 1 && (
-                    <ThemeProvider theme={paginationTheme}>
-                        <Pagination count={totalPages} page={offset} onChange={(e, value) => setOffset(value)} showFirstButton showLastButton />
-                    </ThemeProvider>
-                )}
+                <WorkshopPagination page={offset} limit={limit} total={result?.totalCount || 0} onChange={(e, value) => setOffset(value)} label="payments" />
             </div>
         </>
     );

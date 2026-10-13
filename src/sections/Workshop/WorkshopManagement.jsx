@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify';
-import Pagination from '@mui/material/Pagination';
-import { ThemeProvider } from '@mui/material/styles';
 import { CalendarDays, Clock, MapPin, Plus, Pencil, Trash2, Globe, CalendarX, ImageOff } from 'lucide-react';
 import { getWorkshops, addWorkshop, updateWorkshop, deleteWorkshop } from '../../api/Serviceapi';
 import Loader from '../../component/loader/Loader';
 import Modal from '../../components/modal/Modal';
 import WorkshopModal from './WorkshopModal';
-import { paginationTheme, formatDate, formatTime } from './workshopUtils';
+import WorkshopPagination from './WorkshopPagination';
+import { formatDate, formatTime } from './workshopUtils';
 
 const thClass = "px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left";
 
@@ -22,7 +21,6 @@ const WorkshopManagement = () => {
     const [deleting, setDeleting] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
 
-    const totalPages = Math.ceil(total / limit);
     const activeWorkshop = workshops.find((w) => w.isActive);
 
     const fetchWorkshops = async () => {
@@ -264,13 +262,9 @@ const WorkshopManagement = () => {
                 </div>
             </div>
 
-            {totalPages > 1 && (
-                <ThemeProvider theme={paginationTheme}>
-                    <div className="flex justify-end mt-4">
-                        <Pagination count={totalPages} page={offset} onChange={handlePageChange} showFirstButton showLastButton />
-                    </div>
-                </ThemeProvider>
-            )}
+            <div className="mt-4">
+                <WorkshopPagination page={offset} limit={limit} total={total} onChange={handlePageChange} label="workshops" />
+            </div>
 
             <WorkshopModal open={modalOpen} onClose={closeModal} onSave={handleSave} workshopData={editing} />
 
