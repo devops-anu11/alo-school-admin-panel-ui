@@ -31,6 +31,13 @@
   align-items: center;
   margin-bottom: 20px;
 }
+.feeheadTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
 .feetitle {
   font-family: "Poppins", sans-serif;
   font-weight: 600;
@@ -172,7 +179,6 @@
 }
 
 .discountBadge {
-  margin-left: 8px;
   padding: 2px 8px;
   border-radius: 999px;
   background: #fee4e2;
@@ -186,6 +192,81 @@
   width: 100%;
   display: flex;
   align-items: center;
+  gap: 8px;
+  /* Same height with or without an eye button, so amounts line up */
+  min-height: 32px;
+}
+
+/* Eye button on the Collected / Pending cards - toned like the table's
+   Completed (green) and pending (red) pills; filled while its filter is on */
+.cardViewBtn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+.cardViewBtn:hover {
+  transform: scale(1.06);
+}
+.cardViewBtn:focus-visible {
+  outline: 2px solid #123d84;
+  outline-offset: 2px;
+}
+.cardViewBtnPending {
+  background: #fdecec;
+  color: #d92d20;
+}
+.cardViewBtnPending:hover,
+.cardViewBtnPending.cardViewBtnActive {
+  background: #d92d20;
+  color: #fff;
+}
+.cardViewBtnCompleted {
+  background: #e7f7ee;
+  color: #12805c;
+}
+.cardViewBtnCompleted:hover,
+.cardViewBtnCompleted.cardViewBtnActive {
+  background: #12805c;
+  color: #fff;
+}
+/* Discount card is already red-tinted, so use its badge tone */
+.cardViewBtnDiscounted {
+  background: #fee4e2;
+  color: #b42318;
+}
+.cardViewBtnDiscounted:hover,
+.cardViewBtnDiscounted.cardViewBtnActive {
+  background: #b42318;
+  color: #fff;
+}
+
+/* Card whose eye filter is currently applied to the list */
+.feeamtActivePending,
+.feeamtActivePending:hover {
+  border-color: #f5b5b0;
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.1);
+}
+.feeamtActiveCompleted,
+.feeamtActiveCompleted:hover {
+  border-color: #a6dcc3;
+  box-shadow: 0 0 0 3px rgba(18, 128, 92, 0.12);
+}
+.feeamtActiveDiscounted,
+.feeamtActiveDiscounted:hover {
+  border-color: #f97066;
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
 }
 .amtText {
   font-size: 13px;

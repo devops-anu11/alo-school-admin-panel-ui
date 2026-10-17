@@ -132,6 +132,7 @@
 }
 
 .statCard {
+  position: relative;
   border-radius: 12px;
   background: #fff;
   border: 1px solid #eef0f5;
@@ -140,6 +141,7 @@
   gap: 4px;
   padding: 18px 20px;
   box-sizing: border-box;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .statCard p:nth-of-type(1) {
@@ -147,6 +149,7 @@
   font-weight: 500;
   color: #6b7280;
   margin: 0;
+  padding-right: 40px; /* clear of the eye button */
 }
 
 .statCard p:nth-of-type(2) {
@@ -172,6 +175,74 @@
 .statRed p:nth-of-type(1),
 .statRed p:nth-of-type(2) {
   color: #d92d20;
+}
+
+/* Eye button in a stat card's top-right corner - toned like its card;
+   filled while that card's status is the one listed */
+.statViewBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+.statViewBtn:hover {
+  transform: scale(1.06);
+}
+.statViewBtn:focus-visible {
+  outline: 2px solid #123d84;
+  outline-offset: 2px;
+}
+.statViewBtnTotal {
+  background: #eef3fb;
+  color: #123d84;
+}
+.statViewBtnTotal:hover,
+.statViewBtnTotal.statViewBtnActive {
+  background: #123d84;
+  color: #fff;
+}
+.statViewBtnGreen {
+  background: #d3f0de;
+  color: #12805c;
+}
+.statViewBtnGreen:hover,
+.statViewBtnGreen.statViewBtnActive {
+  background: #12805c;
+  color: #fff;
+}
+.statViewBtnRed {
+  background: #fbdada;
+  color: #d92d20;
+}
+.statViewBtnRed:hover,
+.statViewBtnRed.statViewBtnActive {
+  background: #d92d20;
+  color: #fff;
+}
+
+/* Card whose status is currently listed in the table */
+.statSelectedTotal {
+  border-color: #a9bde0;
+  box-shadow: 0 0 0 3px rgba(18, 61, 132, 0.1);
+}
+.statSelectedGreen {
+  border-color: #8fd4b0;
+  box-shadow: 0 0 0 3px rgba(18, 128, 92, 0.14);
+}
+.statSelectedRed {
+  border-color: #f5b5b0;
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.12);
 }
 
 /* ================= TABLE ================= */

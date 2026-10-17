@@ -7,8 +7,7 @@ import Modal from '../../components/modal/Modal';
 import WorkshopModal from './WorkshopModal';
 import WorkshopPagination from './WorkshopPagination';
 import { formatDate, formatTime } from './workshopUtils';
-
-const thClass = "px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-white text-left";
+import { EmptyState, Toggle, cardClass, rowClass, thClass } from './workshopUi';
 
 const WorkshopManagement = () => {
     const limit = 10;
@@ -20,6 +19,8 @@ const WorkshopManagement = () => {
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [toggling, setToggling] = useState(null);
+    const [hiding, setHiding] = useState(null);
 
     const activeWorkshop = workshops.find((w) => w.isActive);
 
@@ -76,15 +77,28 @@ const WorkshopManagement = () => {
         }
     };
 
-    const setActive = async (item) => {
+    // Saves the switch and updates the rows in place, so it animates instead of reloading the table.
+    const saveLive = async (item, isActive) => {
+        setToggling(item._id);
         try {
             // the API updates only the fields sent and switches the previously live workshop off
-            await updateWorkshop(item._id, { isActive: true });
-            toast.success(`"${item.title}" is now shown on the website`);
-            fetchWorkshops();
+            await updateWorkshop(item._id, { isActive });
+            setWorkshops((prev) => prev.map((w) => ({ ...w, isActive: isActive ? w._id === item._id : w.isActive && w._id !== item._id })));
+            toast.success(isActive ? `"${item.title}" is now live on the website` : `"${item.title}" is hidden from the website`);
+            return true;
         } catch (err) {
-            toast.error(err?.response?.data?.message || "Failed to activate workshop");
+            toast.error(err?.response?.data?.message || (isActive ? "Failed to make the workshop live" : "Failed to hide the workshop"));
+            return false;
+        } finally {
+            setToggling(null);
         }
+    };
+
+    // turning the live one off empties the website's workshop page, so confirm that first
+    const toggleLive = (item) => (item.isActive ? setHiding(item) : saveLive(item, true));
+
+    const confirmHide = async () => {
+        if (hiding && (await saveLive(hiding, false))) setHiding(null);
     };
 
     const confirmDelete = async () => {
@@ -138,22 +152,24 @@ const WorkshopManagement = () => {
                 </button>
             </div>
 
-            <div className='flex items-center justify-between mb-3'>
-                <p className='text-sm text-[#374151] font-semibold'>All Workshops <span className='ml-1 px-2 py-0.5 rounded-full bg-[#e6edf9] text-[#123d84] text-xs'>{total}</span></p>
-                <p className='text-xs text-[#9ca3af] hidden sm:block'>Only one workshop can be live at a time.</p>
-            </div>
-
-            <div className='bg-white border border-[#eef0f5] rounded-2xl overflow-hidden shadow-sm'>
+            <div className={`${cardClass} overflow-hidden`}>
+                <div className='flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#eef0f5]'>
+                    <p className='text-sm text-[#111827] font-semibold'>
+                        All workshops
+                        <span className='ml-2 px-2 py-0.5 rounded-full bg-[#eef3fc] text-[#123d84] text-xs'>{total}</span>
+                    </p>
+                    <p className='text-xs text-[#9ca3af] hidden sm:block'>Only one workshop can be live at a time.</p>
+                </div>
                 <div className='overflow-x-auto w-full'>
                     <table className="w-full border-collapse" style={{ minWidth: '900px' }}>
                         <thead>
-                            <tr className="bg-gradient-to-b from-[#144196] to-[#0b2456]">
-                                <th className={thClass}>Workshop</th>
-                                <th className={thClass}>Schedule</th>
-                                <th className={thClass}>Venue</th>
-                                <th className={thClass}>Fee</th>
-                                <th className={thClass}>Status</th>
-                                <th className={`${thClass} text-right`}>Actions</th>
+                            <tr>
+                                <th className={`${thClass} px-5`}>Workshop</th>
+                                <th className={`${thClass} px-5`}>Schedule</th>
+                                <th className={`${thClass} px-5`}>Venue</th>
+                                <th className={`${thClass} px-5`}>Fee</th>
+                                <th className={`${thClass} px-5`}>Status</th>
+                                <th className={`${thClass} px-5 !text-right`}>Actions</th>
                             </tr>
                         </thead>
                         {loader ? (
@@ -170,7 +186,7 @@ const WorkshopManagement = () => {
                                     workshops.map((item) => (
                                         <tr
                                             key={item._id}
-                                            className={`border-b border-[#f0f1f5] last:border-0 transition-colors ${item.isActive ? 'bg-[#f3fbe6] hover:bg-[#ecf8da]' : 'hover:bg-[#f5f8ff]'}`}
+                                            className={`${rowClass} ${item.isActive ? 'bg-[#f6fcee] hover:bg-[#eef8e1]' : ''}`}
                                         >
                                             <td className={`px-5 py-4 align-top border-l-4 ${item.isActive ? 'border-l-[#7ccf00]' : 'border-l-transparent'}`}>
                                                 <div className='flex items-start gap-3'>
@@ -201,25 +217,25 @@ const WorkshopManagement = () => {
                                             <td className="px-5 py-4 align-top">
                                                 <span className='inline-block px-2.5 py-1 rounded-lg bg-[#eef3fc] text-[#123d84] text-sm font-semibold'>{Number(item.fee) > 0 ? `₹${item.fee}` : 'Free'}</span>
                                             </td>
-                                            <td className="px-5 py-4 align-top text-sm">
-                                                {item.isActive ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#e7f6ec] text-[#067647]">
-                                                        <span className='relative flex w-2 h-2'>
-                                                            <span className='absolute inline-flex w-full h-full rounded-full bg-[#12b76a] opacity-75 animate-ping'></span>
-                                                            <span className='relative inline-flex w-2 h-2 rounded-full bg-[#12b76a]'></span>
-                                                        </span>
-                                                        Live
+                                            <td className="px-5 py-4 align-top">
+                                                {/* title on the wrapper: a disabled switch shows no tooltip of its own */}
+                                                <div
+                                                    className='flex items-center gap-2.5 mt-0.5'
+                                                    title={item.isActive
+                                                        ? 'Hide from the website'
+                                                        : item.posterUrl ? 'Show on the website (replaces the live one)' : 'Add a poster to show this on the website'}
+                                                >
+                                                    <Toggle
+                                                        checked={item.isActive}
+                                                        busy={toggling === item._id}
+                                                        disabled={!!toggling || (!item.isActive && !item.posterUrl)}
+                                                        onChange={() => toggleLive(item)}
+                                                        label={`Show ${item.title} on the website`}
+                                                    />
+                                                    <span className={`text-xs font-semibold ${item.isActive ? 'text-[#067647]' : 'text-[#9ca3af]'}`}>
+                                                        {item.isActive ? 'Live' : 'Off'}
                                                     </span>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className="px-3 py-1 rounded-full text-xs font-semibold border border-[#d0d7e6] text-[#4b5563] bg-white cursor-pointer hover:border-[#123d84] hover:bg-[#123d84] hover:text-white transition-colors"
-                                                        onClick={() => setActive(item)}
-                                                        title="Show this workshop on the website"
-                                                    >
-                                                        Set Live
-                                                    </button>
-                                                )}
+                                                </div>
                                             </td>
                                             <td className="px-5 py-4 align-top">
                                                 <div className="flex items-center justify-end gap-2">
@@ -232,6 +248,7 @@ const WorkshopManagement = () => {
                                                     >
                                                         <Pencil size={15} />
                                                     </button>
+                                                    {/* delete hidden for now
                                                     <button
                                                         type="button"
                                                         aria-label={`Delete ${item.title}`}
@@ -241,18 +258,15 @@ const WorkshopManagement = () => {
                                                     >
                                                         <Trash2 size={15} />
                                                     </button>
+                                                    */}
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="6" className="text-center py-16">
-                                            <div className='w-14 h-14 mx-auto rounded-2xl bg-[#f2f5fc] flex items-center justify-center'>
-                                                <CalendarX size={26} className='text-[#9aa8c7]' />
-                                            </div>
-                                            <p className="text-sm text-[#374151] font-semibold mt-3">No workshops yet</p>
-                                            <p className="text-xs text-[#9ca3af] mt-1">Click “Add Workshop” to create the first one.</p>
+                                        <td colSpan="6">
+                                            <EmptyState icon={CalendarX} title='No workshops yet' text='Click “Add Workshop” to create the first one.' />
                                         </td>
                                     </tr>
                                 )}
@@ -289,6 +303,30 @@ const WorkshopManagement = () => {
                         disabled={deleteLoading}
                     >
                         {deleteLoading ? "Deleting..." : "Delete"}
+                    </button>
+                </div>
+            </Modal>
+
+            <Modal open={!!hiding} title="Hide from Website" onClose={() => !toggling && setHiding(null)} width={420}>
+                <p style={{ margin: "0 0 20px", color: "#6b7280", fontSize: "0.9rem" }}>
+                    The website will stop showing <strong>{hiding?.title}</strong>, and no workshop will be live until you switch one on. Its registrations are kept.
+                </p>
+                <div className="flex justify-end gap-3">
+                    <button
+                        type="button"
+                        className="px-5 py-2.5 text-sm font-semibold text-[#6b7280] bg-white border border-[#e5e7eb] rounded-lg cursor-pointer"
+                        onClick={() => setHiding(null)}
+                        disabled={!!toggling}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        className="px-5 py-2.5 text-sm font-semibold text-white bg-[#123d84] rounded-lg cursor-pointer disabled:opacity-70"
+                        onClick={confirmHide}
+                        disabled={!!toggling}
+                    >
+                        {toggling ? "Hiding..." : "Hide"}
                     </button>
                 </div>
             </Modal>

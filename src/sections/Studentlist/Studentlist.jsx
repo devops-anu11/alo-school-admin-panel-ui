@@ -1,5 +1,5 @@
 import { React, useState, useEffect, useRef } from 'react'
-import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, IconButton, Tooltip } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
@@ -60,7 +60,9 @@ const Studentlist = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [batches, setBatches] = useState([])
   const [courseOptions, setCourseOptions] = useState([])
-  const [activestatus, setActiveStatus] = useState(() => sessionStorage.getItem('studentActiveStatus') || '');
+  // Lists active students by default; '' (All Status) is a real saved
+  // choice, hence ?? rather than ||.
+  const [activestatus, setActiveStatus] = useState(() => sessionStorage.getItem('studentActiveStatus') ?? 'active');
   const [status, setStatus] = useState(() => sessionStorage.getItem('studentStatus') || '');
   const [courseId, setCourseId] = useState(() => sessionStorage.getItem('studentCourseId') || '');
   const [batchId, setBatchId] = useState(() => sessionStorage.getItem('studentBatchId') || '');
@@ -92,8 +94,10 @@ const Studentlist = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
 
  useEffect(() => {
+  // Saved even when empty, so "All Status" survives a reload instead of
+  // falling back to the Active default.
+  sessionStorage.setItem('studentActiveStatus', activestatus);
   const persistedValues = {
-    studentActiveStatus: activestatus,
     studentStatus: status,
     studentCourseId: courseId,
     studentBatchId: batchId,
@@ -107,7 +111,7 @@ const Studentlist = () => {
 }, [activestatus, status, courseId, batchId, searchText, offset]);
 
   const handlefilterSearch = () => {
-    setActiveStatus('');
+    setActiveStatus('active');
     setStatus('');
     setCourseId('');
     setBatchId('');
@@ -216,10 +220,35 @@ const Studentlist = () => {
     setoffset(1);
   };
 
-  const statusChange = (event) => {
-    setActiveStatus(event.target.value);
+  const selectActiveStatus = (value) => {
+    setActiveStatus(value);
     setoffset(1)
   }
+
+  const statusChange = (event) => {
+    selectActiveStatus(event.target.value);
+  }
+
+  // Eye button on a stat card: lists that card's students ('' = all), the
+  // same filter as the status dropdown. Clicking the selected eye again
+  // keeps it selected - only another eye, the dropdown or Clear changes it.
+  const renderStatViewBtn = (value, tone) => {
+    const selected = activestatus === value;
+    const label = `${selected ? 'Showing' : 'View'} ${value || 'all'} students`;
+    return (
+      <Tooltip title={label} arrow placement="top">
+        <button
+          type="button"
+          className={`${styles.statViewBtn} ${tone} ${selected ? styles.statViewBtnActive : ''}`}
+          aria-label={label}
+          aria-pressed={selected}
+          onClick={() => { if (!selected) selectActiveStatus(value); }}
+        >
+          <VisibilityIcon sx={{ fontSize: 18 }} />
+        </button>
+      </Tooltip>
+    );
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -510,7 +539,7 @@ const Studentlist = () => {
                 />
               </div>
               <div>
-                {(activestatus?.toString().trim() || status || courseId?.toString().trim() || batchId?.toString().trim()) && (
+                {(activestatus !== 'active' || status || courseId?.toString().trim() || batchId?.toString().trim()) && (
                   <button className={styles.clear} onClick={handlefilterSearch} title="Clear filters">
                     <IoClose />
                   </button>
@@ -521,20 +550,23 @@ const Studentlist = () => {
           </div>
 
           <div className={styles.statsRow}>
-            <div className={styles.statCard}>
+            <div className={`${styles.statCard} ${activestatus === '' ? styles.statSelectedTotal : ''}`}>
               <p>Total Students</p>
               {/* Active + inactive always adds up to the total matching every
                   other filter, since status only ever has those two values -
                   see the enum on userModel.status. */}
               <p>{activeCount + inactiveCount}</p>
+              {renderStatViewBtn('', styles.statViewBtnTotal)}
             </div>
-            <div className={`${styles.statCard} ${styles.statGreen}`}>
+            <div className={`${styles.statCard} ${styles.statGreen} ${activestatus === 'active' ? styles.statSelectedGreen : ''}`}>
               <p>Active Students</p>
               <p>{activeCount}</p>
+              {renderStatViewBtn('active', styles.statViewBtnGreen)}
             </div>
-            <div className={`${styles.statCard} ${styles.statRed}`}>
+            <div className={`${styles.statCard} ${styles.statRed} ${activestatus === 'inactive' ? styles.statSelectedRed : ''}`}>
               <p>Inactive Students</p>
               <p>{inactiveCount}</p>
+              {renderStatViewBtn('inactive', styles.statViewBtnRed)}
             </div>
           </div>
 

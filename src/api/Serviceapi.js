@@ -258,9 +258,10 @@ export const getFee = (
   searchtext,
   studentStatus = "active",
   discounted = "",
+  feeStatus = "",
 ) => {
   return apiService.get(
-    `/feeBalance?limit=${limit}&offset=${offset}&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchtext}&studentStatus=${studentStatus}&discounted=${discounted}`,
+    `/feeBalance?limit=${limit}&offset=${offset}&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchtext}&studentStatus=${studentStatus}&discounted=${discounted}&feeStatus=${feeStatus}`,
   );
 };
 
@@ -268,9 +269,9 @@ export const createFee = (formdata) => {
   return apiService.post(`/fee/create`, formdata);
 };
 
-export const calcfee = (courseId, batchId, semester, searchText, studentStatus = "active", inStatus = "", discounted = "") => {
+export const calcfee = (courseId, batchId, semester, searchText, studentStatus = "active", inStatus = "", discounted = "", feeStatus = "") => {
   return apiService.get(
-    `/feeBalance/dasboard?courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}&inStatus=${inStatus}&discounted=${discounted}`,
+    `/feeBalance/dasboard?courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}&inStatus=${inStatus}&discounted=${discounted}&feeStatus=${feeStatus}`,
   );
 };
 
@@ -392,7 +393,25 @@ export const getWorkshopTransactions = (workshopId, limit, offset, filters = {},
   Object.entries(filters).forEach(([key, value]) => {
     if (value) params[key] = value;
   });
-  return apiService.get(`/workshop/${workshopId}/transactions`, params);
+  // no workshopId: every workshop's payments together
+  return apiService.get(workshopId ? `/workshop/${workshopId}/transactions` : `/workshop/transactions`, params);
+};
+
+// Excel exports of the Registrations / Transactions tabs, with the same
+// filters as the lists above; data is the base64 xlsx
+export const excelWorkshopRegistrations = (status = "", workshopId = "") => {
+  return apiService.get(`/workshop/registrations/excel`, {
+    ...(status ? { status } : {}),
+    ...(workshopId ? { workshopId } : {}),
+  });
+};
+
+export const excelWorkshopTransactions = (workshopId, filters = {}) => {
+  const params = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params[key] = value;
+  });
+  return apiService.get(workshopId ? `/workshop/${workshopId}/transactions/excel` : `/workshop/transactions/excel`, params);
 };
 
 export const getWorkshops = (limit, offset) => {
@@ -436,9 +455,9 @@ export const excelStudents = (
   );
 };
 
-export const excelfee = (courseId, batchId, semester, searchText, studentStatus = "active", discounted = "") => {
+export const excelfee = (courseId, batchId, semester, searchText, studentStatus = "active", discounted = "", feeStatus = "") => {
   return apiService.get(
-    `/feeBalance/excel?&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}&discounted=${discounted}`,
+    `/feeBalance/excel?&courseId=${courseId}&batchId=${batchId}&noOfsem=${semester}&value=${searchText}&studentStatus=${studentStatus}&discounted=${discounted}&feeStatus=${feeStatus}`,
   );
 };
 

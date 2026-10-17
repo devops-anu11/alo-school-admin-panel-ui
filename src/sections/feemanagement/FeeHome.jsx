@@ -13,7 +13,7 @@ import { MdDelete } from "react-icons/md";
 import magnification from "../../assets/glass.png";
 import Modal from "./Modal";
 import FeeDetailModal from "./FeeDetailModal";
-import { FormControl, InputLabel, MenuItem, Select, IconButton } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, IconButton, Tooltip } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
@@ -85,7 +85,12 @@ const FeeHome = () => {
   const [list, setList] = useState([])
   const [semester, setSemester] = useState('')
   const [studentStatus, setStudentStatus] = useState('active')
-  const [discounted, setDiscounted] = useState('')
+  const [studentFilter, setStudentFilter] = useState('')
+  // The summary-card eye buttons drive two list/export filters: discounted
+  // students, or fee status ("pending" / "completed"). The cards themselves
+  // ignore them so their totals stay the same while a filter is on.
+  const discounted = studentFilter === 'discounted' ? 'true' : ''
+  const feeStatusFilter = studentFilter === 'pending' || studentFilter === 'completed' ? studentFilter : ''
   // const [updatesemester, setUpdateSemester] = useState('')
   // const [payment, setPayment] = useState('')
 
@@ -131,10 +136,37 @@ const FeeHome = () => {
     setList([]);
   };
 
-  const handleDiscountedChange = (event) => {
-    setDiscounted(event.target.value);
+  const applyStudentFilter = (value) => {
+    setStudentFilter(value);
     setoffset(1);
     setList([]);
+  };
+
+  // Eye button on a summary card: lists only that card's students
+  // ("pending" / "completed" / "discounted"); clicking it again goes back
+  // to all students.
+  const cardViewBtnTones = {
+    pending: styles.cardViewBtnPending,
+    completed: styles.cardViewBtnCompleted,
+    discounted: styles.cardViewBtnDiscounted,
+  };
+  const renderCardViewBtn = (status) => {
+    const active = studentFilter === status;
+    const label = active ? 'Show all students' : `View ${status} students`;
+    const tone = cardViewBtnTones[status];
+    return (
+      <Tooltip title={label} arrow placement="top">
+        <button
+          type="button"
+          className={`${styles.cardViewBtn} ${tone} ${active ? styles.cardViewBtnActive : ''}`}
+          aria-label={label}
+          aria-pressed={active}
+          onClick={() => applyStudentFilter(active ? '' : status)}
+        >
+          <FontAwesomeIcon icon={faEye} />
+        </button>
+      </Tooltip>
+    );
   };
 
   const handleupdatesemChange = (event) => {
@@ -209,13 +241,13 @@ const FeeHome = () => {
 
   useEffect(() => {
     getfeelist()
-  }, [offset, courseId, batchId, semester, searchText, studentStatus, discounted]);
+  }, [offset, courseId, batchId, semester, searchText, studentStatus, studentFilter]);
 
   const [loading, setLoading] = useState(false);
   let getfeelist = async () => {
     setLoading(true);
     try {
-      const res = await getFee(limit, offset - 1, courseId, batchId, semester, searchText, studentStatus, discounted)
+      const res = await getFee(limit, offset - 1, courseId, batchId, semester, searchText, studentStatus, discounted, feeStatusFilter)
       console.log(res?.data?.data, 'feelist')
       setList(res?.data?.data?.data)
       settotal(res?.data?.data?.totalCount)
@@ -529,13 +561,13 @@ const FeeHome = () => {
 
   useEffect(() => {
     calculation()
-  }, [courseId, batchId, semester, searchText, studentStatus, discounted])
+  }, [courseId, batchId, semester, searchText, studentStatus])
 
   const [calloading, setCallodading] = useState(false)
   let calculation = async () => {
     setCallodading(true)
     try {
-      let res = await calcfee(courseId, batchId, semester, searchText, studentStatus, "", discounted)
+      let res = await calcfee(courseId, batchId, semester, searchText, studentStatus)
       setCalc(res.data?.data?.data?.[0] || [])
       console.log('hjjj', res.data?.data)
     } catch (error) {
@@ -620,7 +652,7 @@ const FeeHome = () => {
     setCourseId('');
     setBatchId('');
     setStudentStatus('active');
-    setDiscounted('');
+    setStudentFilter('');
     setCourseOptions([]);
   }
 
@@ -630,7 +662,7 @@ const FeeHome = () => {
 
    let getExcel = async () => {
     try {
-      let res = await excelfee(courseId, batchId, semester, searchText, studentStatus, discounted);
+      let res = await excelfee(courseId, batchId, semester, searchText, studentStatus, discounted, feeStatusFilter);
       console.log("Axios response:", res);
   
       // The Base64 string is here
@@ -670,8 +702,12 @@ const FeeHome = () => {
       <ToastContainer />
       <div className={styles.feemanagement}>
         <div className={styles.feehead}>
-          <div className={styles.feetitle}>
-            <p>Fee Management</p>
+          <div className={styles.feeheadTop}>
+            <div className={styles.feetitle}>
+              <p>Fee Management</p>
+            </div>
+            <button className='bg-gradient-to-b from-[#144196] to-[#0b2456] text-white px-5 py-2.5 rounded-[10px] text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 transition' onClick={getExcel}>Export<MdOutlineFileDownload />
+            </button>
           </div>
           <div className={styles.feeform}>
 
@@ -843,52 +879,6 @@ const FeeHome = () => {
                 </FormControl>
               </div>
             </div>
-            <div className={styles.formselect5}>
-              <div className={styles.selectWrapper}>
-                <FormControl
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    minWidth: '100%',
-                    backgroundColor: '#fff',
-                    borderRadius: '10px',
-                    border: '1px solid #e5e7eb'
-                  }}
-                >
-                  <Select
-                    value={discounted}
-                    onChange={handleDiscountedChange}
-                    displayEmpty
-                    IconComponent={KeyboardArrowDownIcon}
-                    sx={{
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        border: 'none',
-                      },
-                      fontSize: '14px',
-                      padding: '4px 10px',
-                      height: '36px',
-                      border: 'none',
-                    }}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          '& .MuiMenuItem-root.Mui-selected': {
-                            backgroundColor: '#2274D4',
-                            color: '#fff',
-                          },
-                          '& .MuiMenuItem-root.Mui-selected:hover': {
-                            backgroundColor: '#1b63b8',
-                          },
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">All Students</MenuItem>
-                    <MenuItem value="true">Discounted</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-            </div>
             <div >
               <div style={{ width: '190px' }}>
                 <TextField
@@ -936,7 +926,7 @@ const FeeHome = () => {
 
             </div>
             <div>
-              {(semester?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim() || (studentStatus && studentStatus !== 'active') || discounted?.toString().trim()) && (
+              {(semester?.toString().trim() || courseId?.toString().trim() || batchId?.toString().trim() || (studentStatus && studentStatus !== 'active') || studentFilter) && (
                 <button className={styles.clear} onClick={handlefilterSearch}>
                   <IoClose />
                 </button>
@@ -958,10 +948,6 @@ const FeeHome = () => {
                 Update Fee
               </button>
             </div> */}
-             <div className='flex justify-end ml-auto'>
-          <button className='bg-gradient-to-b from-[#144196] to-[#0b2456] text-white px-5 py-2.5 rounded-[10px] text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 transition' onClick={getExcel}>Export<MdOutlineFileDownload />
-          </button>
-        </div>
           </div>
         </div>
        
@@ -999,17 +985,19 @@ const FeeHome = () => {
                   <p className={styles.amtValue}>{calc?.totalFee || 0}</p>
                 </div>
               </div>
-              <div className={styles.feeamt}>
+              <div className={`${styles.feeamt} ${studentFilter === 'completed' ? styles.feeamtActiveCompleted : ''}`}>
                 <div className={styles.feeamthead}>
                   <p className={styles.amtText}>Collected Fee Amount</p>
+                  {renderCardViewBtn('completed')}
                 </div>
                 <div className={styles.feeamtamount}>
                   <p className={styles.amtValue}>{calc?.paidFee || 0}</p>
                 </div>
               </div>
-              <div className={styles.feeamt}>
+              <div className={`${styles.feeamt} ${studentFilter === 'pending' ? styles.feeamtActivePending : ''}`}>
                 <div className={styles.feeamthead}>
                   <p className={styles.amtText}>Pending Fee Amount</p>
+                  {renderCardViewBtn('pending')}
                 </div>
                 <div className={styles.feeamtamount}>
                   <p className={styles.amtValue}>{calc?.pendingFee || 0}</p>
@@ -1023,10 +1011,10 @@ const FeeHome = () => {
                   <p className={styles.amtValue}>{calc?.totalAdmissionFee || 0}</p>
                 </div>
               </div>
-              <div className={`${styles.feeamt} ${styles.feeamtDiscount}`}>
+              <div className={`${styles.feeamt} ${styles.feeamtDiscount} ${studentFilter === 'discounted' ? styles.feeamtActiveDiscounted : ''}`}>
                 <div className={styles.feeamthead}>
                   <p className={styles.amtText}>Total Discount</p>
-                  <span className={styles.discountBadge}>- Off</span>
+                  {renderCardViewBtn('discounted')}
                 </div>
                 <div className={styles.feeamtamount}>
                   <p className={styles.amtValue}>{calc?.totalDiscount || 0}</p>

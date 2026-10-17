@@ -57,6 +57,18 @@ export const formatPhone = (phone) => {
     return local.length === 10 ? `+91 ${local.slice(0, 5)} ${local.slice(5)}` : `+${digits}`;
 };
 
+// Saves the base64 .xlsx an export endpoint returns, as "<fileName>.xlsx"
+// (characters Windows can't have in a file name are replaced).
+export const downloadExcel = (base64, fileName) => {
+    const bytes = Uint8Array.from(atob(base64.replace(/\s/g, '')), (c) => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${fileName.replace(/[\\/:*?"<>|]+/g, '-')}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+};
+
 // Workshops for the filter dropdowns (newest first, as the API sorts them).
 export const useWorkshopOptions = () => {
     const [workshops, setWorkshops] = useState([]);
